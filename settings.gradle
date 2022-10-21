@@ -1,0 +1,3 @@
+rootProject.name = 'job-market-analyzer'
+
+include('app')
