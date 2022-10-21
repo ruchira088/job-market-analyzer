@@ -1,5 +1,6 @@
 package com.ruchij;
 
+import com.ruchij.config.CrawlerConfiguration;
 import com.ruchij.service.clock.SystemClock;
 import com.ruchij.site.LinkedIn;
 import com.ruchij.site.pages.HomePage;
@@ -11,7 +12,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 public class App {
     public static void main(String[] args) {
         Config config = ConfigFactory.load();
-        System.out.println(config);
+        System.out.println(CrawlerConfiguration.parse(config));
 
 //        ChromeDriver chromeDriver = new ChromeDriver();
 //
