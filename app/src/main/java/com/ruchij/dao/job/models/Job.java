@@ -6,6 +6,7 @@ import java.util.Optional;
 
 public class Job {
     private String id;
+    private String crawlId;
     private Instant crawledAt;
     private URL link;
     private String title;
@@ -20,6 +21,14 @@ public class Job {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getCrawlId() {
+        return crawlId;
+    }
+
+    public void setCrawlId(String crawlId) {
+        this.crawlId = crawlId;
     }
 
     public Instant getCrawledAt() {

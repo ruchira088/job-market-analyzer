@@ -1,18 +1,30 @@
 package com.ruchij;
 
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.ruchij.config.CrawlerConfiguration;
-import com.ruchij.service.clock.SystemClock;
-import com.ruchij.site.LinkedIn;
-import com.ruchij.site.pages.HomePage;
-import com.ruchij.site.pages.JobsPage;
+import com.ruchij.config.LinkedInCredentials;
+import com.ruchij.dao.job.ElasticsearchJobDao;
+import com.ruchij.dao.job.JobDao;
+import com.ruchij.service.clock.Clock;
+import com.ruchij.service.crawler.Crawler;
+import com.ruchij.service.crawler.CrawlerImpl;
+import com.ruchij.service.random.RandomGenerator;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
+import java.io.IOException;
 
 public class App {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Config config = ConfigFactory.load();
-        System.out.println(CrawlerConfiguration.parse(config));
+        CrawlerConfiguration crawlerConfiguration = CrawlerConfiguration.parse(config);
+
 
 //        ChromeDriver chromeDriver = new ChromeDriver();
 //
@@ -38,5 +50,31 @@ public class App {
 //        Files.copy(screenshot.toPath(), result, StandardCopyOption.REPLACE_EXISTING);
 //
 //        chromeDriver.close();
+    }
+
+    public static void run(CrawlerConfiguration crawlerConfiguration) throws IOException {
+        HttpHost elasticsearchHost =
+            new HttpHost(
+                crawlerConfiguration.elasticsearchConfiguration().host(),
+                crawlerConfiguration.elasticsearchConfiguration().port()
+            );
+
+        try (RestClient restClient = RestClient.builder(elasticsearchHost).build();
+             ElasticsearchTransport elasticsearchTransport = new RestClientTransport(restClient, new JacksonJsonpMapper())) {
+            ElasticsearchAsyncClient elasticsearchAsyncClient = new ElasticsearchAsyncClient(elasticsearchTransport);
+
+            JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
+        }
+    }
+
+    public static void run(
+        RemoteWebDriver remoteWebDriver,
+        JobDao jobDao,
+        LinkedInCredentials linkedInCredentials,
+        Clock clock,
+        RandomGenerator<String> idGenerator
+    ) {
+        Crawler crawler = new CrawlerImpl(remoteWebDriver, jobDao, linkedInCredentials, clock, idGenerator);
+
     }
 }

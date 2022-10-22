@@ -14,13 +14,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class JobsPage {
     private final RemoteWebDriver remoteWebDriver;
@@ -31,10 +29,28 @@ public class JobsPage {
         this.webDriverWait = new WebDriverWait(remoteWebDriver, Duration.ofSeconds(5));
     }
 
-    public Flowable<Job> listJobs(Clock clock) {
+    public int pageCount() {
+        String paginationAttribute = "data-test-pagination-page-btn";
+        WebElement pagination = remoteWebDriver.findElement(By.cssSelector(".jobs-search-results-list__pagination"));
+
+        return pagination.findElements(By.cssSelector(".%s".formatted(paginationAttribute))).stream()
+            .flatMap(element -> Optional.ofNullable(element.getAttribute(paginationAttribute)).stream())
+            .flatMap(string ->  {
+                try {
+                    return Stream.of(Integer.parseInt(string));
+                } catch (NumberFormatException numberFormatException) {
+                    return Stream.empty();
+                }
+            })
+            .max(Comparator.naturalOrder())
+            .orElse(1);
+    }
+
+    public Flowable<Job> listJobs(Clock clock, String crawlId) {
         return Flowable.create(emitter ->
                 traverseJobs(
                     clock,
+                    crawlId,
                     emitter::onNext,
                     () -> !emitter.isCancelled(),
                     emitter::onComplete
@@ -43,7 +59,7 @@ public class JobsPage {
         );
     }
 
-    void traverseJobs(Clock clock, Consumer<Job> onJob, Supplier<Boolean> shouldContinue, Runnable onComplete) {
+    void traverseJobs(Clock clock, String crawlId, Consumer<Job> onJob, Supplier<Boolean> shouldContinue, Runnable onComplete) {
         showAllJobs();
         Set<String> jobIds = new HashSet<>();
         int pageNumber = 1;
@@ -69,7 +85,7 @@ public class JobsPage {
                     webDriverWait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(".artdeco-loader")));
 
                     WebElement jobDetails = remoteWebDriver.findElement(By.cssSelector(".jobs-details"));
-                    parse(jobId, clock.timestamp(), jobDetails, remoteWebDriver.getCurrentUrl()).ifPresent(onJob);
+                    parse(jobId, crawlId, clock.timestamp(), jobDetails, remoteWebDriver.getCurrentUrl()).ifPresent(onJob);
                 }
             }
 
@@ -90,7 +106,7 @@ public class JobsPage {
         onComplete.run();
     }
 
-    static Optional<Job> parse(String jobId, Instant timestamp, WebElement jobDetails, String currentUrl) {
+    static Optional<Job> parse(String jobId, String crawlId, Instant timestamp, WebElement jobDetails, String currentUrl) {
         try {
             URL pageUrl = new URL(currentUrl);
 
@@ -116,6 +132,7 @@ public class JobsPage {
 
             Job job = new Job();
             job.setId(jobId);
+            job.setCrawlId(crawlId);
             job.setCrawledAt(timestamp);
             job.setLink(jobUrl);
             job.setTitle(title);
