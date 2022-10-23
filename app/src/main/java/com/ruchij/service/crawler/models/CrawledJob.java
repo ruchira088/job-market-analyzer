@@ -1,8 +1,8 @@
 package com.ruchij.service.crawler.models;
 
-import java.time.Instant;
+import com.ruchij.dao.job.models.Job;
 
-public record CrawlProgress(String crawlId, Instant timestamp, int currentJobPosition, int allPages) {
+public record CrawledJob(String crawlId, Job job, int currentJobPosition, int allPages) {
     private static final int JOBS_PER_PAGE = 24;
 
     public int estimatedJobCount() {

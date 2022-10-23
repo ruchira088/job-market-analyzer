@@ -1,4 +1,4 @@
-package com.ruchij.site.pages;
+package com.ruchij.service.crawler.selenium.site.pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;

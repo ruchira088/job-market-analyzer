@@ -1,6 +1,6 @@
-package com.ruchij.site;
+package com.ruchij.service.crawler.selenium.site;
 
-import com.ruchij.site.pages.HomePage;
+import com.ruchij.service.crawler.selenium.site.pages.HomePage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;

@@ -90,12 +90,15 @@ public class Job {
     @Override
     public String toString() {
         return "Job{" +
-            "link=" + link +
+            "id='" + id + '\'' +
+            ", crawlId='" + crawlId + '\'' +
+            ", crawledAt=" + crawledAt +
+            ", link=" + link +
             ", title='" + title + '\'' +
             ", companyName='" + companyName + '\'' +
             ", location='" + location + '\'' +
             ", workplaceType=" + workplaceType +
-            ", details='" + details + '\'' +
+            ", details='" + details.substring(0, 50) + '\'' +
             '}';
     }
 }

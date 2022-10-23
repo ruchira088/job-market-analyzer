@@ -1,4 +1,4 @@
-package com.ruchij.site.pages;
+package com.ruchij.service.crawler.selenium.site.pages;
 
 import com.ruchij.dao.job.models.Job;
 import com.ruchij.dao.job.models.WorkplaceType;
@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 public class JobsPage {
     private final RemoteWebDriver remoteWebDriver;
     private final WebDriverWait webDriverWait;
+    private boolean showingAllJobs = false;
 
     public JobsPage(RemoteWebDriver remoteWebDriver) {
         this.remoteWebDriver = remoteWebDriver;
@@ -30,10 +31,12 @@ public class JobsPage {
     }
 
     public int pageCount() {
+        showAllJobs();
+
         String paginationAttribute = "data-test-pagination-page-btn";
         WebElement pagination = remoteWebDriver.findElement(By.cssSelector(".jobs-search-results-list__pagination"));
 
-        return pagination.findElements(By.cssSelector(".%s".formatted(paginationAttribute))).stream()
+        return pagination.findElements(By.cssSelector("li[%s]".formatted(paginationAttribute))).stream()
             .flatMap(element -> Optional.ofNullable(element.getAttribute(paginationAttribute)).stream())
             .flatMap(string ->  {
                 try {
@@ -75,6 +78,7 @@ public class JobsPage {
                 String jobId = jobCard.getAttribute("data-job-id");
 
                 if (!shouldContinue.get()) {
+                    onComplete.run();
                     return;
                 } else if (!jobIds.contains(jobId)) {
                     query = true;
@@ -150,14 +154,17 @@ public class JobsPage {
     }
 
     void showAllJobs() {
-        By showAllSelector = By.cssSelector(".jobs-job-board-list__footer");
+        if (!showingAllJobs) {
+            By showAllSelector = By.cssSelector(".jobs-job-board-list__footer");
 
-        webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(showAllSelector));
-        WebElement showAll = remoteWebDriver.findElement(showAllSelector);
+            webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(showAllSelector));
+            WebElement showAll = remoteWebDriver.findElement(showAllSelector);
 
-        showAll.click();
+            showAll.click();
 
-        webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".jobs-details")));
+            webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".jobs-details")));
+            showingAllJobs = true;
+        }
     }
 
 }

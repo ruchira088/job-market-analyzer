@@ -1,39 +1,37 @@
-package com.ruchij.service.crawler;
+package com.ruchij.service.crawler.selenium;
 
 import com.ruchij.config.LinkedInCredentials;
-import com.ruchij.dao.job.JobDao;
 import com.ruchij.service.clock.Clock;
-import com.ruchij.service.crawler.models.CrawlProgress;
+import com.ruchij.service.crawler.Crawler;
+import com.ruchij.service.crawler.models.CrawledJob;
 import com.ruchij.service.random.RandomGenerator;
-import com.ruchij.site.LinkedIn;
-import com.ruchij.site.pages.HomePage;
-import com.ruchij.site.pages.JobsPage;
+import com.ruchij.service.crawler.selenium.site.LinkedIn;
+import com.ruchij.service.crawler.selenium.site.pages.HomePage;
+import com.ruchij.service.crawler.selenium.site.pages.JobsPage;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-public class CrawlerImpl implements Crawler {
+public class SeleniumCrawler implements Crawler {
     private final RemoteWebDriver remoteWebDriver;
-    private final JobDao jobDao;
     private final LinkedInCredentials linkedInCredentials;
     private final Clock clock;
     private final RandomGenerator<String> idGenerator;
 
-    public CrawlerImpl(
+    public SeleniumCrawler(
         RemoteWebDriver remoteWebDriver,
-        JobDao jobDao,
         LinkedInCredentials linkedInCredentials,
         Clock clock,
         RandomGenerator<String> idGenerator
     ) {
         this.remoteWebDriver = remoteWebDriver;
-        this.jobDao = jobDao;
         this.linkedInCredentials = linkedInCredentials;
         this.clock = clock;
         this.idGenerator = idGenerator;
     }
 
     @Override
-    public Flowable<CrawlProgress> crawl() {
+    public Flowable<CrawledJob> crawl() {
         LinkedIn linkedIn = new LinkedIn(remoteWebDriver);
 
         HomePage homePage = linkedIn.login(linkedInCredentials.email(), linkedInCredentials.password());
@@ -43,10 +41,10 @@ public class CrawlerImpl implements Crawler {
         String crawlId = idGenerator.generate();
 
         return jobsPage.listJobs(clock, crawlId)
-            .flatMap(job -> Flowable.fromCompletionStage(jobDao.insert(job)))
+            .subscribeOn(Schedulers.io())
             .zipWith(
                 Flowable.range(1, Integer.MAX_VALUE),
-                (id, integer) -> new CrawlProgress(crawlId, clock.timestamp(), integer, pageCount)
+                (job, integer) -> new CrawledJob(crawlId, job, integer, pageCount)
             );
     }
 }
