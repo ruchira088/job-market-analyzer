@@ -98,7 +98,7 @@ public class Job {
             ", companyName='" + companyName + '\'' +
             ", location='" + location + '\'' +
             ", workplaceType=" + workplaceType +
-            ", details='" + details.substring(0, 50) + '\'' +
+            ", details='" + (details == null ? null : details.substring(0, 50)) + '\'' +
             '}';
     }
 }

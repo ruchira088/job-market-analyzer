@@ -3,6 +3,8 @@ package com.ruchij.service.crawler;
 import com.ruchij.service.crawler.models.CrawledJob;
 import io.reactivex.rxjava3.core.Flowable;
 
+import java.util.Optional;
+
 public interface Crawler {
-    Flowable<CrawledJob> crawl();
+    Flowable<CrawledJob> crawl(Optional<Long> limit);
 }

@@ -4,47 +4,60 @@ import com.ruchij.config.LinkedInCredentials;
 import com.ruchij.service.clock.Clock;
 import com.ruchij.service.crawler.Crawler;
 import com.ruchij.service.crawler.models.CrawledJob;
-import com.ruchij.service.random.RandomGenerator;
 import com.ruchij.service.crawler.selenium.site.LinkedIn;
 import com.ruchij.service.crawler.selenium.site.pages.HomePage;
 import com.ruchij.service.crawler.selenium.site.pages.JobsPage;
+import com.ruchij.service.random.RandomGenerator;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 public class SeleniumCrawler implements Crawler {
-    private final RemoteWebDriver remoteWebDriver;
+    private static final Logger logger = LoggerFactory.getLogger(SeleniumCrawler.class);
+
     private final LinkedInCredentials linkedInCredentials;
     private final Clock clock;
     private final RandomGenerator<String> idGenerator;
 
     public SeleniumCrawler(
-        RemoteWebDriver remoteWebDriver,
         LinkedInCredentials linkedInCredentials,
         Clock clock,
         RandomGenerator<String> idGenerator
     ) {
-        this.remoteWebDriver = remoteWebDriver;
         this.linkedInCredentials = linkedInCredentials;
         this.clock = clock;
         this.idGenerator = idGenerator;
     }
 
     @Override
-    public Flowable<CrawledJob> crawl() {
-        LinkedIn linkedIn = new LinkedIn(remoteWebDriver);
+    public Flowable<CrawledJob> crawl(Optional<Long> limit) {
+        String crawlId = idGenerator.generate();
+
+        logger.info("Started SeleniumCrawler id=%s".formatted(crawlId));
+
+        ChromeDriver chromeDriver = new ChromeDriver();
+        LinkedIn linkedIn = new LinkedIn(chromeDriver);
 
         HomePage homePage = linkedIn.login(linkedInCredentials.email(), linkedInCredentials.password());
         JobsPage jobsPage = homePage.jobsPage();
 
         int pageCount = jobsPage.pageCount();
-        String crawlId = idGenerator.generate();
 
         return jobsPage.listJobs(clock, crawlId)
+            .take(limit.orElse(Long.MAX_VALUE))
             .subscribeOn(Schedulers.io())
             .zipWith(
                 Flowable.range(1, Integer.MAX_VALUE),
                 (job, integer) -> new CrawledJob(crawlId, job, integer, pageCount)
-            );
+            )
+            .doOnComplete(() -> {
+                chromeDriver.quit();
+                logger.info("Completed SeleniumCrawler id=%s".formatted(crawlId));
+            });
+
     }
 }

@@ -10,7 +10,10 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
@@ -21,6 +24,8 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class JobsPage {
+    private static final Logger logger = LoggerFactory.getLogger(JobsPage.class);
+
     private final RemoteWebDriver remoteWebDriver;
     private final WebDriverWait webDriverWait;
     private boolean showingAllJobs = false;
@@ -69,6 +74,8 @@ public class JobsPage {
 
         boolean query = true;
 
+        logger.info("Started crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
+
         while (query && shouldContinue.get()) {
             query = false;
 
@@ -94,6 +101,8 @@ public class JobsPage {
             }
 
             if (!query) {
+                logger.info("Completed crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
+
                 pageNumber++;
 
                 List<WebElement> elements =
@@ -103,6 +112,8 @@ public class JobsPage {
                     WebElement nextPage = elements.get(0);
                     nextPage.click();
                     query = true;
+
+                    logger.info("Started crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
                 }
             }
         }
@@ -147,8 +158,8 @@ public class JobsPage {
 
             return Optional.of(job);
         } catch (Exception exception) {
-            // TODO Add logging
-            exception.printStackTrace();
+            logger.error("Error occurred parsing WebElement to a Job", exception);
+
             return Optional.empty();
         }
     }
