@@ -3,6 +3,7 @@ package com.ruchij.dao.task;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch._types.InlineGet;
 import co.elastic.clients.elasticsearch._types.WriteResponseBase;
+import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import com.ruchij.dao.task.models.CrawlerTask;
@@ -39,6 +40,14 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
             .thenApplyAsync(crawlerTaskUpdateResponse ->
                 Optional.ofNullable(crawlerTaskUpdateResponse.get()).map(InlineGet::source)
             );
+    }
+
+    @Override
+    public CompletableFuture<Optional<CrawlerTask>> findById(String crawlerTaskId) {
+        GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(crawlerTaskId));
+
+        return elasticsearchAsyncClient.get(getRequest, CrawlerTask.class)
+            .thenApplyAsync(crawlerTaskGetResponse -> Optional.ofNullable(crawlerTaskGetResponse.source()));
     }
 
     private class UpdateFinishedTimestamp {

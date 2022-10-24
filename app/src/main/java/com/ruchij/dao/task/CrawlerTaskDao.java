@@ -9,5 +9,7 @@ import java.util.concurrent.CompletableFuture;
 public interface CrawlerTaskDao {
     CompletableFuture<String> insert(CrawlerTask crawlerTask);
 
+    CompletableFuture<Optional<CrawlerTask>> findById(String crawlerTaskId);
+
     CompletableFuture<Optional<CrawlerTask>> setFinishedTimestamp(String crawlerTaskId, Instant finishedTimestamp);
 }
