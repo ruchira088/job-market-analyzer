@@ -1,6 +1,7 @@
 
 plugins {
     id 'application'
+    id 'com.github.ben-manes.versions' version '0.43.0'
 }
 
 repositories {
@@ -8,13 +9,19 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.typesafe:config:1.4.2'
-    implementation 'org.seleniumhq.selenium:selenium-java:4.5.0'
-    implementation "io.reactivex.rxjava3:rxjava:3.1.5"
-    implementation 'co.elastic.clients:elasticsearch-java:8.4.3'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'
-    implementation 'ch.qos.logback:logback-classic:1.4.4'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    implementation(
+        'com.typesafe:config:1.4.2',
+        'org.seleniumhq.selenium:selenium-java:4.5.2',
+        'io.reactivex.rxjava3:rxjava:3.1.5',
+        'co.elastic.clients:elasticsearch-java:8.4.3',
+        'com.fasterxml.jackson.core:jackson-databind:2.13.4.2',
+        'ch.qos.logback:logback-classic:1.4.4',
+        'org.testcontainers:elasticsearch:1.17.5',
+    )
+
+    testImplementation(
+        'org.junit.jupiter:junit-jupiter:5.8.2'
+    )
 }
 
 application {

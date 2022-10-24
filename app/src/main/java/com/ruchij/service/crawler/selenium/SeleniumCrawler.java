@@ -21,7 +21,6 @@ public class SeleniumCrawler implements Crawler {
 
     private final LinkedInCredentials linkedInCredentials;
     private final Clock clock;
-    private final RandomGenerator<String> idGenerator;
 
     public SeleniumCrawler(
         LinkedInCredentials linkedInCredentials,
@@ -30,34 +29,32 @@ public class SeleniumCrawler implements Crawler {
     ) {
         this.linkedInCredentials = linkedInCredentials;
         this.clock = clock;
-        this.idGenerator = idGenerator;
     }
 
     @Override
-    public Flowable<CrawledJob> crawl(Optional<Long> limit) {
-        String crawlId = idGenerator.generate();
+    public Flowable<CrawledJob> crawl(String crawlerTaskId) {
+        return Flowable.just(1)
+            .flatMap(value -> {
+                logger.info("Started SeleniumCrawler id=%s".formatted(crawlerTaskId));
 
-        logger.info("Started SeleniumCrawler id=%s".formatted(crawlId));
+                ChromeDriver chromeDriver = new ChromeDriver();
+                LinkedIn linkedIn = new LinkedIn(chromeDriver);
 
-        ChromeDriver chromeDriver = new ChromeDriver();
-        LinkedIn linkedIn = new LinkedIn(chromeDriver);
+                HomePage homePage = linkedIn.login(linkedInCredentials.email(), linkedInCredentials.password());
+                JobsPage jobsPage = homePage.jobsPage();
 
-        HomePage homePage = linkedIn.login(linkedInCredentials.email(), linkedInCredentials.password());
-        JobsPage jobsPage = homePage.jobsPage();
+                int pageCount = jobsPage.pageCount();
 
-        int pageCount = jobsPage.pageCount();
-
-        return jobsPage.listJobs(clock, crawlId)
-            .take(limit.orElse(Long.MAX_VALUE))
-            .subscribeOn(Schedulers.io())
-            .zipWith(
-                Flowable.range(1, Integer.MAX_VALUE),
-                (job, integer) -> new CrawledJob(crawlId, job, integer, pageCount)
-            )
-            .doOnComplete(() -> {
-                chromeDriver.quit();
-                logger.info("Completed SeleniumCrawler id=%s".formatted(crawlId));
+                return jobsPage.listJobs(clock, crawlerTaskId)
+                    .subscribeOn(Schedulers.io())
+                    .zipWith(
+                        Flowable.range(1, Integer.MAX_VALUE),
+                        (job, integer) -> new CrawledJob(crawlerTaskId, job, integer, pageCount)
+                    )
+                    .doFinally(() -> {
+                        chromeDriver.quit();
+                        logger.info("Completed SeleniumCrawler id=%s".formatted(crawlerTaskId));
+                    });
             });
-
     }
 }

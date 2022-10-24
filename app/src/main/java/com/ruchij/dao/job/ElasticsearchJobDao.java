@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class ElasticsearchJobDao implements JobDao {
     private static final String INDEX = "jobs";
+
     private final ElasticsearchAsyncClient elasticsearchAsyncClient;
 
     public ElasticsearchJobDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {

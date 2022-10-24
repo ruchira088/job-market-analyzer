@@ -7,6 +7,8 @@ import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.ruchij.config.CrawlerConfiguration;
 import com.ruchij.dao.job.JobDao;
 import com.ruchij.dao.job.models.Job;
+import com.ruchij.dao.task.CrawlerTaskDao;
+import com.ruchij.dao.task.models.CrawlerTask;
 import com.ruchij.service.clock.Clock;
 import com.ruchij.service.crawler.Crawler;
 import com.ruchij.service.crawler.selenium.SeleniumCrawler;
@@ -14,6 +16,7 @@ import com.ruchij.service.random.RandomGenerator;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.functions.Action;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -54,23 +57,17 @@ public class App {
             Crawler crawler =
                 new SeleniumCrawler(crawlerConfiguration.linkedInCredentials(), clock, idGenerator);
 
-            run(crawler, jobDao);
+            run();
         }
     }
 
     public static void run(
-        Crawler crawler,
-        JobDao jobDao
     ) {
-        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
-        crawler.crawl(Optional.of(3L))
-            .doOnComplete(() -> completableFuture.complete(null))
-            .subscribe(System.out::println);
-
-        try {
-            completableFuture.get();
-        } catch (Exception exception) {
-
-        }
+       Flowable.range(1, 10)
+           .doOnComplete(() -> {
+               System.out.println("Complete");
+           })
+           .take(4)
+           .subscribe(System.out::println);
     }
 }
