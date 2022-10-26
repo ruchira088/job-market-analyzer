@@ -11,5 +11,5 @@ public interface CrawlerTaskDao {
 
     CompletableFuture<Optional<CrawlerTask>> findById(String crawlerTaskId);
 
-    CompletableFuture<Optional<CrawlerTask>> setFinishedTimestamp(String crawlerTaskId, Instant finishedTimestamp);
+    CompletableFuture<Boolean> setFinishedTimestamp(String crawlerTaskId, Instant finishedTimestamp);
 }

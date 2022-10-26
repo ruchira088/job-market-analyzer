@@ -1,7 +1,7 @@
 package com.ruchij.dao.task;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
-import co.elastic.clients.elasticsearch._types.InlineGet;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.WriteResponseBase;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
@@ -30,15 +30,27 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
     }
 
     @Override
-    public CompletableFuture<Optional<CrawlerTask>> setFinishedTimestamp(String crawlerTaskId, Instant finishedTimestamp) {
+    public CompletableFuture<Boolean> setFinishedTimestamp(String crawlerTaskId, Instant finishedTimestamp) {
         UpdateRequest<CrawlerTask, UpdateFinishedTimestamp> updateRequest =
             UpdateRequest.of(builder ->
                 builder.index(INDEX).id(crawlerTaskId).doc(new UpdateFinishedTimestamp(finishedTimestamp))
             );
 
         return elasticsearchAsyncClient.update(updateRequest, CrawlerTask.class)
-            .thenApplyAsync(crawlerTaskUpdateResponse ->
-                Optional.ofNullable(crawlerTaskUpdateResponse.get()).map(InlineGet::source)
+            .thenApplyAsync(crawlerTaskUpdateResponse -> true)
+            .exceptionallyComposeAsync(throwable ->
+                Optional.ofNullable(throwable.getCause())
+                    .flatMap(cause -> {
+                        if (cause instanceof ElasticsearchException) {
+                            return Optional.of((ElasticsearchException) cause);
+                        } else {
+                            return Optional.empty();
+                        }
+                    })
+                    .flatMap(elasticsearchException -> Optional.ofNullable(elasticsearchException.error().type()))
+                    .filter(errorType -> errorType.equalsIgnoreCase("document_missing_exception"))
+                    .map(value -> CompletableFuture.completedFuture(false))
+                    .orElse(CompletableFuture.failedFuture(throwable))
             );
     }
 

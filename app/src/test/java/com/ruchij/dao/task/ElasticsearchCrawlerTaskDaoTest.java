@@ -1,8 +1,6 @@
 package com.ruchij.dao.task;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ruchij.config.ElasticsearchConfiguration;
 import com.ruchij.dao.elasticsearch.ElasticsearchClientBuilder;
 import com.ruchij.dao.task.models.CrawlerTask;
@@ -14,12 +12,13 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+
+import static com.ruchij.test.TestUtils.waitFor;
 
 class ElasticsearchCrawlerTaskDaoTest {
 
     @Test
-    void insertCrawlerTasks() throws Exception {
+    void performOperations() throws Exception {
         try (ElasticsearchContainer elasticsearchContainer =
                  new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:8.4.3")
                      .withEnv("xpack.security.enabled", "false")
@@ -44,15 +43,40 @@ class ElasticsearchCrawlerTaskDaoTest {
                 crawlerTask.setCrawlerId(crawlerTaskId);
                 crawlerTask.setStartedAt(startTimestamp);
 
-                String insertionResult = elasticsearchCrawlerTaskDao.insert(crawlerTask).get(10, TimeUnit.SECONDS);
+                String insertionResult = waitFor(elasticsearchCrawlerTaskDao.insert(crawlerTask));
                 Assertions.assertEquals(crawlerTaskId, insertionResult);
 
-                Optional<CrawlerTask> maybeCrawlerTask = elasticsearchCrawlerTaskDao.findById(crawlerTaskId).get(10, TimeUnit.SECONDS);
+                Optional<CrawlerTask> maybeCrawlerTask = waitFor(elasticsearchCrawlerTaskDao.findById(crawlerTaskId));
+
                 Assertions.assertTrue(maybeCrawlerTask.isPresent());
-
                 Assertions.assertEquals(crawlerTask, maybeCrawlerTask.get());
-            }
 
+                Instant finishTimestamp = clock.timestamp();
+                crawlerTask.setFinishedAt(finishTimestamp);
+
+                Boolean updated =
+                    waitFor(elasticsearchCrawlerTaskDao.setFinishedTimestamp(crawlerTaskId, finishTimestamp));
+
+                Assertions.assertTrue(updated);
+
+                Optional<CrawlerTask> maybeFinishedCrawlerTask =
+                    waitFor(elasticsearchCrawlerTaskDao.findById(crawlerTaskId));
+
+                Assertions.assertTrue(maybeFinishedCrawlerTask.isPresent());
+                Assertions.assertEquals(crawlerTask, maybeFinishedCrawlerTask.get());
+
+                String randomId = RandomGenerator.idGenerator().generate();
+
+                Optional<CrawlerTask> emptyTask =
+                    waitFor(elasticsearchCrawlerTaskDao.findById(randomId));
+
+                Assertions.assertTrue(emptyTask.isEmpty());
+
+                Boolean updatedNonExisting =
+                    waitFor(elasticsearchCrawlerTaskDao.setFinishedTimestamp(randomId, finishTimestamp));
+
+                Assertions.assertFalse(updatedNonExisting);
+            }
         }
     }
 
