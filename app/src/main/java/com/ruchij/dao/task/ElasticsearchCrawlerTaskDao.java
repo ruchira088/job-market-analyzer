@@ -2,6 +2,7 @@ package com.ruchij.dao.task;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.WriteResponseBase;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
@@ -24,7 +25,13 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
     @Override
     public CompletableFuture<String> insert(CrawlerTask crawlerTask) {
         IndexRequest<CrawlerTask> indexRequest =
-            IndexRequest.of(builder -> builder.index(INDEX).id(crawlerTask.getCrawlerId()).document(crawlerTask));
+            IndexRequest.of(builder ->
+                builder
+                    .index(INDEX)
+                    .refresh(Refresh.True)
+                    .id(crawlerTask.getCrawlerId())
+                    .document(crawlerTask)
+            );
 
         return elasticsearchAsyncClient.index(indexRequest).thenApplyAsync(WriteResponseBase::id);
     }
@@ -33,7 +40,11 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
     public CompletableFuture<Boolean> setFinishedTimestamp(String crawlerTaskId, Instant finishedTimestamp) {
         UpdateRequest<CrawlerTask, UpdateFinishedTimestamp> updateRequest =
             UpdateRequest.of(builder ->
-                builder.index(INDEX).id(crawlerTaskId).doc(new UpdateFinishedTimestamp(finishedTimestamp))
+                builder
+                    .index(INDEX)
+                    .id(crawlerTaskId)
+                    .refresh(Refresh.True)
+                    .doc(new UpdateFinishedTimestamp(finishedTimestamp))
             );
 
         return elasticsearchAsyncClient.update(updateRequest, CrawlerTask.class)
