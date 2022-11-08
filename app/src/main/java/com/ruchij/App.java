@@ -3,7 +3,10 @@ package com.ruchij;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import com.ruchij.config.CrawlerConfiguration;
 import com.ruchij.dao.elasticsearch.ElasticsearchClientBuilder;
+import com.ruchij.dao.job.ElasticsearchJobDao;
 import com.ruchij.dao.job.JobDao;
+import com.ruchij.dao.task.CrawlerTaskDao;
+import com.ruchij.dao.task.ElasticsearchCrawlerTaskDao;
 import com.ruchij.service.clock.Clock;
 import com.ruchij.service.crawler.Crawler;
 import com.ruchij.service.crawler.selenium.SeleniumCrawler;
@@ -26,29 +29,17 @@ public class App {
         try (ElasticsearchClientBuilder elasticsearchClientBuilder = new ElasticsearchClientBuilder(crawlerConfiguration.elasticsearchConfiguration())) {
             ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
 
-//            JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
+            JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
+            CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
             Clock clock = Clock.systemClock();
             RandomGenerator<String> idGenerator = RandomGenerator.idGenerator();
-
-            JobDao jobDao = job -> {
-                System.out.println(job);
-                return CompletableFuture.completedFuture(idGenerator.generate());
-            };
 
             Crawler crawler =
                 new SeleniumCrawler(crawlerConfiguration.linkedInCredentials(), clock, idGenerator);
 
-            run();
-        }
-    }
+            CrawlTaskRunner crawlTaskRunner = new CrawlTaskRunner(crawler, crawlerTaskDao, jobDao, clock, idGenerator);
 
-    public static void run(
-    ) {
-       Flowable.range(1, 10)
-           .doOnComplete(() -> {
-               System.out.println("Complete");
-           })
-           .take(4)
-           .subscribe(System.out::println);
+            crawlTaskRunner.run();
+        }
     }
 }
