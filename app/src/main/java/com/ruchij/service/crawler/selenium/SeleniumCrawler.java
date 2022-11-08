@@ -1,6 +1,5 @@
 package com.ruchij.service.crawler.selenium;
 
-import com.ruchij.config.LinkedInCredentials;
 import com.ruchij.service.clock.Clock;
 import com.ruchij.service.crawler.Crawler;
 import com.ruchij.service.crawler.models.CrawledJob;
@@ -16,27 +15,22 @@ import org.slf4j.LoggerFactory;
 public class SeleniumCrawler implements Crawler {
     private static final Logger logger = LoggerFactory.getLogger(SeleniumCrawler.class);
 
-    private final LinkedInCredentials linkedInCredentials;
     private final Clock clock;
 
-    public SeleniumCrawler(
-        LinkedInCredentials linkedInCredentials,
-        Clock clock
-    ) {
-        this.linkedInCredentials = linkedInCredentials;
+    public SeleniumCrawler(Clock clock) {
         this.clock = clock;
     }
 
     @Override
-    public Flowable<CrawledJob> crawl(String crawlerTaskId) {
+    public Flowable<CrawledJob> crawl(String crawlerTaskId, String email, String password) {
         return Flowable.just(1)
-            .flatMap(value -> {
+            .concatMap(value -> {
                 logger.info("Started SeleniumCrawler id=%s".formatted(crawlerTaskId));
 
                 ChromeDriver chromeDriver = new ChromeDriver();
                 LinkedIn linkedIn = new LinkedIn(chromeDriver);
 
-                HomePage homePage = linkedIn.login(linkedInCredentials.email(), linkedInCredentials.password());
+                HomePage homePage = linkedIn.login(email, password);
                 JobsPage jobsPage = homePage.jobsPage();
 
                 int pageCount = jobsPage.pageCount();

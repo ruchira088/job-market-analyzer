@@ -5,17 +5,18 @@ import com.ruchij.config.CrawlerConfiguration;
 import com.ruchij.dao.elasticsearch.ElasticsearchClientBuilder;
 import com.ruchij.dao.job.ElasticsearchJobDao;
 import com.ruchij.dao.job.JobDao;
+import com.ruchij.dao.linkedin.ElasticsearchLinkedInCredentialsDao;
+import com.ruchij.dao.linkedin.LinkedInCredentialsDao;
 import com.ruchij.dao.task.CrawlerTaskDao;
 import com.ruchij.dao.task.ElasticsearchCrawlerTaskDao;
 import com.ruchij.service.clock.Clock;
 import com.ruchij.service.crawler.Crawler;
 import com.ruchij.service.crawler.selenium.SeleniumCrawler;
+import com.ruchij.service.encryption.AesEncryptionService;
+import com.ruchij.service.encryption.EncryptionService;
 import com.ruchij.service.random.RandomGenerator;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import io.reactivex.rxjava3.core.Flowable;
-
-import java.util.concurrent.CompletableFuture;
 
 public class App {
     public static void main(String[] args) throws Exception {
@@ -31,13 +32,26 @@ public class App {
 
             JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
             CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
+            LinkedInCredentialsDao linkedInCredentialsDao = new ElasticsearchLinkedInCredentialsDao(elasticsearchAsyncClient);
+
             Clock clock = Clock.systemClock();
             RandomGenerator<String> idGenerator = RandomGenerator.idGenerator();
 
-            Crawler crawler =
-                new SeleniumCrawler(crawlerConfiguration.linkedInCredentials(), clock);
+            EncryptionService encryptionService =
+                new AesEncryptionService(crawlerConfiguration.securityConfiguration().encryptionKey());
 
-            CrawlTaskRunner crawlTaskRunner = new CrawlTaskRunner(crawler, crawlerTaskDao, jobDao, clock, idGenerator);
+            Crawler crawler = new SeleniumCrawler(clock);
+
+            CrawlTaskRunner crawlTaskRunner =
+                new CrawlTaskRunner(
+                    crawler,
+                    crawlerTaskDao,
+                    jobDao,
+                    linkedInCredentialsDao,
+                    encryptionService,
+                    clock,
+                    idGenerator
+                );
 
             crawlTaskRunner.run();
         }

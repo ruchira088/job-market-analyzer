@@ -5,6 +5,7 @@ import java.util.Objects;
 
 public class CrawlerTask {
     private String crawlerId;
+    private String userId;
     private Instant startedAt;
     private Instant finishedAt;
 
@@ -14,6 +15,14 @@ public class CrawlerTask {
 
     public void setCrawlerId(String crawlerId) {
         this.crawlerId = crawlerId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public Instant getStartedAt() {
@@ -37,11 +46,11 @@ public class CrawlerTask {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CrawlerTask that = (CrawlerTask) o;
-        return Objects.equals(crawlerId, that.crawlerId) && Objects.equals(startedAt, that.startedAt) && Objects.equals(finishedAt, that.finishedAt);
+        return crawlerId.equals(that.crawlerId) && userId.equals(that.userId) && startedAt.equals(that.startedAt) && Objects.equals(finishedAt, that.finishedAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(crawlerId, startedAt, finishedAt);
+        return Objects.hash(crawlerId, userId, startedAt, finishedAt);
     }
 }
