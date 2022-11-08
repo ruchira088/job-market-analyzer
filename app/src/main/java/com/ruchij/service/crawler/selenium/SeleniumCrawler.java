@@ -7,14 +7,11 @@ import com.ruchij.service.crawler.models.CrawledJob;
 import com.ruchij.service.crawler.selenium.site.LinkedIn;
 import com.ruchij.service.crawler.selenium.site.pages.HomePage;
 import com.ruchij.service.crawler.selenium.site.pages.JobsPage;
-import com.ruchij.service.random.RandomGenerator;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 
 public class SeleniumCrawler implements Crawler {
     private static final Logger logger = LoggerFactory.getLogger(SeleniumCrawler.class);
@@ -24,8 +21,7 @@ public class SeleniumCrawler implements Crawler {
 
     public SeleniumCrawler(
         LinkedInCredentials linkedInCredentials,
-        Clock clock,
-        RandomGenerator<String> idGenerator
+        Clock clock
     ) {
         this.linkedInCredentials = linkedInCredentials;
         this.clock = clock;

@@ -35,7 +35,7 @@ public class App {
             RandomGenerator<String> idGenerator = RandomGenerator.idGenerator();
 
             Crawler crawler =
-                new SeleniumCrawler(crawlerConfiguration.linkedInCredentials(), clock, idGenerator);
+                new SeleniumCrawler(crawlerConfiguration.linkedInCredentials(), clock);
 
             CrawlTaskRunner crawlTaskRunner = new CrawlTaskRunner(crawler, crawlerTaskDao, jobDao, clock, idGenerator);
 
