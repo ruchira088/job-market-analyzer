@@ -4,7 +4,7 @@ import com.ruchij.dao.elasticsearch.models.EncryptedText;
 
 import java.time.Instant;
 
-public class LinkedInCredentials {
+public class EncryptedLinkedInCredentials {
     private String userId;
     private Instant createdAt;
     private EncryptedText email;

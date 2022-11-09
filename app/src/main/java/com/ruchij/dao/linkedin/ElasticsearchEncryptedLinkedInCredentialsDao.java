@@ -6,7 +6,7 @@ import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.ruchij.dao.linkedin.models.LinkedInCredentials;
+import com.ruchij.dao.linkedin.models.EncryptedLinkedInCredentials;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 
@@ -15,39 +15,39 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class ElasticsearchLinkedInCredentialsDao implements LinkedInCredentialsDao {
+public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLinkedInCredentialsDao {
     private static final String INDEX = "linkedIn-credentials";
 
     private final ElasticsearchAsyncClient elasticsearchAsyncClient;
 
-    public ElasticsearchLinkedInCredentialsDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {
+    public ElasticsearchEncryptedLinkedInCredentialsDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {
         this.elasticsearchAsyncClient = elasticsearchAsyncClient;
     }
 
     @Override
-    public CompletableFuture<String> insert(LinkedInCredentials linkedInCredentials) {
-        IndexRequest<LinkedInCredentials> indexRequest =
-            IndexRequest.of(builder -> builder.index(INDEX).id(linkedInCredentials.getUserId()).document(linkedInCredentials));
+    public CompletableFuture<String> insert(EncryptedLinkedInCredentials encryptedLinkedInCredentials) {
+        IndexRequest<EncryptedLinkedInCredentials> indexRequest =
+            IndexRequest.of(builder -> builder.index(INDEX).id(encryptedLinkedInCredentials.getUserId()).document(encryptedLinkedInCredentials));
 
         return elasticsearchAsyncClient.index(indexRequest).thenApplyAsync(WriteResponseBase::id);
     }
 
     @Override
-    public Flowable<LinkedInCredentials> getAll() {
+    public Flowable<EncryptedLinkedInCredentials> getAll() {
         return Flowable.create(emitter -> {
             int page = 0;
             int size = 100;
             boolean completed = false;
 
             while (!completed) {
-                List<LinkedInCredentials> linkedInCredentialsList =
+                List<EncryptedLinkedInCredentials> encryptedLinkedInCredentialsList =
                     getAll(page, size).get(20, TimeUnit.SECONDS);
 
-                for (LinkedInCredentials linkedInCredentials : linkedInCredentialsList) {
-                    emitter.onNext(linkedInCredentials);
+                for (EncryptedLinkedInCredentials encryptedLinkedInCredentials : encryptedLinkedInCredentialsList) {
+                    emitter.onNext(encryptedLinkedInCredentials);
                 }
 
-                if (linkedInCredentialsList.size() < size) {
+                if (encryptedLinkedInCredentialsList.size() < size) {
                     completed = true;
                     emitter.onComplete();
                 } else {
@@ -57,20 +57,20 @@ public class ElasticsearchLinkedInCredentialsDao implements LinkedInCredentialsD
         }, BackpressureStrategy.BUFFER);
     }
 
-    private CompletableFuture<List<LinkedInCredentials>> getAll(int page, int size) {
+    private CompletableFuture<List<EncryptedLinkedInCredentials>> getAll(int page, int size) {
         SearchRequest searchRequest = SearchRequest.of(builder -> builder.index(INDEX).size(size).from(page * size));
 
-        return elasticsearchAsyncClient.search(searchRequest, LinkedInCredentials.class)
+        return elasticsearchAsyncClient.search(searchRequest, EncryptedLinkedInCredentials.class)
             .thenApplyAsync(linkedInCredentialsSearchResponse ->
                 linkedInCredentialsSearchResponse.hits().hits().stream().map(Hit::source).toList()
             );
     }
 
     @Override
-    public CompletableFuture<Optional<LinkedInCredentials>> findByUserId(String userId) {
+    public CompletableFuture<Optional<EncryptedLinkedInCredentials>> findByUserId(String userId) {
         GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(userId));
 
-        return elasticsearchAsyncClient.get(getRequest, LinkedInCredentials.class)
+        return elasticsearchAsyncClient.get(getRequest, EncryptedLinkedInCredentials.class)
             .thenApplyAsync(linkedInCredentialsGetResponse -> Optional.ofNullable(linkedInCredentialsGetResponse.source()));
     }
 }

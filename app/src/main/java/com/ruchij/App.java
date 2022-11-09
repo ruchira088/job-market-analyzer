@@ -5,8 +5,8 @@ import com.ruchij.config.CrawlerConfiguration;
 import com.ruchij.dao.elasticsearch.ElasticsearchClientBuilder;
 import com.ruchij.dao.job.ElasticsearchJobDao;
 import com.ruchij.dao.job.JobDao;
-import com.ruchij.dao.linkedin.ElasticsearchLinkedInCredentialsDao;
-import com.ruchij.dao.linkedin.LinkedInCredentialsDao;
+import com.ruchij.dao.linkedin.ElasticsearchEncryptedLinkedInCredentialsDao;
+import com.ruchij.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.dao.task.CrawlerTaskDao;
 import com.ruchij.dao.task.ElasticsearchCrawlerTaskDao;
 import com.ruchij.service.clock.Clock;
@@ -14,6 +14,8 @@ import com.ruchij.service.crawler.Crawler;
 import com.ruchij.service.crawler.selenium.SeleniumCrawler;
 import com.ruchij.service.encryption.AesEncryptionService;
 import com.ruchij.service.encryption.EncryptionService;
+import com.ruchij.service.linkedin.LinkedInCredentialsService;
+import com.ruchij.service.linkedin.LinkedInCredentialsServiceImpl;
 import com.ruchij.service.random.RandomGenerator;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -32,13 +34,16 @@ public class App {
 
             JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
             CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
-            LinkedInCredentialsDao linkedInCredentialsDao = new ElasticsearchLinkedInCredentialsDao(elasticsearchAsyncClient);
+            EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
             Clock clock = Clock.systemClock();
             RandomGenerator<String> idGenerator = RandomGenerator.idGenerator();
 
             EncryptionService encryptionService =
                 new AesEncryptionService(crawlerConfiguration.securityConfiguration().encryptionKey());
+
+            LinkedInCredentialsService linkedInCredentialsService =
+                new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
 
             Crawler crawler = new SeleniumCrawler(clock);
 
@@ -47,8 +52,7 @@ public class App {
                     crawler,
                     crawlerTaskDao,
                     jobDao,
-                    linkedInCredentialsDao,
-                    encryptionService,
+                    linkedInCredentialsService,
                     clock,
                     idGenerator
                 );
