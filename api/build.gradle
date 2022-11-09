@@ -1,0 +1,31 @@
+plugins {
+    id 'application'
+    id 'com.github.ben-manes.versions' version '0.43.0'
+}
+
+group = 'com.ruchij.api'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(
+            project(':app'),
+            'com.typesafe:config:1.4.2',
+            'io.javalin:javalin-bundle:5.1.3',
+            'ch.qos.logback:logback-classic:1.4.4'
+    )
+
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter:5.9.1'
+    )
+}
+
+application {
+    mainClass = 'com.ruchij.api.App'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

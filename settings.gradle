@@ -1,3 +1,4 @@
 rootProject.name = 'job-market-analyzer'
 
+include('api')
 include('app')
