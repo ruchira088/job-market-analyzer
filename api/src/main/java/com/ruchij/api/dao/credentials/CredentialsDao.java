@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface CredentialsDao {
-    CompletableFuture<Credentials> insert(Credentials credentials);
+    CompletableFuture<String> insert(Credentials credentials);
 
     CompletableFuture<Optional<Credentials>> findByUserId(String userId);
 }
