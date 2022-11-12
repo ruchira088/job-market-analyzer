@@ -33,7 +33,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
                     .document(crawlerTask)
             );
 
-        return elasticsearchAsyncClient.index(indexRequest).thenApplyAsync(WriteResponseBase::id);
+        return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }
 
     @Override
@@ -48,8 +48,8 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
             );
 
         return elasticsearchAsyncClient.update(updateRequest, CrawlerTask.class)
-            .thenApplyAsync(crawlerTaskUpdateResponse -> true)
-            .exceptionallyComposeAsync(throwable ->
+            .thenApply(crawlerTaskUpdateResponse -> true)
+            .exceptionallyCompose(throwable ->
                 Optional.ofNullable(throwable.getCause())
                     .flatMap(cause -> {
                         if (cause instanceof ElasticsearchException) {
@@ -70,7 +70,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
         GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(crawlerTaskId));
 
         return elasticsearchAsyncClient.get(getRequest, CrawlerTask.class)
-            .thenApplyAsync(crawlerTaskGetResponse -> Optional.ofNullable(crawlerTaskGetResponse.source()));
+            .thenApply(crawlerTaskGetResponse -> Optional.ofNullable(crawlerTaskGetResponse.source()));
     }
 
     private class UpdateFinishedTimestamp {

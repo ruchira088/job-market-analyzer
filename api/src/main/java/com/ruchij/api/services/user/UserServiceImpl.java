@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public CompletableFuture<User> create(String email, String password, String firstName, Optional<String> lastName) {
         return userDao.findByEmail(email)
-            .thenComposeAsync(maybeUser -> {
+            .thenCompose(maybeUser -> {
                 if (maybeUser.isPresent()) {
                     return CompletableFuture.failedFuture(
                         new ResourceConflictException("User with email=%s already exists".formatted(email))
@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
                     return CompletableFuture.completedFuture(null);
                 }
             })
-            .thenComposeAsync(a -> {
+            .thenCompose(a -> {
                 String userId = idGenerator.generate();
                 Instant timestamp = clock.timestamp();
 
@@ -64,8 +64,8 @@ public class UserServiceImpl implements UserService {
                 credentials.setSaltedHashedPassword(hashedPassword);
 
                 return userDao.insert(user)
-                    .thenComposeAsync(b -> credentialsDao.insert(credentials))
-                    .thenApplyAsync(c -> user);
+                    .thenCompose(b -> credentialsDao.insert(credentials))
+                    .thenApply(c -> user);
             });
     }
 }

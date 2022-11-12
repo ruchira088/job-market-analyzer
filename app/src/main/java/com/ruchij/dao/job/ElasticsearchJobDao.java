@@ -23,7 +23,7 @@ public class ElasticsearchJobDao implements JobDao {
         IndexRequest<Job> indexRequest =
             IndexRequest.of(builder -> builder.index(INDEX).document(job));
 
-        return elasticsearchAsyncClient.index(indexRequest).thenApplyAsync(WriteResponseBase::id);
+        return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }
 
     @Override
@@ -31,6 +31,6 @@ public class ElasticsearchJobDao implements JobDao {
         GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(jobId));
 
         return elasticsearchAsyncClient.get(getRequest, Job.class)
-            .thenApplyAsync(jobGetResponse -> Optional.ofNullable(jobGetResponse.source()));
+            .thenApply(jobGetResponse -> Optional.ofNullable(jobGetResponse.source()));
     }
 }

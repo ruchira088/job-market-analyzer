@@ -25,7 +25,7 @@ public class ElasticsearchUserDao implements UserDao {
         IndexRequest<User> indexRequest =
             IndexRequest.of(builder -> builder.index(INDEX).id(user.getUserId()).document(user));
 
-        return elasticsearchAsyncClient.index(indexRequest).thenApplyAsync(WriteResponseBase::id);
+        return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class ElasticsearchUserDao implements UserDao {
         GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(userId));
 
         return elasticsearchAsyncClient.get(getRequest, User.class)
-            .thenApplyAsync(getResponse -> Optional.ofNullable(getResponse.source()));
+            .thenApply(getResponse -> Optional.ofNullable(getResponse.source()));
     }
 
     @Override
@@ -51,6 +51,6 @@ public class ElasticsearchUserDao implements UserDao {
         );
 
         return elasticsearchAsyncClient.search(searchRequest, User.class)
-            .thenApplyAsync(searchResponse -> searchResponse.hits().hits().stream().findFirst().map(Hit::source));
+            .thenApply(searchResponse -> searchResponse.hits().hits().stream().findFirst().map(Hit::source));
     }
 }

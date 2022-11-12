@@ -29,7 +29,7 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
         IndexRequest<EncryptedLinkedInCredentials> indexRequest =
             IndexRequest.of(builder -> builder.index(INDEX).id(encryptedLinkedInCredentials.getUserId()).document(encryptedLinkedInCredentials));
 
-        return elasticsearchAsyncClient.index(indexRequest).thenApplyAsync(WriteResponseBase::id);
+        return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
         SearchRequest searchRequest = SearchRequest.of(builder -> builder.index(INDEX).size(size).from(page * size));
 
         return elasticsearchAsyncClient.search(searchRequest, EncryptedLinkedInCredentials.class)
-            .thenApplyAsync(linkedInCredentialsSearchResponse ->
+            .thenApply(linkedInCredentialsSearchResponse ->
                 linkedInCredentialsSearchResponse.hits().hits().stream().map(Hit::source).toList()
             );
     }
@@ -71,6 +71,6 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
         GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(userId));
 
         return elasticsearchAsyncClient.get(getRequest, EncryptedLinkedInCredentials.class)
-            .thenApplyAsync(linkedInCredentialsGetResponse -> Optional.ofNullable(linkedInCredentialsGetResponse.source()));
+            .thenApply(linkedInCredentialsGetResponse -> Optional.ofNullable(linkedInCredentialsGetResponse.source()));
     }
 }

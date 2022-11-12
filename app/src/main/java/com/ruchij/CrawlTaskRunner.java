@@ -70,7 +70,7 @@ public class CrawlTaskRunner {
 
                 crawlerTask.setFinishedAt(timestamp);
                 crawlerTaskDao.setFinishedTimestamp(crawlerTaskId, timestamp)
-                    .thenApplyAsync(result -> completableFuture.complete(crawlerTask));
+                    .thenApply(result -> completableFuture.complete(crawlerTask));
             })
             .subscribe();
 

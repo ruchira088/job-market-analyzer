@@ -22,7 +22,7 @@ public class ElasticsearchCredentialsDao implements CredentialsDao {
         IndexRequest<Credentials> indexRequest =
             IndexRequest.of(builder -> builder.index(INDEX).id(credentials.getUserId()));
 
-        return elasticsearchAsyncClient.index(indexRequest).thenApplyAsync(WriteResponseBase::id);
+        return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }
 
     @Override
@@ -30,6 +30,6 @@ public class ElasticsearchCredentialsDao implements CredentialsDao {
         GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(userId));
 
         return elasticsearchAsyncClient.get(getRequest, Credentials.class)
-            .thenApplyAsync(getResponse -> Optional.ofNullable(getResponse.source()));
+            .thenApply(getResponse -> Optional.ofNullable(getResponse.source()));
     }
 }
