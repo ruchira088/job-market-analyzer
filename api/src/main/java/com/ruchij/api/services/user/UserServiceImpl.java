@@ -59,9 +59,7 @@ public class UserServiceImpl implements UserService {
 
                 String hashedPassword = passwordHashingService.hashPassword(password);
 
-                Credentials credentials = new Credentials();
-                credentials.setUserId(userId);
-                credentials.setSaltedHashedPassword(hashedPassword);
+                Credentials credentials = new Credentials(userId, hashedPassword);
 
                 return userDao.insert(user)
                     .thenCompose(b -> credentialsDao.insert(credentials))
