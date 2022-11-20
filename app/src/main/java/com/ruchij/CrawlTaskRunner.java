@@ -2,7 +2,6 @@ package com.ruchij;
 
 import com.ruchij.service.crawler.CrawlManager;
 import com.ruchij.service.linkedin.LinkedInCredentialsService;
-import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import java.util.concurrent.ExecutorService;
@@ -25,11 +24,10 @@ public class CrawlTaskRunner {
 
         linkedInCredentialsService.getAll()
             .flatMap(linkedInCredentials ->
-                Flowable.fromCompletionStage(
-                        crawlManager.run(
-                            linkedInCredentials.userId(),
-                            linkedInCredentials.email(),
-                            linkedInCredentials.password())
+                crawlManager.run(
+                        linkedInCredentials.userId(),
+                        linkedInCredentials.email(),
+                        linkedInCredentials.password()
                     )
                     .subscribeOn(Schedulers.from(executorService))
             )

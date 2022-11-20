@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+  redis:
+    image: bitnami/redis:7.0
+    healthcheck:
+      test: "redis-cli ping"
+      start_period: 2s
+      interval: 4s
+      timeout: 2s
+    ports:
+      - 6379:6379
+    environment:
+      REDIS_PASSWORD: "my-redis-password"
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
     ports:

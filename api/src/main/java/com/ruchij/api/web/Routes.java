@@ -6,6 +6,7 @@ import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.routes.AuthenticationRoute;
 import com.ruchij.api.web.routes.LinkedInRoute;
 import com.ruchij.api.web.routes.UserRoute;
+import com.ruchij.service.crawler.CrawlManager;
 import com.ruchij.service.linkedin.LinkedInCredentialsService;
 import io.javalin.apibuilder.EndpointGroup;
 
@@ -17,6 +18,7 @@ public class Routes implements EndpointGroup {
     private final AuthenticationRoute authenticationRoute;
 
     public Routes(
+        CrawlManager crawlManager,
         UserService userService,
         AuthenticationService authenticationService,
         LinkedInCredentialsService linkedInCredentialsService
@@ -25,7 +27,7 @@ public class Routes implements EndpointGroup {
 
         this.userRoute = new UserRoute(userService);
         this.authenticationRoute = new AuthenticationRoute(authenticationService);
-        this.linkedInRoute = new LinkedInRoute(linkedInCredentialsService, authenticationMiddleware);
+        this.linkedInRoute = new LinkedInRoute(linkedInCredentialsService, crawlManager, authenticationMiddleware);
     }
 
     public Routes(UserRoute userRoute, LinkedInRoute linkedInRoute, AuthenticationRoute authenticationRoute) {

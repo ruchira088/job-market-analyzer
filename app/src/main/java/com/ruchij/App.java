@@ -22,6 +22,8 @@ import com.ruchij.service.random.RandomGenerator;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import java.security.SecureRandom;
+
 public class App {
     public static void main(String[] args) throws Exception {
         Config config = ConfigFactory.load();
@@ -42,14 +44,25 @@ public class App {
             RandomGenerator<String> idGenerator = RandomGenerator.idGenerator();
 
             EncryptionService encryptionService =
-                new AesEncryptionService(crawlerConfiguration.securityConfiguration().encryptionKey());
+                new AesEncryptionService(
+                    crawlerConfiguration.crawlerSecurityConfiguration().encryptionKey(),
+                    SecureRandom.getInstanceStrong()
+                );
 
             LinkedInCredentialsService linkedInCredentialsService =
                 new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
 
             Crawler crawler = new SeleniumCrawler(clock);
 
-            CrawlManager crawlManager = new CrawlManagerImpl(crawler, crawlerTaskDao, jobDao, idGenerator, clock);
+            CrawlManager crawlManager =
+                new CrawlManagerImpl(
+                    crawler,
+                    linkedInCredentialsService,
+                    crawlerTaskDao,
+                    jobDao,
+                    idGenerator,
+                    clock
+                );
 
             CrawlTaskRunner crawlTaskRunner = new CrawlTaskRunner(crawlManager, linkedInCredentialsService);
 
