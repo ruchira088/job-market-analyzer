@@ -82,15 +82,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public CompletableFuture<User> authenticate(String token) {
-        return keyValueStore.get(token)
-            .thenCompose(optionalValue -> Transformers.convert(optionalValue, () -> new AuthenticationException("Token not found")))
-            .thenCompose(valueString -> {
-                try {
-                    AuthenticationToken authenticationToken = JsonUtils.objectMapper.readValue(valueString, AuthenticationToken.class);
+        return existingToken(token)
+            .thenCompose(authenticationToken -> {
+                Instant timestamp = clock.timestamp();
 
-                    Instant timestamp = clock.timestamp();
-
-                    if (authenticationToken.expiresAt().isAfter(timestamp)) {
+                if (authenticationToken.expiresAt().isAfter(timestamp)) {
+                    try {
                         String value =
                             JsonUtils.objectMapper.writeValueAsString(
                                 authenticationToken.update(
@@ -109,9 +106,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                         )
                                     )
                             );
-                    } else {
-                        return CompletableFuture.failedFuture(new AuthenticationException("Token is expired"));
+                    } catch (JsonProcessingException jsonProcessingException) {
+                        return CompletableFuture.failedFuture(jsonProcessingException);
                     }
+                } else {
+                    return CompletableFuture.failedFuture(new AuthenticationException("Token is expired"));
+                }
+            });
+    }
+
+    @Override
+    public CompletableFuture<AuthenticationToken> logout(String token) {
+        return existingToken(token)
+            .thenCompose(authenticationToken -> keyValueStore.delete(token).thenApply(__ -> authenticationToken));
+    }
+
+    private CompletableFuture<AuthenticationToken> existingToken(String token) {
+        return keyValueStore.get(token)
+            .thenCompose(optionalValue -> Transformers.convert(optionalValue, () -> new AuthenticationException("Token not found")))
+            .thenCompose(valueString -> {
+                try {
+                    AuthenticationToken authenticationToken =
+                        JsonUtils.objectMapper.readValue(valueString, AuthenticationToken.class);
+
+                    return CompletableFuture.completedFuture(authenticationToken);
                 } catch (JsonProcessingException jsonProcessingException) {
                     return CompletableFuture.failedFuture(jsonProcessingException);
                 }

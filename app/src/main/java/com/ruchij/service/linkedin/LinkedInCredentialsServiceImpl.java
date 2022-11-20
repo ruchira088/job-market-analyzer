@@ -48,6 +48,14 @@ public class LinkedInCredentialsServiceImpl implements LinkedInCredentialsServic
     }
 
     @Override
+    public CompletableFuture<LinkedInCredentials> deleteByUserId(String userId) {
+        return getByUserId(userId)
+            .thenCompose(linkedInCredentials ->
+                encryptedLinkedInCredentialsDao.deleteByUserId(userId).thenApply(__ -> linkedInCredentials)
+            );
+    }
+
+    @Override
     public CompletableFuture<String> insert(String userId, String email, String password) {
         try {
             Instant timestamp = clock.timestamp();

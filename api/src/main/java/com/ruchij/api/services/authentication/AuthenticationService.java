@@ -9,4 +9,6 @@ public interface AuthenticationService {
     CompletableFuture<AuthenticationToken> login(String email, String password);
 
     CompletableFuture<User> authenticate(String token);
+
+    CompletableFuture<AuthenticationToken> logout(String token);
 }

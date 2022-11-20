@@ -18,7 +18,7 @@ public class AuthenticationMiddleware {
         this.authenticationService = authenticationService;
     }
 
-    public CompletableFuture<User> authenticate(Context context) {
+    public CompletableFuture<String> token(Context context) {
         return Transformers.convert(
                 Optional.ofNullable(context.header(Header.AUTHORIZATION)),
                 () -> new AuthenticationException("Missing %s header".formatted(Header.AUTHORIZATION))
@@ -29,8 +29,11 @@ public class AuthenticationMiddleware {
                 } else {
                     return CompletableFuture.failedFuture(new AuthenticationException("Invalid authorization token type"));
                 }
-            })
-            .thenCompose(authenticationService::authenticate);
+            });
+    }
+
+    public CompletableFuture<User> authenticate(Context context) {
+        return token(context).thenCompose(authenticationService::authenticate);
     }
 
 }

@@ -28,28 +28,47 @@ public class LinkedInRoute implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
-        path("credentials", () ->
-            post(context -> {
-                CreateLinkedInCredentialsRequest linkedInCredentialsRequest =
-                    context.bodyStreamAsClass(CreateLinkedInCredentialsRequest.class);
+        path("credentials", () -> {
+                post(context -> {
+                    CreateLinkedInCredentialsRequest linkedInCredentialsRequest =
+                        context.bodyStreamAsClass(CreateLinkedInCredentialsRequest.class);
 
-                context
-                    .status(HttpStatus.CREATED)
-                    .future(() ->
-                        authenticationMiddleware.authenticate(context)
-                            .thenCompose(user ->
-                                linkedInCredentialsService.insert(
-                                    user.getUserId(),
-                                    linkedInCredentialsRequest.getEmail(),
-                                    linkedInCredentialsRequest.getPassword()
+                    context
+                        .status(HttpStatus.CREATED)
+                        .future(() ->
+                            authenticationMiddleware.authenticate(context)
+                                .thenCompose(user ->
+                                    linkedInCredentialsService.insert(
+                                        user.getUserId(),
+                                        linkedInCredentialsRequest.getEmail(),
+                                        linkedInCredentialsRequest.getPassword()
+                                    )
                                 )
-                            )
-                    );
-            })
+                        );
+                });
+
+                get(context ->
+                    context
+                        .status(HttpStatus.OK)
+                        .future(() ->
+                            authenticationMiddleware.authenticate(context)
+                                .thenCompose(user -> linkedInCredentialsService.getByUserId(user.getUserId()))
+                        )
+                );
+
+                delete(context ->
+                    context
+                        .status(HttpStatus.OK)
+                        .future(() ->
+                            authenticationMiddleware.authenticate(context)
+                                .thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.getUserId()))
+                        )
+                );
+            }
         );
 
         path("crawl", () ->
-            sse(sseClient -> {
+            sse(sseClient ->
                 authenticationMiddleware.authenticate(sseClient.ctx())
                     .thenApply(user -> {
                             sseClient.sendEvent(SseType.CRAWL_STARTED.name(), null);
@@ -65,8 +84,7 @@ public class LinkedInRoute implements EndpointGroup {
                                         objectMapper.writeValueAsString(crawledJob))
                                 );
                         }
-                    );
-            })
+                    ))
         );
     }
 }

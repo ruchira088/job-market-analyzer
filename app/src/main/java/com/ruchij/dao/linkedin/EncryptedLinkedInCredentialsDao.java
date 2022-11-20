@@ -13,4 +13,6 @@ public interface EncryptedLinkedInCredentialsDao {
     Flowable<EncryptedLinkedInCredentials> getAll();
 
     CompletableFuture<Optional<EncryptedLinkedInCredentials>> findByUserId(String userId);
+
+    CompletableFuture<Boolean> deleteByUserId(String userId);
 }

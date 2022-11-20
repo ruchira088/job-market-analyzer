@@ -1,7 +1,9 @@
 package com.ruchij.dao.linkedin;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.WriteResponseBase;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
@@ -72,5 +74,13 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
 
         return elasticsearchAsyncClient.get(getRequest, EncryptedLinkedInCredentials.class)
             .thenApply(linkedInCredentialsGetResponse -> Optional.ofNullable(linkedInCredentialsGetResponse.source()));
+    }
+
+    @Override
+    public CompletableFuture<Boolean> deleteByUserId(String userId) {
+        DeleteRequest deleteRequest = DeleteRequest.of(builder -> builder.index(INDEX).id(userId));
+
+        return elasticsearchAsyncClient.delete(deleteRequest)
+            .thenApply(deleteResponse -> deleteResponse.result() == Result.Deleted);
     }
 }

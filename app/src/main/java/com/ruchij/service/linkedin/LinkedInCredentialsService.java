@@ -10,5 +10,7 @@ public interface LinkedInCredentialsService {
 
     CompletableFuture<LinkedInCredentials> getByUserId(String userId);
 
+    CompletableFuture<LinkedInCredentials> deleteByUserId(String userId);
+
     CompletableFuture<String> insert(String userId, String email, String password);
 }

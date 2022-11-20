@@ -1,17 +1,20 @@
 package com.ruchij.api.web.routes;
 
 import com.ruchij.api.services.user.UserService;
+import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.requests.CreateUserRequest;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
-import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class UserRoute implements EndpointGroup {
     private final UserService userService;
+    private final AuthenticationMiddleware authenticationMiddleware;
 
-    public UserRoute(UserService userService) {
+    public UserRoute(UserService userService, AuthenticationMiddleware authenticationMiddleware) {
         this.userService = userService;
+        this.authenticationMiddleware = authenticationMiddleware;
     }
 
     @Override
@@ -28,5 +31,13 @@ public class UserRoute implements EndpointGroup {
                     createUserRequest.getLastName()
                 ));
         });
+
+        path("authenticated", () ->
+            get(context ->
+                context
+                    .status(HttpStatus.OK)
+                    .future(() -> authenticationMiddleware.authenticate(context))
+            )
+        );
     }
 }
