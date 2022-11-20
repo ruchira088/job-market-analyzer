@@ -5,6 +5,7 @@ import com.ruchij.api.web.requests.CreateUserRequest;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
+import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
 public class UserRoute implements EndpointGroup {

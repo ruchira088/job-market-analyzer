@@ -10,6 +10,8 @@ import com.ruchij.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.dao.task.CrawlerTaskDao;
 import com.ruchij.dao.task.ElasticsearchCrawlerTaskDao;
 import com.ruchij.service.clock.Clock;
+import com.ruchij.service.crawler.CrawlManager;
+import com.ruchij.service.crawler.CrawlManagerImpl;
 import com.ruchij.service.crawler.Crawler;
 import com.ruchij.service.crawler.selenium.SeleniumCrawler;
 import com.ruchij.service.encryption.AesEncryptionService;
@@ -47,15 +49,9 @@ public class App {
 
             Crawler crawler = new SeleniumCrawler(clock);
 
-            CrawlTaskRunner crawlTaskRunner =
-                new CrawlTaskRunner(
-                    crawler,
-                    crawlerTaskDao,
-                    jobDao,
-                    linkedInCredentialsService,
-                    clock,
-                    idGenerator
-                );
+            CrawlManager crawlManager = new CrawlManagerImpl(crawler, crawlerTaskDao, jobDao, idGenerator, clock);
+
+            CrawlTaskRunner crawlTaskRunner = new CrawlTaskRunner(crawlManager, linkedInCredentialsService);
 
             crawlTaskRunner.run();
         }

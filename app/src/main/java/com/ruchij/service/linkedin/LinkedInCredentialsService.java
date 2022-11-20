@@ -8,5 +8,7 @@ import java.util.concurrent.CompletableFuture;
 public interface LinkedInCredentialsService {
     Flowable<LinkedInCredentials> getAll();
 
+    CompletableFuture<LinkedInCredentials> getByUserId(String userId);
+
     CompletableFuture<String> insert(String userId, String email, String password);
 }

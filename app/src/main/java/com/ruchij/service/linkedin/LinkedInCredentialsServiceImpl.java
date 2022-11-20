@@ -3,9 +3,11 @@ package com.ruchij.service.linkedin;
 import com.ruchij.dao.elasticsearch.models.EncryptedText;
 import com.ruchij.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.dao.linkedin.models.EncryptedLinkedInCredentials;
+import com.ruchij.exceptions.ResourceNotFoundException;
 import com.ruchij.service.clock.Clock;
 import com.ruchij.service.encryption.EncryptionService;
 import com.ruchij.service.linkedin.models.LinkedInCredentials;
+import com.ruchij.utils.Transformers;
 import io.reactivex.rxjava3.core.Flowable;
 
 import java.security.GeneralSecurityException;
@@ -27,16 +29,22 @@ public class LinkedInCredentialsServiceImpl implements LinkedInCredentialsServic
         this.clock = clock;
     }
 
+    @Override
+    public CompletableFuture<LinkedInCredentials> getByUserId(String userId) {
+        return encryptedLinkedInCredentialsDao.findByUserId(userId)
+            .thenCompose(maybeCredentials ->
+                Transformers.convert(
+                    maybeCredentials,
+                    () -> new ResourceNotFoundException("LinkedIn credentials not found for userId=%s".formatted(userId))
+                )
+            )
+            .thenCompose(encryptedLinkedInCredentials -> Transformers.lift(() -> decrypt(encryptedLinkedInCredentials)));
+    }
 
     @Override
     public Flowable<LinkedInCredentials> getAll() {
         return encryptedLinkedInCredentialsDao.getAll()
-            .map(encryptedLinkedInCredentials -> {
-                String email = decrypt(encryptedLinkedInCredentials.getEmail());
-                String password = decrypt(encryptedLinkedInCredentials.getPassword());
-
-                return new LinkedInCredentials(encryptedLinkedInCredentials.getUserId(), email, password);
-            });
+            .map(this::decrypt);
     }
 
     @Override
@@ -57,6 +65,14 @@ public class LinkedInCredentialsServiceImpl implements LinkedInCredentialsServic
         } catch (GeneralSecurityException generalSecurityException) {
             return CompletableFuture.failedFuture(generalSecurityException);
         }
+    }
+
+    private LinkedInCredentials decrypt(EncryptedLinkedInCredentials encryptedLinkedInCredentials)
+        throws GeneralSecurityException {
+        String email = decrypt(encryptedLinkedInCredentials.getEmail());
+        String password = decrypt(encryptedLinkedInCredentials.getPassword());
+
+        return new LinkedInCredentials(encryptedLinkedInCredentials.getUserId(), email, password);
     }
 
     private String decrypt(EncryptedText encryptedText) throws GeneralSecurityException {

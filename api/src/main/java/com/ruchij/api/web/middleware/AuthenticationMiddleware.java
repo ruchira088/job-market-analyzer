@@ -3,7 +3,7 @@ package com.ruchij.api.web.middleware;
 import com.ruchij.api.dao.user.models.User;
 import com.ruchij.api.exceptions.AuthenticationException;
 import com.ruchij.api.services.authentication.AuthenticationService;
-import com.ruchij.api.utils.Transformers;
+import com.ruchij.utils.Transformers;
 import io.javalin.http.Context;
 import io.javalin.http.Header;
 
