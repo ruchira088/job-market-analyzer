@@ -20,7 +20,7 @@ class ElasticsearchCrawlerTaskDaoTest {
             ElasticsearchCrawlerTaskDao elasticsearchCrawlerTaskDao =
                 new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
 
-            String crawlerTaskId = RandomGenerator.idGenerator().generate();
+            String crawlerTaskId = RandomGenerator.uuidGenerator().generate();
 
             Clock clock = Clock.systemClock();
             Instant startTimestamp = clock.timestamp();
@@ -51,7 +51,7 @@ class ElasticsearchCrawlerTaskDaoTest {
             Assertions.assertTrue(maybeFinishedCrawlerTask.isPresent());
             Assertions.assertEquals(crawlerTask, maybeFinishedCrawlerTask.get());
 
-            String randomId = RandomGenerator.idGenerator().generate();
+            String randomId = RandomGenerator.uuidGenerator().generate();
 
             Optional<CrawlerTask> emptyTask =
                 waitFor(elasticsearchCrawlerTaskDao.findById(randomId));

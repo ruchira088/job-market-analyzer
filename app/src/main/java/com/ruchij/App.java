@@ -23,6 +23,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import java.security.SecureRandom;
+import java.util.UUID;
 
 public class App {
     public static void main(String[] args) throws Exception {
@@ -41,7 +42,7 @@ public class App {
             EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
             Clock clock = Clock.systemClock();
-            RandomGenerator<String> idGenerator = RandomGenerator.idGenerator();
+            RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
 
             EncryptionService encryptionService =
                 new AesEncryptionService(

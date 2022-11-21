@@ -1,6 +1,6 @@
 plugins {
     id 'application'
-    id 'com.github.ben-manes.versions' version '0.43.0'
+    id 'com.github.ben-manes.versions' version '0.44.0'
 }
 
 group = 'com.ruchij'
@@ -14,11 +14,11 @@ dependencies {
             'com.typesafe:config:1.4.2',
             'org.seleniumhq.selenium:selenium-java:4.6.0',
             'io.reactivex.rxjava3:rxjava:3.1.5',
-            'co.elastic.clients:elasticsearch-java:8.5.0',
+            'co.elastic.clients:elasticsearch-java:8.5.1',
             'com.fasterxml.jackson.core:jackson-databind:2.14.0',
             'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0',
-            'ch.qos.logback:logback-classic:1.4.4',
-            'org.testcontainers:elasticsearch:1.17.5',
+            'ch.qos.logback:logback-classic:1.4.5',
+            'org.testcontainers:elasticsearch:1.17.6',
     )
 
     testImplementation(
