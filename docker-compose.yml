@@ -15,13 +15,24 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+    healthcheck:
+      test: "curl http://localhost:9200/_cluster/health"
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
     ports:
       - 9300:9300
       - 9200:9200
     environment:
       "discovery.type": single-node
+      "xpack.security.enabled": false
 
   kibana:
     image: kibana:8.4.3
+    healthcheck:
+      test: "curl http://localhost:5601/status"
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
     ports:
       - 5601:5601

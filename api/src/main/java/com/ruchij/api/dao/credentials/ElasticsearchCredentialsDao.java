@@ -20,7 +20,7 @@ public class ElasticsearchCredentialsDao implements CredentialsDao {
     @Override
     public CompletableFuture<String> insert(Credentials credentials) {
         IndexRequest<Credentials> indexRequest =
-            IndexRequest.of(builder -> builder.index(INDEX).id(credentials.getUserId()));
+            IndexRequest.of(builder -> builder.index(INDEX).id(credentials.userId()));
 
         return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }
