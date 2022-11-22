@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
                     return CompletableFuture.completedFuture(null);
                 }
             })
-            .thenCompose(a -> {
+            .thenCompose(__ -> {
                 String userId = idGenerator.generate();
                 Instant timestamp = clock.timestamp();
 
@@ -62,8 +62,8 @@ public class UserServiceImpl implements UserService {
                 Credentials credentials = new Credentials(userId, hashedPassword);
 
                 return userDao.insert(user)
-                    .thenCompose(b -> credentialsDao.insert(credentials))
-                    .thenApply(c -> user);
+                    .thenCompose(___ -> credentialsDao.insert(credentials))
+                    .thenApply(___ -> user);
             });
     }
 }
