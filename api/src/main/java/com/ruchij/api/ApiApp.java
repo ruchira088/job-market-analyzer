@@ -55,68 +55,67 @@ public class ApiApp {
     }
 
     public static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
-        try (ElasticsearchClientBuilder elasticsearchClientBuilder = new ElasticsearchClientBuilder(apiConfiguration.elasticsearchConfiguration())) {
-            ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
+        ElasticsearchClientBuilder elasticsearchClientBuilder = new ElasticsearchClientBuilder(apiConfiguration.elasticsearchConfiguration());
+        ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
 
-            UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
-            CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
-            JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
-            CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
-            EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
+        UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
+        CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
+        JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
+        CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
+        EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
-            KeyValueStore keyValueStore = new RedisKeyValueStore(apiConfiguration.redisConfiguration().uri());
-            KeyValueStore authenticationKeyValueStore =
-                new NamespacedKeyValueStore(keyValueStore, AuthenticationToken.class.getSimpleName());
+        KeyValueStore keyValueStore = new RedisKeyValueStore(apiConfiguration.redisConfiguration().uri());
+        KeyValueStore authenticationKeyValueStore =
+            new NamespacedKeyValueStore(keyValueStore, AuthenticationToken.class.getSimpleName());
 
-            Clock clock = Clock.systemClock();
-            RandomGenerator<String> tokenGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
-            RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
+        Clock clock = Clock.systemClock();
+        RandomGenerator<String> tokenGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
+        RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
 
-            EncryptionService encryptionService =
-                new AesEncryptionService(
-                    apiConfiguration.apiSecurityConfiguration().encryptionKey(),
-                    SecureRandom.getInstanceStrong()
-                );
+        EncryptionService encryptionService =
+            new AesEncryptionService(
+                apiConfiguration.apiSecurityConfiguration().encryptionKey(),
+                SecureRandom.getInstanceStrong()
+            );
 
-            LinkedInCredentialsService linkedInCredentialsService =
-                new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
+        LinkedInCredentialsService linkedInCredentialsService =
+            new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
 
-            Crawler crawler = new SeleniumCrawler(clock);
+        Crawler crawler = new SeleniumCrawler(clock);
 
-            CrawlManager crawlManager =
-                new CrawlManagerImpl(
-                    crawler,
-                    linkedInCredentialsService,
-                    crawlerTaskDao,
-                    jobDao,
-                    idGenerator,
-                    clock
-                );
+        CrawlManager crawlManager =
+            new CrawlManagerImpl(
+                crawler,
+                linkedInCredentialsService,
+                crawlerTaskDao,
+                jobDao,
+                idGenerator,
+                clock
+            );
 
-            PasswordHashingService passwordHashingService = new BCryptPasswordHashingService();
+        PasswordHashingService passwordHashingService = new BCryptPasswordHashingService();
 
-            UserService userService =
-                new UserServiceImpl(
-                    userDao,
-                    credentialsDao,
-                    passwordHashingService,
-                    idGenerator,
-                    clock
-                );
+        UserService userService =
+            new UserServiceImpl(
+                userDao,
+                credentialsDao,
+                passwordHashingService,
+                idGenerator,
+                clock
+            );
 
-            AuthenticationService authenticationService =
-                new AuthenticationServiceImpl(
-                    authenticationKeyValueStore,
-                    tokenGenerator,
-                    passwordHashingService,
-                    userDao,
-                    credentialsDao,
-                    clock
-                );
+        AuthenticationService authenticationService =
+            new AuthenticationServiceImpl(
+                authenticationKeyValueStore,
+                tokenGenerator,
+                passwordHashingService,
+                userDao,
+                credentialsDao,
+                clock
+            );
 
-            Routes routes = new Routes(crawlManager, userService, authenticationService, linkedInCredentialsService);
+        Routes routes = new Routes(crawlManager, userService, authenticationService, linkedInCredentialsService);
 
-            return routes;
-        }
+        return routes;
     }
 }
