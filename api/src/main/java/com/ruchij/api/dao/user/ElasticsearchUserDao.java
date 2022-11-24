@@ -41,10 +41,10 @@ public class ElasticsearchUserDao implements UserDao {
         SearchRequest searchRequest = SearchRequest.of(builder ->
             builder.index(INDEX)
                 .query(queryBuilder ->
-                    queryBuilder.match(matchQuery ->
-                        matchQuery
-                            .field("email")
-                            .query(email)
+                    queryBuilder.term(termQuery ->
+                        termQuery
+                            .field("email.keyword")
+                            .value(email)
                     )
                 )
                 .size(1)

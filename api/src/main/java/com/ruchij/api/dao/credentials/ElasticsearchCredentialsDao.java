@@ -4,6 +4,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch._types.WriteResponseBase;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import com.ruchij.api.dao.credentials.models.Credentials;
 
 import java.util.Optional;
@@ -20,7 +21,7 @@ public class ElasticsearchCredentialsDao implements CredentialsDao {
     @Override
     public CompletableFuture<String> insert(Credentials credentials) {
         IndexRequest<Credentials> indexRequest =
-            IndexRequest.of(builder -> builder.index(INDEX).id(credentials.userId()));
+            IndexRequest.of(builder -> builder.index(INDEX).id(credentials.userId()).document(credentials));
 
         return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }
