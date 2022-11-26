@@ -34,7 +34,6 @@ public class LinkedInRoute implements EndpointGroup {
                         context.bodyStreamAsClass(CreateLinkedInCredentialsRequest.class);
 
                     context
-                        .status(HttpStatus.CREATED)
                         .future(() ->
                             authenticationMiddleware.authenticate(context)
                                 .thenCompose(user ->
@@ -44,24 +43,37 @@ public class LinkedInRoute implements EndpointGroup {
                                         linkedInCredentialsRequest.getPassword()
                                     )
                                 )
+                                .thenApply(linkedInCredentials ->
+                                    context
+                                        .status(HttpStatus.CREATED)
+                                        .json(linkedInCredentials)
+                                )
                         );
                 });
 
                 get(context ->
                     context
-                        .status(HttpStatus.OK)
                         .future(() ->
                             authenticationMiddleware.authenticate(context)
                                 .thenCompose(user -> linkedInCredentialsService.getByUserId(user.getUserId()))
+                                .thenApply(linkedInCredentials ->
+                                    context
+                                        .status(HttpStatus.OK)
+                                        .json(linkedInCredentials)
+                                )
                         )
                 );
 
                 delete(context ->
                     context
-                        .status(HttpStatus.OK)
                         .future(() ->
                             authenticationMiddleware.authenticate(context)
                                 .thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.getUserId()))
+                                .thenApply(linkedInCredentials ->
+                                    context
+                                        .status(HttpStatus.OK)
+                                        .json(linkedInCredentials)
+                                )
                         )
                 );
             }

@@ -27,14 +27,27 @@ public class AuthenticationRoute implements EndpointGroup {
             UserLoginRequest userLoginRequest = context.bodyStreamAsClass(UserLoginRequest.class);
 
             context
-                .status(HttpStatus.CREATED)
-                .future(() -> authenticationService.login(userLoginRequest.email(), userLoginRequest.password()));
+                .future(() ->
+                    authenticationService.login(userLoginRequest.email(), userLoginRequest.password())
+                        .thenApply(authenticationToken ->
+                            context
+                                .status(HttpStatus.OK)
+                                .json(authenticationToken)
+                        )
+                );
         });
 
         delete(context ->
             context
-                .status(HttpStatus.OK)
-                .future(() -> authenticationMiddleware.token(context).thenCompose(authenticationService::logout))
+                .future(() ->
+                    authenticationMiddleware.token(context)
+                        .thenCompose(authenticationService::logout)
+                        .thenApply(authenticationToken ->
+                            context
+                                .status(HttpStatus.OK)
+                                .json(authenticationToken)
+                        )
+                )
         );
 
     }

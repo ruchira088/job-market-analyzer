@@ -23,20 +23,32 @@ public class UserRoute implements EndpointGroup {
             CreateUserRequest createUserRequest = context.bodyStreamAsClass(CreateUserRequest.class);
 
             context
-                .status(HttpStatus.CREATED)
-                .future(() -> userService.create(
-                    createUserRequest.getEmail(),
-                    createUserRequest.getPassword(),
-                    createUserRequest.getFirstName(),
-                    createUserRequest.getLastName()
-                ));
+                .future(() ->
+                    userService.create(
+                            createUserRequest.getEmail(),
+                            createUserRequest.getPassword(),
+                            createUserRequest.getFirstName(),
+                            createUserRequest.getLastName()
+                        )
+                        .thenApply(user ->
+                            context
+                                .status(HttpStatus.CREATED)
+                                .json(user)
+                        )
+                );
         });
 
         path("authenticated", () ->
             get(context ->
                 context
-                    .status(HttpStatus.OK)
-                    .future(() -> authenticationMiddleware.authenticate(context))
+                    .future(() ->
+                        authenticationMiddleware.authenticate(context)
+                            .thenApply(user ->
+                                context
+                                    .status(HttpStatus.OK)
+                                    .json(user)
+                            )
+                    )
             )
         );
     }

@@ -56,20 +56,23 @@ public class LinkedInCredentialsServiceImpl implements LinkedInCredentialsServic
     }
 
     @Override
-    public CompletableFuture<String> insert(String userId, String email, String password) {
+    public CompletableFuture<LinkedInCredentials> insert(String userId, String email, String password) {
         try {
             Instant timestamp = clock.timestamp();
 
             String encryptedEmail = encryptionService.encrypt(email.getBytes());
             String encryptedPassword = encryptionService.encrypt(password.getBytes());
 
-            EncryptedLinkedInCredentials encryptedLinkedInCredentials = new EncryptedLinkedInCredentials();
-            encryptedLinkedInCredentials.setUserId(userId);
-            encryptedLinkedInCredentials.setCreatedAt(timestamp);
-            encryptedLinkedInCredentials.setEmail(new EncryptedText(encryptedEmail));
-            encryptedLinkedInCredentials.setPassword(new EncryptedText(encryptedPassword));
+            EncryptedLinkedInCredentials encryptedLinkedInCredentials =
+                new EncryptedLinkedInCredentials(
+                    userId,
+                    timestamp,
+                    new EncryptedText(encryptedEmail),
+                    new EncryptedText(encryptedPassword)
+                );
 
-            return encryptedLinkedInCredentialsDao.insert(encryptedLinkedInCredentials);
+            return encryptedLinkedInCredentialsDao.insert(encryptedLinkedInCredentials)
+                .thenApply(__ -> new LinkedInCredentials(userId, email, password));
         } catch (GeneralSecurityException generalSecurityException) {
             return CompletableFuture.failedFuture(generalSecurityException);
         }
@@ -77,10 +80,10 @@ public class LinkedInCredentialsServiceImpl implements LinkedInCredentialsServic
 
     private LinkedInCredentials decrypt(EncryptedLinkedInCredentials encryptedLinkedInCredentials)
         throws GeneralSecurityException {
-        String email = decrypt(encryptedLinkedInCredentials.getEmail());
-        String password = decrypt(encryptedLinkedInCredentials.getPassword());
+        String email = decrypt(encryptedLinkedInCredentials.email());
+        String password = decrypt(encryptedLinkedInCredentials.password());
 
-        return new LinkedInCredentials(encryptedLinkedInCredentials.getUserId(), email, password);
+        return new LinkedInCredentials(encryptedLinkedInCredentials.userId(), email, password);
     }
 
     private String decrypt(EncryptedText encryptedText) throws GeneralSecurityException {
