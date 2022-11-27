@@ -23,7 +23,7 @@ public class ElasticsearchUserDao implements UserDao {
     @Override
     public CompletableFuture<String> insert(User user) {
         IndexRequest<User> indexRequest =
-            IndexRequest.of(builder -> builder.index(INDEX).id(user.getUserId()).document(user));
+            IndexRequest.of(builder -> builder.index(INDEX).id(user.userId()).document(user));
 
         return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }

@@ -38,7 +38,7 @@ public class LinkedInRoute implements EndpointGroup {
                             authenticationMiddleware.authenticate(context)
                                 .thenCompose(user ->
                                     linkedInCredentialsService.insert(
-                                        user.getUserId(),
+                                        user.userId(),
                                         linkedInCredentialsRequest.getEmail(),
                                         linkedInCredentialsRequest.getPassword()
                                     )
@@ -55,7 +55,7 @@ public class LinkedInRoute implements EndpointGroup {
                     context
                         .future(() ->
                             authenticationMiddleware.authenticate(context)
-                                .thenCompose(user -> linkedInCredentialsService.getByUserId(user.getUserId()))
+                                .thenCompose(user -> linkedInCredentialsService.getByUserId(user.userId()))
                                 .thenApply(linkedInCredentials ->
                                     context
                                         .status(HttpStatus.OK)
@@ -68,7 +68,7 @@ public class LinkedInRoute implements EndpointGroup {
                     context
                         .future(() ->
                             authenticationMiddleware.authenticate(context)
-                                .thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.getUserId()))
+                                .thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.userId()))
                                 .thenApply(linkedInCredentials ->
                                     context
                                         .status(HttpStatus.OK)
@@ -85,7 +85,7 @@ public class LinkedInRoute implements EndpointGroup {
                     .thenApply(user -> {
                             sseClient.sendEvent(SseType.CRAWL_STARTED.name(), null);
 
-                            return crawlManager.run(user.getUserId())
+                            return crawlManager.run(user.userId())
                                 .doFinally(() -> {
                                     sseClient.sendEvent(SseType.CRAWL_COMPLETED.name(), null);
                                     sseClient.close();

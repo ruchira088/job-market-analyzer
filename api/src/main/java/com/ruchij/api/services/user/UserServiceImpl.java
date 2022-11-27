@@ -50,12 +50,8 @@ public class UserServiceImpl implements UserService {
                 String userId = idGenerator.generate();
                 Instant timestamp = clock.timestamp();
 
-                User user = new User();
-                user.setUserId(userId);
-                user.setCreatedAt(timestamp);
-                user.setEmail(email);
-                user.setFirstName(firstName);
-                user.setLastName(lastName);
+                User user =
+                    new User(userId, timestamp, email, firstName, lastName);
 
                 String hashedPassword = passwordHashingService.hashPassword(password);
 
