@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.ruchij.test.TestUtils.waitFor;
 
@@ -20,14 +21,14 @@ class ElasticsearchCrawlerTaskDaoTest {
             ElasticsearchCrawlerTaskDao elasticsearchCrawlerTaskDao =
                 new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
 
-            String crawlerTaskId = RandomGenerator.uuidGenerator().generate();
+            RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
+            String crawlerTaskId = idGenerator.generate();
+            String userId = idGenerator.generate();
 
             Clock clock = Clock.systemClock();
             Instant startTimestamp = clock.timestamp();
 
-            CrawlerTask crawlerTask = new CrawlerTask();
-            crawlerTask.setCrawlerId(crawlerTaskId);
-            crawlerTask.setStartedAt(startTimestamp);
+            CrawlerTask crawlerTask = new CrawlerTask(crawlerTaskId, userId, startTimestamp, Optional.empty());
 
             String insertionResult = waitFor(elasticsearchCrawlerTaskDao.insert(crawlerTask));
             Assertions.assertEquals(crawlerTaskId, insertionResult);
@@ -38,7 +39,8 @@ class ElasticsearchCrawlerTaskDaoTest {
             Assertions.assertEquals(crawlerTask, maybeCrawlerTask.get());
 
             Instant finishTimestamp = clock.timestamp();
-            crawlerTask.setFinishedAt(finishTimestamp);
+            CrawlerTask finishedCrawlerTask =
+                new CrawlerTask(crawlerTaskId, userId, startTimestamp, Optional.of(finishTimestamp));
 
             Boolean updated =
                 waitFor(elasticsearchCrawlerTaskDao.setFinishedTimestamp(crawlerTaskId, finishTimestamp));
@@ -49,9 +51,9 @@ class ElasticsearchCrawlerTaskDaoTest {
                 waitFor(elasticsearchCrawlerTaskDao.findById(crawlerTaskId));
 
             Assertions.assertTrue(maybeFinishedCrawlerTask.isPresent());
-            Assertions.assertEquals(crawlerTask, maybeFinishedCrawlerTask.get());
+            Assertions.assertEquals(finishedCrawlerTask, maybeFinishedCrawlerTask.get());
 
-            String randomId = RandomGenerator.uuidGenerator().generate();
+            String randomId = RandomGenerator.uuidGenerator().map(UUID::toString).generate();
 
             Optional<CrawlerTask> emptyTask =
                 waitFor(elasticsearchCrawlerTaskDao.findById(randomId));

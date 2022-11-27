@@ -93,7 +93,8 @@ public class LinkedInRoute implements EndpointGroup {
                                 .subscribe(crawledJob ->
                                     sseClient.sendEvent(
                                         SseType.CRAWLED_JOB.name(),
-                                        objectMapper.writeValueAsString(crawledJob))
+                                        objectMapper.writeValueAsString(crawledJob)
+                                    )
                                 );
                         }
                     ))

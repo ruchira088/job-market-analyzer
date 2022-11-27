@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
-    private static final String INDEX = "crawler_jobs";
+    private static final String INDEX = "crawler_tasks";
 
     private final ElasticsearchAsyncClient elasticsearchAsyncClient;
 
@@ -29,7 +29,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
                 builder
                     .index(INDEX)
                     .refresh(Refresh.True)
-                    .id(crawlerTask.getCrawlerId())
+                    .id(crawlerTask.crawlerId())
                     .document(crawlerTask)
             );
 
@@ -73,22 +73,6 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
             .thenApply(crawlerTaskGetResponse -> Optional.ofNullable(crawlerTaskGetResponse.source()));
     }
 
-    private class UpdateFinishedTimestamp {
-        private Instant finishedAt;
-
-        public UpdateFinishedTimestamp() {
-        }
-
-        private UpdateFinishedTimestamp(Instant finishedAt) {
-            this.finishedAt = finishedAt;
-        }
-
-        public Instant getFinishedAt() {
-            return finishedAt;
-        }
-
-        public void setFinishedAt(Instant finishedAt) {
-            this.finishedAt = finishedAt;
-        }
+    private record UpdateFinishedTimestamp(Instant finishedAt) {
     }
 }

@@ -29,7 +29,12 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
     @Override
     public CompletableFuture<String> insert(EncryptedLinkedInCredentials encryptedLinkedInCredentials) {
         IndexRequest<EncryptedLinkedInCredentials> indexRequest =
-            IndexRequest.of(builder -> builder.index(INDEX).id(encryptedLinkedInCredentials.getUserId()).document(encryptedLinkedInCredentials));
+            IndexRequest.of(builder ->
+                builder
+                    .index(INDEX)
+                    .id(encryptedLinkedInCredentials.userId())
+                    .document(encryptedLinkedInCredentials)
+            );
 
         return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
     }

@@ -9,6 +9,8 @@ import com.ruchij.service.linkedin.LinkedInCredentialsService;
 import com.ruchij.service.random.RandomGenerator;
 import io.reactivex.rxjava3.core.Flowable;
 
+import java.util.Optional;
+
 public class CrawlManagerImpl implements CrawlManager {
     private final Crawler crawler;
     private final LinkedInCredentialsService linkedInCredentialsService;
@@ -45,10 +47,8 @@ public class CrawlManagerImpl implements CrawlManager {
     public Flowable<CrawledJob> run(String userId, String linkedInEmail, String linkedInPassword) {
         String crawlerTaskId = idGenerator.generate();
 
-        CrawlerTask crawlerTask = new CrawlerTask();
-        crawlerTask.setCrawlerId(crawlerTaskId);
-        crawlerTask.setUserId(userId);
-        crawlerTask.setStartedAt(clock.timestamp());
+        CrawlerTask crawlerTask =
+            new CrawlerTask(crawlerTaskId, userId, clock.timestamp(), Optional.empty());
 
         return Flowable.fromCompletionStage(crawlerTaskDao.insert(crawlerTask))
             .concatMap(value -> crawler.crawl(crawlerTaskId, linkedInEmail, linkedInPassword))
