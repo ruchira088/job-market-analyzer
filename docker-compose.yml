@@ -6,6 +6,8 @@ services:
     ports:
       - 8080:8080
     depends_on:
+      migration-app:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       elasticsearch:
@@ -18,6 +20,15 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: "my-redis-password"
+
+  migration-app:
+    image: ghcr.io/ruchira088/job-market-analyzer-migration-app:main
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
 
   redis:
     image: bitnami/redis:7.0
@@ -54,18 +65,3 @@ services:
       timeout: 5s
     ports:
       - 5601:5601
-
-  postgres:
-    image: postgres
-    command: ["postgres", "-c", "log_statement=all"]
-    healthcheck:
-      test: "pg_isready -U admin -d playground"
-      start_period: 10s
-      interval: 10s
-      timeout: 5s
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_DB: "playground"
-      POSTGRES_USER: "admin"
-      POSTGRES_PASSWORD: "password"

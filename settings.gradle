@@ -2,3 +2,4 @@ rootProject.name = 'job-market-analyzer'
 
 include('api')
 include('crawler')
+include('migration-app')

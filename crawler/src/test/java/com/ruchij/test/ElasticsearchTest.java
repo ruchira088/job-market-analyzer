@@ -1,8 +1,8 @@
 package com.ruchij.test;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
-import com.ruchij.config.ElasticsearchConfiguration;
-import com.ruchij.dao.elasticsearch.ElasticsearchClientBuilder;
+import com.ruchij.crawler.config.ElasticsearchConfiguration;
+import com.ruchij.migration.elasticsearch.ElasticsearchClientBuilder;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 public interface ElasticsearchTest {

@@ -6,8 +6,8 @@ import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.routes.AuthenticationRoute;
 import com.ruchij.api.web.routes.LinkedInRoute;
 import com.ruchij.api.web.routes.UserRoute;
-import com.ruchij.service.crawler.CrawlManager;
-import com.ruchij.service.linkedin.LinkedInCredentialsService;
+import com.ruchij.crawler.service.crawler.CrawlManager;
+import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.path;

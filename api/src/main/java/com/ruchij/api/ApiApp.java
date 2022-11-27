@@ -1,6 +1,7 @@
 package com.ruchij.api;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import com.ruchij.api.config.ApiConfiguration;
 import com.ruchij.api.dao.credentials.CredentialsDao;
 import com.ruchij.api.dao.credentials.ElasticsearchCredentialsDao;
@@ -17,23 +18,23 @@ import com.ruchij.api.services.hashing.PasswordHashingService;
 import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
-import com.ruchij.dao.elasticsearch.ElasticsearchClientBuilder;
-import com.ruchij.dao.job.ElasticsearchJobDao;
-import com.ruchij.dao.job.JobDao;
-import com.ruchij.dao.linkedin.ElasticsearchEncryptedLinkedInCredentialsDao;
-import com.ruchij.dao.linkedin.EncryptedLinkedInCredentialsDao;
-import com.ruchij.dao.task.CrawlerTaskDao;
-import com.ruchij.dao.task.ElasticsearchCrawlerTaskDao;
-import com.ruchij.service.clock.Clock;
-import com.ruchij.service.crawler.CrawlManager;
-import com.ruchij.service.crawler.CrawlManagerImpl;
-import com.ruchij.service.crawler.Crawler;
-import com.ruchij.service.crawler.selenium.SeleniumCrawler;
-import com.ruchij.service.encryption.AesEncryptionService;
-import com.ruchij.service.encryption.EncryptionService;
-import com.ruchij.service.linkedin.LinkedInCredentialsService;
-import com.ruchij.service.linkedin.LinkedInCredentialsServiceImpl;
-import com.ruchij.service.random.RandomGenerator;
+import com.ruchij.crawler.dao.job.ElasticsearchJobDao;
+import com.ruchij.crawler.dao.job.JobDao;
+import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentialsDao;
+import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
+import com.ruchij.crawler.dao.task.CrawlerTaskDao;
+import com.ruchij.crawler.dao.task.ElasticsearchCrawlerTaskDao;
+import com.ruchij.crawler.service.clock.Clock;
+import com.ruchij.crawler.service.crawler.CrawlManager;
+import com.ruchij.crawler.service.crawler.CrawlManagerImpl;
+import com.ruchij.crawler.service.crawler.Crawler;
+import com.ruchij.crawler.service.crawler.selenium.SeleniumCrawler;
+import com.ruchij.crawler.service.encryption.AesEncryptionService;
+import com.ruchij.crawler.service.encryption.EncryptionService;
+import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
+import com.ruchij.crawler.service.linkedin.LinkedInCredentialsServiceImpl;
+import com.ruchij.crawler.service.random.RandomGenerator;
+import com.ruchij.migration.elasticsearch.ElasticsearchClientBuilder;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.javalin.Javalin;
@@ -42,7 +43,7 @@ import io.javalin.json.JavalinJackson;
 import java.security.SecureRandom;
 import java.util.UUID;
 
-import static com.ruchij.utils.JsonUtils.objectMapper;
+import static com.ruchij.crawler.utils.JsonUtils.objectMapper;
 
 public class ApiApp {
     public static void main(String[] args) throws Exception {
@@ -55,7 +56,11 @@ public class ApiApp {
     }
 
     public static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
-        ElasticsearchClientBuilder elasticsearchClientBuilder = new ElasticsearchClientBuilder(apiConfiguration.elasticsearchConfiguration());
+        ElasticsearchClientBuilder elasticsearchClientBuilder =
+            new ElasticsearchClientBuilder(
+                apiConfiguration.elasticsearchConfiguration(),
+                new JacksonJsonpMapper(objectMapper)
+            );
         ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
 
         UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);

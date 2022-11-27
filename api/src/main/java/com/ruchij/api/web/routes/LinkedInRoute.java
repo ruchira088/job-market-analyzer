@@ -3,12 +3,12 @@ package com.ruchij.api.web.routes;
 import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.requests.CreateLinkedInCredentialsRequest;
 import com.ruchij.api.web.responses.SseType;
-import com.ruchij.service.crawler.CrawlManager;
-import com.ruchij.service.linkedin.LinkedInCredentialsService;
+import com.ruchij.crawler.service.crawler.CrawlManager;
+import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
-import static com.ruchij.utils.JsonUtils.objectMapper;
+import static com.ruchij.crawler.utils.JsonUtils.objectMapper;
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class LinkedInRoute implements EndpointGroup {

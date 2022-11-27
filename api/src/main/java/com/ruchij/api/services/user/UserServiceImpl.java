@@ -6,8 +6,8 @@ import com.ruchij.api.dao.user.UserDao;
 import com.ruchij.api.dao.user.models.User;
 import com.ruchij.api.exceptions.ResourceConflictException;
 import com.ruchij.api.services.hashing.PasswordHashingService;
-import com.ruchij.service.clock.Clock;
-import com.ruchij.service.random.RandomGenerator;
+import com.ruchij.crawler.service.clock.Clock;
+import com.ruchij.crawler.service.random.RandomGenerator;
 
 import java.time.Instant;
 import java.util.Optional;

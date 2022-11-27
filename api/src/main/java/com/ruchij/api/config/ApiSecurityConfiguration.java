@@ -1,6 +1,6 @@
 package com.ruchij.api.config;
 
-import com.ruchij.config.CrawlerSecurityConfiguration;
+import com.ruchij.crawler.config.CrawlerSecurityConfiguration;
 import com.typesafe.config.Config;
 
 import javax.crypto.spec.IvParameterSpec;

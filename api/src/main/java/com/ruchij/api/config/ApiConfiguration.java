@@ -1,6 +1,6 @@
 package com.ruchij.api.config;
 
-import com.ruchij.config.ElasticsearchConfiguration;
+import com.ruchij.migration.config.ElasticsearchConfiguration;
 import com.typesafe.config.Config;
 
 public record ApiConfiguration(

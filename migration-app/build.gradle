@@ -1,0 +1,23 @@
+plugins {
+    id 'application'
+    id 'com.github.ben-manes.versions' version '0.44.0'
+}
+
+group = 'com.ruchij.migration'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(
+        'com.typesafe:config:1.4.2',
+        'com.fasterxml.jackson.core:jackson-databind:2.14.1',
+        'co.elastic.clients:elasticsearch-java:8.5.2',
+        'ch.qos.logback:logback-classic:1.4.5',
+    )
+}
+
+application {
+    mainClass = 'com.ruchij.migration.MigrationApp'
+}
