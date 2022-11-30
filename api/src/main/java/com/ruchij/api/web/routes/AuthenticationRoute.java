@@ -3,6 +3,7 @@ package com.ruchij.api.web.routes;
 import com.ruchij.api.services.authentication.AuthenticationService;
 import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.requests.UserLoginRequest;
+import com.ruchij.api.web.responses.AuthenticationTokenResponse;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
@@ -32,7 +33,7 @@ public class AuthenticationRoute implements EndpointGroup {
                         .thenApply(authenticationToken ->
                             context
                                 .status(HttpStatus.OK)
-                                .json(authenticationToken)
+                                .json(AuthenticationTokenResponse.from(authenticationToken))
                         )
                 );
         });
@@ -45,7 +46,7 @@ public class AuthenticationRoute implements EndpointGroup {
                         .thenApply(authenticationToken ->
                             context
                                 .status(HttpStatus.OK)
-                                .json(authenticationToken)
+                                .json(AuthenticationTokenResponse.from(authenticationToken))
                         )
                 )
         );

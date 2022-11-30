@@ -3,6 +3,7 @@ package com.ruchij.api.web.routes;
 import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.requests.CreateUserRequest;
+import com.ruchij.api.web.responses.UserResponse;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
@@ -33,7 +34,7 @@ public class UserRoute implements EndpointGroup {
                         .thenApply(user ->
                             context
                                 .status(HttpStatus.CREATED)
-                                .json(user)
+                                .json(UserResponse.from(user))
                         )
                 );
         });
@@ -46,7 +47,7 @@ public class UserRoute implements EndpointGroup {
                             .thenApply(user ->
                                 context
                                     .status(HttpStatus.OK)
-                                    .json(user)
+                                    .json(UserResponse.from(user))
                             )
                     )
             )
