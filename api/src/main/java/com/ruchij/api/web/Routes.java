@@ -25,7 +25,7 @@ public class Routes implements EndpointGroup {
     ) {
         AuthenticationMiddleware authenticationMiddleware = new AuthenticationMiddleware(authenticationService);
 
-        this.userRoute = new UserRoute(userService, authenticationMiddleware);
+        this.userRoute = new UserRoute(userService);
         this.authenticationRoute = new AuthenticationRoute(authenticationService, authenticationMiddleware);
         this.linkedInRoute = new LinkedInRoute(linkedInCredentialsService, crawlManager, authenticationMiddleware);
     }

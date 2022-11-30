@@ -14,10 +14,13 @@ import com.ruchij.crawler.service.random.RandomGenerator;
 import com.ruchij.crawler.utils.JsonUtils;
 import com.ruchij.crawler.utils.Transformers;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 public class AuthenticationServiceImpl implements AuthenticationService {
+    private static final Duration SESSION_DURATION = Duration.ofDays(7);
+
     private final KeyValueStore keyValueStore;
     private final RandomGenerator<String> tokenGenerator;
     private final PasswordHashingService passwordHashingService;
@@ -68,7 +71,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 Instant timestamp = clock.timestamp();
 
                 AuthenticationToken authenticationToken =
-                    new AuthenticationToken(timestamp, user.userId(), token, null, 0);
+                    new AuthenticationToken(timestamp, user.userId(), token, timestamp.plus(SESSION_DURATION), 0);
 
                 try {
                     String value = JsonUtils.objectMapper.writeValueAsString(authenticationToken);
@@ -91,7 +94,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         String value =
                             JsonUtils.objectMapper.writeValueAsString(
                                 authenticationToken.update(
-                                    timestamp,
+                                    timestamp.plus(SESSION_DURATION),
                                     authenticationToken.renewals() + 1
                                 )
                             );

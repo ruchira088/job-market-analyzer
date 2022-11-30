@@ -7,15 +7,13 @@ import com.ruchij.api.web.responses.UserResponse;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
-import static io.javalin.apibuilder.ApiBuilder.*;
+import static io.javalin.apibuilder.ApiBuilder.post;
 
 public class UserRoute implements EndpointGroup {
     private final UserService userService;
-    private final AuthenticationMiddleware authenticationMiddleware;
 
-    public UserRoute(UserService userService, AuthenticationMiddleware authenticationMiddleware) {
+    public UserRoute(UserService userService) {
         this.userService = userService;
-        this.authenticationMiddleware = authenticationMiddleware;
     }
 
     @Override
@@ -26,10 +24,10 @@ public class UserRoute implements EndpointGroup {
             context
                 .future(() ->
                     userService.create(
-                            createUserRequest.getEmail(),
-                            createUserRequest.getPassword(),
-                            createUserRequest.getFirstName(),
-                            createUserRequest.getLastName()
+                            createUserRequest.email(),
+                            createUserRequest.password(),
+                            createUserRequest.firstName(),
+                            createUserRequest.lastName()
                         )
                         .thenApply(user ->
                             context
@@ -38,19 +36,5 @@ public class UserRoute implements EndpointGroup {
                         )
                 );
         });
-
-        path("authenticated", () ->
-            get(context ->
-                context
-                    .future(() ->
-                        authenticationMiddleware.authenticate(context)
-                            .thenApply(user ->
-                                context
-                                    .status(HttpStatus.OK)
-                                    .json(UserResponse.from(user))
-                            )
-                    )
-            )
-        );
     }
 }

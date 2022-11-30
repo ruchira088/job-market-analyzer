@@ -4,11 +4,11 @@ import com.ruchij.api.services.authentication.AuthenticationService;
 import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.requests.UserLoginRequest;
 import com.ruchij.api.web.responses.AuthenticationTokenResponse;
+import com.ruchij.api.web.responses.UserResponse;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
-import static io.javalin.apibuilder.ApiBuilder.delete;
-import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class AuthenticationRoute implements EndpointGroup {
     private final AuthenticationService authenticationService;
@@ -51,5 +51,18 @@ public class AuthenticationRoute implements EndpointGroup {
                 )
         );
 
+        path("user", () ->
+            get(context ->
+                context
+                    .future(() ->
+                        authenticationMiddleware.authenticate(context)
+                            .thenApply(user ->
+                                context
+                                    .status(HttpStatus.OK)
+                                    .json(UserResponse.from(user))
+                            )
+                    )
+            )
+        );
     }
 }

@@ -39,8 +39,8 @@ public class LinkedInRoute implements EndpointGroup {
                                 .thenCompose(user ->
                                     linkedInCredentialsService.insert(
                                         user.userId(),
-                                        linkedInCredentialsRequest.getEmail(),
-                                        linkedInCredentialsRequest.getPassword()
+                                        linkedInCredentialsRequest.email(),
+                                        linkedInCredentialsRequest.password()
                                     )
                                 )
                                 .thenApply(linkedInCredentials ->
