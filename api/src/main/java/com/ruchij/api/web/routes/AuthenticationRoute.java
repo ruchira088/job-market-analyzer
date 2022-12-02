@@ -33,6 +33,7 @@ public class AuthenticationRoute implements EndpointGroup {
                         .thenApply(authenticationToken ->
                             context
                                 .status(HttpStatus.OK)
+                                .cookie(AuthenticationMiddleware.AUTHENTICATION_COOKIE, authenticationToken.token())
                                 .json(AuthenticationTokenResponse.from(authenticationToken))
                         )
                 );

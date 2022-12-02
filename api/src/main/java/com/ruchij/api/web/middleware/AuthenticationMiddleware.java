@@ -11,14 +11,23 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class AuthenticationMiddleware {
-    public static final String TOKEN = "Bearer";
+    public static final String AUTHENTICATION_COOKIE = "authentication";
+    private static final String TOKEN = "Bearer";
+
     private final AuthenticationService authenticationService;
 
     public AuthenticationMiddleware(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
     }
 
-    public CompletableFuture<String> token(Context context) {
+    private CompletableFuture<String> cookie(Context context) {
+        return Transformers.convert(
+            Optional.ofNullable(context.cookie(AUTHENTICATION_COOKIE)),
+            () -> new AuthenticationException("Missing authentication cookie")
+        );
+    }
+
+    private CompletableFuture<String> header(Context context) {
         return Transformers.convert(
                 Optional.ofNullable(context.header(Header.AUTHORIZATION)),
                 () -> new AuthenticationException("Missing %s header".formatted(Header.AUTHORIZATION))
@@ -30,6 +39,10 @@ public class AuthenticationMiddleware {
                     return CompletableFuture.failedFuture(new AuthenticationException("Invalid authorization token type"));
                 }
             });
+    }
+
+    public CompletableFuture<String> token(Context context) {
+        return header(context).exceptionallyCompose(__ -> cookie(context));
     }
 
     public CompletableFuture<User> authenticate(Context context) {
