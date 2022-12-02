@@ -18,6 +18,7 @@ import com.ruchij.api.services.hashing.PasswordHashingService;
 import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
+import com.ruchij.api.web.middleware.ExceptionHandler;
 import com.ruchij.crawler.dao.job.ElasticsearchJobDao;
 import com.ruchij.crawler.dao.job.JobDao;
 import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentialsDao;
@@ -50,12 +51,19 @@ public class ApiApp {
         Config config = ConfigFactory.load();
         ApiConfiguration apiConfiguration = ApiConfiguration.parse(config);
 
-        Javalin.create(javalinConfig -> javalinConfig.jsonMapper(new JavalinJackson(objectMapper)))
-            .routes(routes(apiConfiguration))
-            .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
+        httpApplication(apiConfiguration);
     }
 
-    public static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
+    private static Javalin httpApplication(ApiConfiguration apiConfiguration) throws Exception {
+        Javalin httpApplication =
+            Javalin.create(javalinConfig -> javalinConfig.jsonMapper(new JavalinJackson(objectMapper)))
+                .routes(routes(apiConfiguration))
+                .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
+
+        return ExceptionHandler.handle(httpApplication);
+    }
+
+    private static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
         ElasticsearchClientBuilder elasticsearchClientBuilder =
             new ElasticsearchClientBuilder(
                 apiConfiguration.elasticsearchConfiguration(),
