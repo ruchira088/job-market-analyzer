@@ -13,7 +13,7 @@ dependencies {
     implementation(
             project(':migration-app'),
             'com.typesafe:config:1.4.2',
-            'org.seleniumhq.selenium:selenium-java:4.6.0',
+            'org.seleniumhq.selenium:selenium-java:4.7.0',
             'io.reactivex.rxjava3:rxjava:3.1.5',
             'co.elastic.clients:elasticsearch-java:8.5.2',
             'com.fasterxml.jackson.core:jackson-databind:2.14.1',
