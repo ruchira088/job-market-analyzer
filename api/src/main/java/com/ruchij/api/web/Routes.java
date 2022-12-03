@@ -30,12 +30,6 @@ public class Routes implements EndpointGroup {
         this.linkedInRoute = new LinkedInRoute(linkedInCredentialsService, crawlManager, authenticationMiddleware);
     }
 
-    public Routes(UserRoute userRoute, LinkedInRoute linkedInRoute, AuthenticationRoute authenticationRoute) {
-        this.userRoute = userRoute;
-        this.linkedInRoute = linkedInRoute;
-        this.authenticationRoute = authenticationRoute;
-    }
-
     @Override
     public void addEndpoints() {
         path("user", userRoute);

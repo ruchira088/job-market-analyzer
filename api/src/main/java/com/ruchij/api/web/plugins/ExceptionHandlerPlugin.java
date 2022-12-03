@@ -1,4 +1,4 @@
-package com.ruchij.api.web.middleware;
+package com.ruchij.api.web.plugins;
 
 import com.ruchij.api.exceptions.AuthenticationException;
 import com.ruchij.api.exceptions.ResourceConflictException;
@@ -6,13 +6,15 @@ import com.ruchij.api.web.responses.ErrorResponse;
 import com.ruchij.crawler.exceptions.ResourceNotFoundException;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
+import io.javalin.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class ExceptionHandler {
-    private static Map<Class<? extends Exception>, HttpStatus> errorCodes() {
+public class ExceptionHandlerPlugin implements Plugin {
+    private Map<Class<? extends Exception>, HttpStatus> errorCodes() {
         Map<Class<? extends Exception>, HttpStatus> errorMappings = new HashMap<>();
 
         errorMappings.put(ResourceConflictException.class, HttpStatus.CONFLICT);
@@ -22,11 +24,12 @@ public class ExceptionHandler {
         return errorMappings;
     }
 
-    private static Throwable rootCause(Throwable throwable) {
-        return Optional.ofNullable(throwable.getCause()).map(ExceptionHandler::rootCause).orElse(throwable);
+    private Throwable rootCause(Throwable throwable) {
+        return Optional.ofNullable(throwable.getCause()).map(this::rootCause).orElse(throwable);
     }
 
-    public static Javalin handle(Javalin javalin) {
+    @Override
+    public void apply(@NotNull Javalin javalin) {
         for (Map.Entry<Class<? extends Exception>, HttpStatus> entry : errorCodes().entrySet()) {
             javalin.exception(
                 entry.getKey(),
@@ -34,13 +37,11 @@ public class ExceptionHandler {
                     context
                         .status(entry.getValue())
                         .json(new ErrorResponse(
-                            Optional.ofNullable(rootCause(exception).getMessage())
-                                .orElse(entry.getKey().getCanonicalName())
+                                Optional.ofNullable(rootCause(exception).getMessage())
+                                    .orElse(entry.getKey().getCanonicalName())
                             )
                         )
             );
         }
-
-        return javalin;
     }
 }

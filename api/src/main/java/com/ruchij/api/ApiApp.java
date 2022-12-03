@@ -18,7 +18,7 @@ import com.ruchij.api.services.hashing.PasswordHashingService;
 import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
-import com.ruchij.api.web.middleware.ExceptionHandler;
+import com.ruchij.api.web.plugins.ExceptionHandlerPlugin;
 import com.ruchij.crawler.dao.job.ElasticsearchJobDao;
 import com.ruchij.crawler.dao.job.JobDao;
 import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentialsDao;
@@ -55,12 +55,19 @@ public class ApiApp {
     }
 
     private static Javalin httpApplication(ApiConfiguration apiConfiguration) throws Exception {
-        Javalin httpApplication =
-            Javalin.create(javalinConfig -> javalinConfig.jsonMapper(new JavalinJackson(objectMapper)))
-                .routes(routes(apiConfiguration))
-                .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
-
-        return ExceptionHandler.handle(httpApplication);
+        return Javalin
+            .create(javalinConfig -> {
+                    javalinConfig.jsonMapper(new JavalinJackson(objectMapper));
+                    javalinConfig.plugins.register(new ExceptionHandlerPlugin());
+                    javalinConfig.plugins.enableCors(
+                        corsContainer -> corsContainer.add(corsPluginConfig -> {
+                            corsPluginConfig.reflectClientOrigin = true;
+                        })
+                    );
+                }
+            )
+            .routes(routes(apiConfiguration))
+            .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
     }
 
     private static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
