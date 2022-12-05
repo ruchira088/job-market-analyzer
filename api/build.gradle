@@ -19,7 +19,8 @@ dependencies {
             'io.reactivex.rxjava3:rxjava:3.1.5',
             'co.elastic.clients:elasticsearch-java:8.5.2',
             'io.lettuce:lettuce-core:6.2.1.RELEASE',
-            'ch.qos.logback:logback-classic:1.4.5'
+            'ch.qos.logback:logback-classic:1.4.5',
+            'org.testcontainers:testcontainers:1.17.6'
     )
 
     testImplementation(

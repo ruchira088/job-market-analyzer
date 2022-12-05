@@ -29,7 +29,7 @@ public class UserRoute implements EndpointGroup {
                             createUserRequest.firstName(),
                             createUserRequest.lastName()
                         )
-                        .thenApply(user ->
+                        .thenAccept(user ->
                             context
                                 .status(HttpStatus.CREATED)
                                 .json(UserResponse.from(user))

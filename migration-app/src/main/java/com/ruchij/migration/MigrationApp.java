@@ -30,7 +30,7 @@ public class MigrationApp {
         run(migrationConfiguration);
     }
 
-    private static void run(MigrationConfiguration migrationConfiguration) throws Exception {
+    public static void run(MigrationConfiguration migrationConfiguration) throws Exception {
         try (ElasticsearchClientBuilder elasticsearchClientBuilder = new ElasticsearchClientBuilder(migrationConfiguration.elasticsearchConfiguration())) {
             ElasticsearchClient elasticsearchClient = elasticsearchClientBuilder.buildClient();
             ElasticsearchIndicesClient elasticsearchIndicesClient = elasticsearchClient.indices();

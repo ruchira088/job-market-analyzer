@@ -43,7 +43,7 @@ public class LinkedInRoute implements EndpointGroup {
                                         linkedInCredentialsRequest.password()
                                     )
                                 )
-                                .thenApply(linkedInCredentials ->
+                                .thenAccept(linkedInCredentials ->
                                     context
                                         .status(HttpStatus.CREATED)
                                         .json(linkedInCredentials)
@@ -56,7 +56,7 @@ public class LinkedInRoute implements EndpointGroup {
                         .future(() ->
                             authenticationMiddleware.authenticate(context)
                                 .thenCompose(user -> linkedInCredentialsService.getByUserId(user.userId()))
-                                .thenApply(linkedInCredentials ->
+                                .thenAccept(linkedInCredentials ->
                                     context
                                         .status(HttpStatus.OK)
                                         .json(linkedInCredentials)
@@ -69,7 +69,7 @@ public class LinkedInRoute implements EndpointGroup {
                         .future(() ->
                             authenticationMiddleware.authenticate(context)
                                 .thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.userId()))
-                                .thenApply(linkedInCredentials ->
+                                .thenAccept(linkedInCredentials ->
                                     context
                                         .status(HttpStatus.OK)
                                         .json(linkedInCredentials)

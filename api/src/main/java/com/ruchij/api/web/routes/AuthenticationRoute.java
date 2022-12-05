@@ -6,7 +6,9 @@ import com.ruchij.api.web.requests.UserLoginRequest;
 import com.ruchij.api.web.responses.AuthenticationTokenResponse;
 import com.ruchij.api.web.responses.UserResponse;
 import io.javalin.apibuilder.EndpointGroup;
+import io.javalin.http.Cookie;
 import io.javalin.http.HttpStatus;
+import io.javalin.http.SameSite;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
@@ -30,11 +32,18 @@ public class AuthenticationRoute implements EndpointGroup {
             context
                 .future(() ->
                     authenticationService.login(userLoginRequest.email(), userLoginRequest.password())
-                        .thenApply(authenticationToken ->
-                            context
-                                .status(HttpStatus.OK)
-                                .cookie(AuthenticationMiddleware.AUTHENTICATION_COOKIE, authenticationToken.token())
-                                .json(AuthenticationTokenResponse.from(authenticationToken))
+                        .thenAccept(authenticationToken -> {
+                            Cookie authenticationCookie =
+                                new Cookie(AuthenticationMiddleware.AUTHENTICATION_COOKIE, authenticationToken.token());
+
+                            authenticationCookie.setSameSite(SameSite.NONE);
+                            authenticationCookie.setSecure(true);
+
+                                context
+                                    .status(HttpStatus.OK)
+                                    .cookie(authenticationCookie)
+                                    .json(AuthenticationTokenResponse.from(authenticationToken));
+                            }
                         )
                 );
         });
@@ -44,7 +53,7 @@ public class AuthenticationRoute implements EndpointGroup {
                 .future(() ->
                     authenticationMiddleware.token(context)
                         .thenCompose(authenticationService::logout)
-                        .thenApply(authenticationToken ->
+                        .thenAccept(authenticationToken ->
                             context
                                 .status(HttpStatus.OK)
                                 .json(AuthenticationTokenResponse.from(authenticationToken))
@@ -57,7 +66,7 @@ public class AuthenticationRoute implements EndpointGroup {
                 context
                     .future(() ->
                         authenticationMiddleware.authenticate(context)
-                            .thenApply(user ->
+                            .thenAccept(user ->
                                 context
                                     .status(HttpStatus.OK)
                                     .json(UserResponse.from(user))

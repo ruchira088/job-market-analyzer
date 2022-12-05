@@ -9,3 +9,5 @@ build
 bin
 
 playbooks/output
+
+development/src/main/resources/localhost.jks

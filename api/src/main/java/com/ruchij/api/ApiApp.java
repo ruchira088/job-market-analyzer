@@ -39,10 +39,12 @@ import com.ruchij.migration.elasticsearch.ElasticsearchClientBuilder;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson;
 
 import java.security.SecureRandom;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static com.ruchij.crawler.utils.JsonUtils.objectMapper;
 
@@ -51,10 +53,14 @@ public class ApiApp {
         Config config = ConfigFactory.load();
         ApiConfiguration apiConfiguration = ApiConfiguration.parse(config);
 
-        httpApplication(apiConfiguration);
+        httpApplication(apiConfiguration, __ -> {})
+            .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
     }
 
-    private static Javalin httpApplication(ApiConfiguration apiConfiguration) throws Exception {
+    public static Javalin httpApplication(
+        ApiConfiguration apiConfiguration,
+        Consumer<JavalinConfig> configModifier
+    ) throws Exception {
         return Javalin
             .create(javalinConfig -> {
                     javalinConfig.jsonMapper(new JavalinJackson(objectMapper));
@@ -62,12 +68,13 @@ public class ApiApp {
                     javalinConfig.plugins.enableCors(
                         corsContainer -> corsContainer.add(corsPluginConfig -> {
                             corsPluginConfig.reflectClientOrigin = true;
+                            corsPluginConfig.allowCredentials = true;
                         })
                     );
+                    configModifier.accept(javalinConfig);
                 }
             )
-            .routes(routes(apiConfiguration))
-            .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
+            .routes(routes(apiConfiguration));
     }
 
     private static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
