@@ -80,24 +80,32 @@ public class LinkedInRoute implements EndpointGroup {
         );
 
         path("crawl", () ->
-            sse(sseClient ->
+            sse(sseClient -> {
+                sseClient.keepAlive();
+
                 authenticationMiddleware.authenticate(sseClient.ctx())
                     .thenApply(user -> {
-                            sseClient.sendEvent(SseType.CRAWL_STARTED.name(), null);
+                            sseClient.sendEvent(SseType.CRAWL_STARTED.name(), "{}");
 
                             return crawlManager.run(user.userId())
                                 .doFinally(() -> {
-                                    sseClient.sendEvent(SseType.CRAWL_COMPLETED.name(), null);
-                                    sseClient.close();
+                                    if (!sseClient.terminated()) {
+                                        sseClient.sendEvent(SseType.CRAWL_COMPLETED.name(), "{}");
+                                        sseClient.close();
+                                    }
                                 })
-                                .subscribe(crawledJob ->
-                                    sseClient.sendEvent(
-                                        SseType.CRAWLED_JOB.name(),
-                                        objectMapper.writeValueAsString(crawledJob)
-                                    )
+                                .subscribe(crawledJob -> {
+                                        if (!sseClient.terminated()) {
+                                            sseClient.sendEvent(
+                                                SseType.CRAWLED_JOB.name(),
+                                                objectMapper.writeValueAsString(crawledJob)
+                                            );
+                                        }
+                                    }
                                 );
                         }
-                    ))
+                    );
+            })
         );
     }
 }

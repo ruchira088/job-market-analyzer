@@ -23,11 +23,10 @@ public class SeleniumCrawler implements Crawler {
 
     @Override
     public Flowable<CrawledJob> crawl(String crawlerTaskId, String email, String password) {
-        return Flowable.just(1)
-            .concatMap(value -> {
-                logger.info("Started SeleniumCrawler id=%s".formatted(crawlerTaskId));
+        logger.info("Started SeleniumCrawler id=%s".formatted(crawlerTaskId));
 
-                ChromeDriver chromeDriver = new ChromeDriver();
+        return Flowable.fromSupplier(ChromeDriver::new)
+            .concatMap(chromeDriver -> {
                 LinkedIn linkedIn = new LinkedIn(chromeDriver);
 
                 HomePage homePage = linkedIn.login(email, password);
