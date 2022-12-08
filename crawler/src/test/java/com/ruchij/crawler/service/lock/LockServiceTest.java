@@ -30,23 +30,23 @@ class LockServiceTest {
         Duration timeout = Duration.ofMillis(5_000);
         ArrayList<ScheduledFuture<Optional<Lock>>> scheduledFutures = new ArrayList<>();
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10_000; i++) {
             ScheduledFuture<Optional<Lock>> scheduledLock = scheduledExecutorService.schedule(
                 () -> lockService.lock(lockId, timeout).get(100, TimeUnit.MILLISECONDS),
-                i % 10,
+                100 - (i % 10),
                 TimeUnit.MILLISECONDS
             );
 
             scheduledFutures.add(scheduledLock);
         }
 
-        Assertions.assertEquals(100, scheduledFutures.size());
+        Assertions.assertEquals(10_000, scheduledFutures.size());
 
         int lockCount = 0;
         int noLockCount = 0;
 
         for (ScheduledFuture<Optional<Lock>> scheduledFuture : scheduledFutures) {
-            if (scheduledFuture.get(100, TimeUnit.MILLISECONDS).isPresent()) {
+            if (scheduledFuture.get(1000, TimeUnit.MILLISECONDS).isPresent()) {
                 lockCount++;
             } else {
                 noLockCount++;
@@ -54,7 +54,7 @@ class LockServiceTest {
         }
 
         Assertions.assertEquals(1, lockCount);
-        Assertions.assertEquals(99, noLockCount);
+        Assertions.assertEquals(9999, noLockCount);
     }
 
     @Test
