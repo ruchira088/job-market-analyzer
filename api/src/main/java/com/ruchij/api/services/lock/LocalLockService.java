@@ -1,7 +1,7 @@
-package com.ruchij.crawler.service.lock;
+package com.ruchij.api.services.lock;
 
+import com.ruchij.api.services.lock.models.Lock;
 import com.ruchij.crawler.service.clock.Clock;
-import com.ruchij.crawler.service.lock.models.Lock;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -32,7 +32,7 @@ public class LocalLockService implements LockService {
             locks.put(lockId, lock);
 
             scheduledExecutorService.schedule(
-                () -> release(lock),
+                () -> release(lockId),
                 timeout.toMillis(),
                 TimeUnit.MILLISECONDS
             );
@@ -42,7 +42,7 @@ public class LocalLockService implements LockService {
     }
 
     @Override
-    public CompletableFuture<Boolean> release(Lock lock) {
-        return CompletableFuture.completedFuture(locks.remove(lock.id()) != null);
+    public CompletableFuture<Boolean> release(String lockId) {
+        return CompletableFuture.completedFuture(locks.remove(lockId) != null);
     }
 }

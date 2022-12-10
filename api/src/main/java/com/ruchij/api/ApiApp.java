@@ -13,8 +13,12 @@ import com.ruchij.api.kv.RedisKeyValueStore;
 import com.ruchij.api.services.authentication.AuthenticationService;
 import com.ruchij.api.services.authentication.AuthenticationServiceImpl;
 import com.ruchij.api.services.authentication.models.AuthenticationToken;
+import com.ruchij.api.services.crawler.ExtendedCrawlManager;
+import com.ruchij.api.services.crawler.ExtendedCrawlManagerImpl;
 import com.ruchij.api.services.hashing.BCryptPasswordHashingService;
 import com.ruchij.api.services.hashing.PasswordHashingService;
+import com.ruchij.api.services.lock.LocalLockService;
+import com.ruchij.api.services.lock.LockService;
 import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
@@ -44,6 +48,8 @@ import io.javalin.json.JavalinJackson;
 
 import java.security.SecureRandom;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Consumer;
 
 import static com.ruchij.crawler.utils.JsonUtils.objectMapper;
@@ -113,12 +119,17 @@ public class ApiApp {
         CrawlManager crawlManager =
             new CrawlManagerImpl(
                 crawler,
-                linkedInCredentialsService,
                 crawlerTaskDao,
                 jobDao,
                 idGenerator,
                 clock
             );
+
+        ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
+        LockService lockService = new LocalLockService(scheduledExecutorService, clock);
+
+        ExtendedCrawlManager extendedCrawlManager =
+            new ExtendedCrawlManagerImpl(crawlManager, lockService, linkedInCredentialsService);
 
         PasswordHashingService passwordHashingService = new BCryptPasswordHashingService();
 
@@ -141,7 +152,7 @@ public class ApiApp {
                 clock
             );
 
-        Routes routes = new Routes(crawlManager, userService, authenticationService, linkedInCredentialsService);
+        Routes routes = new Routes(extendedCrawlManager, userService, authenticationService, linkedInCredentialsService);
 
         return routes;
     }

@@ -1,7 +1,9 @@
-package com.ruchij.crawler.service.lock;
+package com.ruchij.api.service.lock;
 
+import com.ruchij.api.services.lock.LocalLockService;
+import com.ruchij.api.services.lock.LockService;
+import com.ruchij.api.services.lock.models.Lock;
 import com.ruchij.crawler.service.clock.Clock;
-import com.ruchij.crawler.service.lock.models.Lock;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -75,7 +77,7 @@ class LockServiceTest {
             );
         }
 
-        lockService.release(optionalLock.get());
+        lockService.release(lockId);
 
         Assertions.assertTrue(
             lockService.lock(lockId, timeout)

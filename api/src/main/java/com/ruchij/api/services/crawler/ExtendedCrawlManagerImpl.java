@@ -1,0 +1,51 @@
+package com.ruchij.api.services.crawler;
+
+import com.ruchij.api.exceptions.ResourceConflictException;
+import com.ruchij.api.services.lock.LockService;
+import com.ruchij.crawler.service.crawler.CrawlManager;
+import com.ruchij.crawler.service.crawler.models.CrawledJob;
+import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
+import io.reactivex.rxjava3.core.Flowable;
+
+import java.time.Duration;
+
+public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
+    private static final Duration LOCK_TIMEOUT = Duration.ofMinutes(10);
+
+    private final CrawlManager crawlManager;
+    private final LockService lockService;
+    private final LinkedInCredentialsService linkedInCredentialsService;
+
+    public ExtendedCrawlManagerImpl(
+        CrawlManager crawlManager,
+        LockService lockService,
+        LinkedInCredentialsService linkedInCredentialsService
+    ) {
+        this.crawlManager = crawlManager;
+        this.lockService = lockService;
+        this.linkedInCredentialsService = linkedInCredentialsService;
+    }
+
+    @Override
+    public Flowable<CrawledJob> runWithLock(String userId) {
+        return Flowable.fromCompletionStage(lockService.lock(userId, LOCK_TIMEOUT))
+            .concatMap(maybeLock -> {
+                if (maybeLock.isEmpty()) {
+                    return Flowable.error(
+                        new ResourceConflictException("Job crawl is already active for userId=%s".formatted(userId))
+                    );
+                } else {
+                    return Flowable.fromCompletionStage(linkedInCredentialsService.getByUserId(userId));
+                }
+            })
+            .concatMap(linkedInCredentials ->
+                run(linkedInCredentials.userId(), linkedInCredentials.email(), linkedInCredentials.password())
+            )
+            .doFinally(() -> lockService.release(userId));
+    }
+
+    @Override
+    public Flowable<CrawledJob> run(String userId, String linkedInEmail, String linkedInPassword) {
+        return crawlManager.run(userId, linkedInEmail, linkedInPassword);
+    }
+}

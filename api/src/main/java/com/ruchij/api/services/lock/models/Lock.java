@@ -1,4 +1,4 @@
-package com.ruchij.crawler.service.lock.models;
+package com.ruchij.api.services.lock.models;
 
 import java.time.Instant;
 

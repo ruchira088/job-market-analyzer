@@ -1,9 +1,10 @@
 package com.ruchij.api.web.routes;
 
+import com.ruchij.api.services.crawler.ExtendedCrawlManager;
 import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.requests.CreateLinkedInCredentialsRequest;
+import com.ruchij.api.web.responses.ErrorResponse;
 import com.ruchij.api.web.responses.SseType;
-import com.ruchij.crawler.service.crawler.CrawlManager;
 import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
@@ -13,16 +14,16 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class LinkedInRoute implements EndpointGroup {
     private final LinkedInCredentialsService linkedInCredentialsService;
-    private final CrawlManager crawlManager;
+    private final ExtendedCrawlManager extendedCrawlManager;
     private final AuthenticationMiddleware authenticationMiddleware;
 
     public LinkedInRoute(
         LinkedInCredentialsService linkedInCredentialsService,
-        CrawlManager crawlManager,
+        ExtendedCrawlManager extendedCrawlManager,
         AuthenticationMiddleware authenticationMiddleware
     ) {
         this.linkedInCredentialsService = linkedInCredentialsService;
-        this.crawlManager = crawlManager;
+        this.extendedCrawlManager = extendedCrawlManager;
         this.authenticationMiddleware = authenticationMiddleware;
     }
 
@@ -87,12 +88,19 @@ public class LinkedInRoute implements EndpointGroup {
                     .thenApply(user -> {
                             sseClient.sendEvent(SseType.CRAWL_STARTED.name(), "{}");
 
-                            return crawlManager.run(user.userId())
+                            return extendedCrawlManager.runWithLock(user.userId())
                                 .doFinally(() -> {
                                     if (!sseClient.terminated()) {
                                         sseClient.sendEvent(SseType.CRAWL_COMPLETED.name(), "{}");
                                         sseClient.close();
                                     }
+                                })
+                                .doOnError(throwable -> {
+                                    sseClient.sendEvent(
+                                        SseType.CRAWL_ERROR.name(),
+                                        objectMapper.writeValueAsString(new ErrorResponse(throwable.getMessage()))
+                                    );
+                                    sseClient.close();
                                 })
                                 .subscribe(crawledJob -> {
                                         if (!sseClient.terminated()) {

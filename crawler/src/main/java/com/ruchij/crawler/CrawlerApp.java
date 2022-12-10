@@ -65,7 +65,6 @@ public class CrawlerApp {
             CrawlManager crawlManager =
                 new CrawlManagerImpl(
                     crawler,
-                    linkedInCredentialsService,
                     crawlerTaskDao,
                     jobDao,
                     idGenerator,
