@@ -40,9 +40,10 @@ public class SeleniumCrawler implements Crawler {
                         Flowable.range(1, Integer.MAX_VALUE),
                         (job, integer) -> new CrawledJob(crawlerTaskId, job, integer, pageCount)
                     )
+                    .doOnError(throwable -> logger.error("Error occurred with crawlTaskId=%s".formatted(crawlerTaskId), throwable))
                     .doFinally(() -> {
                         chromeDriver.quit();
-                        logger.info("Completed SeleniumCrawler id=%s".formatted(crawlerTaskId));
+                        logger.info("Completed SeleniumCrawler for crawlTaskId=%s".formatted(crawlerTaskId));
                     });
             });
     }

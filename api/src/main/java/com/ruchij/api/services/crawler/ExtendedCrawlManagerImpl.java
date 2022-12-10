@@ -6,11 +6,15 @@ import com.ruchij.crawler.service.crawler.CrawlManager;
 import com.ruchij.crawler.service.crawler.models.CrawledJob;
 import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
 import io.reactivex.rxjava3.core.Flowable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
 public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
     private static final Duration LOCK_TIMEOUT = Duration.ofMinutes(10);
+
+    private static final Logger logger = LoggerFactory.getLogger(ExtendedCrawlManagerImpl.class);
 
     private final CrawlManager crawlManager;
     private final LockService lockService;
@@ -28,20 +32,29 @@ public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
 
     @Override
     public Flowable<CrawledJob> runWithLock(String userId) {
+        logger.info("Starting job crawl for userId=%s".formatted(userId));
+
         return Flowable.fromCompletionStage(lockService.lock(userId, LOCK_TIMEOUT))
             .concatMap(maybeLock -> {
                 if (maybeLock.isEmpty()) {
-                    return Flowable.error(
-                        new ResourceConflictException("Job crawl is already active for userId=%s".formatted(userId))
-                    );
+                    ResourceConflictException resourceConflictException =
+                        new ResourceConflictException("Job crawl is already active for userId=%s".formatted(userId));
+
+                    logger.warn("Crawl already active", resourceConflictException);
+                    return Flowable.error(resourceConflictException);
                 } else {
+                    logger.info("Acquired crawl lock for userId=%s".formatted(userId));
+
                     return Flowable.fromCompletionStage(linkedInCredentialsService.getByUserId(userId));
                 }
             })
             .concatMap(linkedInCredentials ->
                 run(linkedInCredentials.userId(), linkedInCredentials.email(), linkedInCredentials.password())
             )
-            .doFinally(() -> lockService.release(userId));
+            .doFinally(() -> {
+                lockService.release(userId);
+                logger.info("Released crawl lock for userId=%s".formatted(userId));
+            });
     }
 
     @Override
