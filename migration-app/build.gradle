@@ -13,7 +13,7 @@ dependencies {
     implementation(
         'com.typesafe:config:1.4.2',
         'com.fasterxml.jackson.core:jackson-databind:2.14.1',
-        'co.elastic.clients:elasticsearch-java:8.5.2',
+        'co.elastic.clients:elasticsearch-java:8.5.3',
         'ch.qos.logback:logback-classic:1.4.5',
         'org.testcontainers:elasticsearch:1.17.6'
     )

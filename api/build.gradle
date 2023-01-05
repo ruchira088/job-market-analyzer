@@ -14,11 +14,11 @@ dependencies {
             project(':crawler'),
             project(':migration-app'),
             'com.typesafe:config:1.4.2',
-            'io.javalin:javalin-bundle:5.2.0',
+            'io.javalin:javalin-bundle:5.3.0',
             'org.mindrot:jbcrypt:0.4',
             'io.reactivex.rxjava3:rxjava:3.1.5',
-            'co.elastic.clients:elasticsearch-java:8.5.2',
-            'io.lettuce:lettuce-core:6.2.1.RELEASE',
+            'co.elastic.clients:elasticsearch-java:8.5.3',
+            'io.lettuce:lettuce-core:6.2.2.RELEASE',
             'ch.qos.logback:logback-classic:1.4.5',
             'org.testcontainers:testcontainers:1.17.6'
     )

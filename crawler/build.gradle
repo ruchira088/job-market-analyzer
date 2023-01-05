@@ -13,9 +13,9 @@ dependencies {
     implementation(
             project(':migration-app'),
             'com.typesafe:config:1.4.2',
-            'org.seleniumhq.selenium:selenium-java:4.7.0',
+            'org.seleniumhq.selenium:selenium-java:4.7.2',
             'io.reactivex.rxjava3:rxjava:3.1.5',
-            'co.elastic.clients:elasticsearch-java:8.5.2',
+            'co.elastic.clients:elasticsearch-java:8.5.3',
             'com.fasterxml.jackson.core:jackson-databind:2.14.1',
             'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1',
             'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.1',
