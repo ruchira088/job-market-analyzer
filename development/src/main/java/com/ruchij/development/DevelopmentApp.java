@@ -5,11 +5,11 @@ import com.ruchij.api.config.ApiConfiguration;
 import com.ruchij.api.config.ApiSecurityConfiguration;
 import com.ruchij.api.config.HttpConfiguration;
 import com.ruchij.api.config.RedisConfiguration;
-import com.ruchij.api.containers.RedisContainer;
+import com.ruchij.development.providers.ConfigurationProvider;
+import com.ruchij.development.providers.ContainerConfigurationProvider;
 import com.ruchij.migration.MigrationApp;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
 import com.ruchij.migration.config.MigrationConfiguration;
-import com.ruchij.migration.containers.ElasticsearchContainer;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -24,8 +24,9 @@ public class DevelopmentApp {
     private static final Logger logger = LoggerFactory.getLogger(DevelopmentApp.class);
 
     public static void main(String[] args) throws Exception {
-        ElasticsearchConfiguration elasticsearchConfiguration =
-            new ElasticsearchContainer().elasticsearchConfiguration();
+        ConfigurationProvider configurationProvider = new ContainerConfigurationProvider();
+
+        ElasticsearchConfiguration elasticsearchConfiguration = configurationProvider.elasticsearchConfiguration();
 
         logger.info("Elasticsearch is ready");
 
@@ -34,7 +35,7 @@ public class DevelopmentApp {
 
         logger.info("Migration completed");
 
-        RedisConfiguration redisConfiguration = new RedisContainer().redisConfiguration();
+        RedisConfiguration redisConfiguration = configurationProvider.redisConfiguration();
 
         logger.info("Redis is ready");
 
