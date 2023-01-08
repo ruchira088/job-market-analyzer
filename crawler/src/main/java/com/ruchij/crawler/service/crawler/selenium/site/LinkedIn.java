@@ -6,7 +6,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class LinkedIn {
-    private static final String WEB_URL = "https://www.linkedin.com";
+    private static final String WEB_URL = "https://www.linkedin.com/login";
     private final RemoteWebDriver remoteWebDriver;
 
     public LinkedIn(RemoteWebDriver remoteWebDriver) {
@@ -20,13 +20,13 @@ public class LinkedIn {
     public HomePage login(String email, String password) {
         open();
 
-        WebElement emailInput = remoteWebDriver.findElement(By.id("session_key"));
+        WebElement emailInput = remoteWebDriver.findElement(By.id("username"));
         emailInput.sendKeys(email);
 
-        WebElement passwordInput = remoteWebDriver.findElement(By.id("session_password"));
+        WebElement passwordInput = remoteWebDriver.findElement(By.id("password"));
         passwordInput.sendKeys(password);
 
-        WebElement submitButton = remoteWebDriver.findElement(By.className("sign-in-form__submit-button"));
+        WebElement submitButton = remoteWebDriver.findElement(By.cssSelector("button[aria-label='Sign in']"));
         submitButton.click();
 
         return new HomePage(remoteWebDriver);
