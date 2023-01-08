@@ -46,5 +46,7 @@ public class MigrationApp {
                 }
             }
         }
+
+        logger.info("Migration Completed");
     }
 }
