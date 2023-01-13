@@ -1,6 +1,6 @@
 plugins {
     id 'application'
-    id 'com.github.ben-manes.versions' version '0.44.0'
+    id 'com.github.ben-manes.versions' version "$dependencyUpdatesPluginVersion"
 }
 
 group = 'com.ruchij.api'
@@ -13,18 +13,18 @@ dependencies {
     implementation(
             project(':crawler'),
             project(':migration-app'),
-            'com.typesafe:config:1.4.2',
-            'io.javalin:javalin-bundle:5.3.0',
-            'org.mindrot:jbcrypt:0.4',
-            'io.reactivex.rxjava3:rxjava:3.1.5',
-            'co.elastic.clients:elasticsearch-java:8.5.3',
-            'io.lettuce:lettuce-core:6.2.2.RELEASE',
-            'ch.qos.logback:logback-classic:1.4.5',
-            'org.testcontainers:testcontainers:1.17.6'
+            "com.typesafe:config:$typesafeConfigVersion",
+            "io.javalin:javalin-bundle:$javalinVersion",
+            "org.mindrot:jbcrypt:$jbcryptVersion",
+            "io.reactivex.rxjava3:rxjava:$rxJavaVersion",
+            "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
+            "io.lettuce:lettuce-core:$lettuceVersion",
+            "ch.qos.logback:logback-classic:$logbackVersion",
+            "org.testcontainers:testcontainers:$testContainersVersion"
     )
 
     testImplementation(
-            'org.junit.jupiter:junit-jupiter:5.9.1'
+            "org.junit.jupiter:junit-jupiter:$junitVersion"
     )
 }
 
