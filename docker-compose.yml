@@ -1,25 +1,25 @@
 version: "3.9"
 
 services:
-#  api:
-#    image: ghcr.io/ruchira088/job-market-analyzer-api:main
-#    ports:
-#      - 8080:8080
-#    depends_on:
-#      migration-app:
-#        condition: service_completed_successfully
-#      redis:
-#        condition: service_healthy
-#      elasticsearch:
-#        condition: service_healthy
-#    environment:
-#      ELASTICSEARCH_HOST: elasticsearch
-#      ELASTICSEARCH_PORT: 9200
-#      ENCRYPTION_KEY: "ahV2wB8G+6hQDwzfFoZcKlM4KC//qjA0Jq3TjewqgGQ="
-#      DEFAULT_IV: "W6qURTo/i3zikcdrBpC/LQ=="
-#      REDIS_HOST: redis
-#      REDIS_PORT: 6379
-#      REDIS_PASSWORD: "my-redis-password"
+  api:
+    image: ghcr.io/ruchira088/job-market-analyzer-api:main
+    ports:
+      - 8080:8080
+    depends_on:
+      migration-app:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ENCRYPTION_KEY: "ahV2wB8G+6hQDwzfFoZcKlM4KC//qjA0Jq3TjewqgGQ="
+      DEFAULT_IV: "W6qURTo/i3zikcdrBpC/LQ=="
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: "my-redis-password"
 
   migration-app:
     image: ghcr.io/ruchira088/job-market-analyzer-migration-app:main

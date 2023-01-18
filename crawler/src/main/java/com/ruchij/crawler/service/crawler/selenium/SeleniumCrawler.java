@@ -12,6 +12,8 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CompletableFuture;
+
 public class SeleniumCrawler implements Crawler {
     private static final Logger logger = LoggerFactory.getLogger(SeleniumCrawler.class);
 
@@ -46,5 +48,21 @@ public class SeleniumCrawler implements Crawler {
                         logger.info("Completed SeleniumCrawler for crawlTaskId=%s".formatted(crawlerTaskId));
                     });
             });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> isHealthy() {
+        ChromeDriver chromeDriver = new ChromeDriver();
+
+        try {
+            LinkedIn linkedIn = new LinkedIn(chromeDriver);
+            linkedIn.open();
+            return CompletableFuture.completedFuture(true);
+        } catch (Exception exception) {
+            logger.error("Unable to open LinkedIn webpage", exception);
+            return CompletableFuture.completedFuture(false);
+        } finally {
+            chromeDriver.quit();
+        }
     }
 }

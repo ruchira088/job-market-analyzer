@@ -7,16 +7,19 @@
       import_tasks: tasks/build-and-publish-docker-image.yml
       vars:
         app: migration-app
+        dockerfile: DockerfileJava.j2
         publish: false
 
     - name: Build crawler Docker image
       import_tasks: tasks/build-and-publish-docker-image.yml
       vars:
         app: crawler
+        dockerfile: DockerfileSelenium.j2
         publish: false
 
     - name: Build API Docker image
       import_tasks: tasks/build-and-publish-docker-image.yml
       vars:
         app: api
+        dockerfile: DockerfileSelenium.j2
         publish: false

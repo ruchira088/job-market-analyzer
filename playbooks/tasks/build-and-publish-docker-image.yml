@@ -24,7 +24,7 @@
 
 - name: Generate the Dockerfile
   template:
-    src: docker/Dockerfile.j2
+    src: docker/{{ dockerfile }}
     dest: output/Dockerfile-{{ app }}
   vars:
     build_timestamp: "{{ ansible_date_time.iso8601 }}"
@@ -50,7 +50,7 @@
       shell: |
         docker buildx build \
           --push \
-          --platform linux/arm64,linux/amd64 \
+          --platform linux/amd64 \
           -t ghcr.io/ruchira088/job-market-analyzer-{{ app }}:{{ git_branch }} \
           -t ghcr.io/ruchira088/job-market-analyzer-{{ app }}:{{ git_branch }}-{{ git_commit }} \
           -f output/Dockerfile-{{ app }} \
