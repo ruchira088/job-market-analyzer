@@ -72,7 +72,7 @@ public class HealthServiceImpl implements HealthService {
 
     private HealthStatus resolve(CompletableFuture<HealthStatus> completableFuture) {
         try {
-            return completableFuture.get(TIME_OUT.toMillis(), TimeUnit.MILLISECONDS);
+            return completableFuture.get();
         } catch (Exception exception) {
             return HealthStatus.UNHEALTHY;
         }
@@ -85,8 +85,10 @@ public class HealthServiceImpl implements HealthService {
 
         scheduledExecutorService.schedule(
             () -> {
-                result.complete(HealthStatus.UNHEALTHY);
-                completableFuture.cancel(true);
+                if (!completableFuture.isDone()) {
+                    result.complete(HealthStatus.UNHEALTHY);
+                    completableFuture.cancel(true);
+                }
             }, TIME_OUT.toMillis(),
             TimeUnit.MILLISECONDS
         );

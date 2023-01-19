@@ -17,6 +17,8 @@ import com.ruchij.api.services.crawler.ExtendedCrawlManager;
 import com.ruchij.api.services.crawler.ExtendedCrawlManagerImpl;
 import com.ruchij.api.services.hashing.BCryptPasswordHashingService;
 import com.ruchij.api.services.hashing.PasswordHashingService;
+import com.ruchij.api.services.health.HealthService;
+import com.ruchij.api.services.health.HealthServiceImpl;
 import com.ruchij.api.services.lock.LocalLockService;
 import com.ruchij.api.services.lock.LockService;
 import com.ruchij.api.services.user.UserService;
@@ -45,8 +47,10 @@ import com.typesafe.config.ConfigFactory;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson;
+import okhttp3.OkHttpClient;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -59,7 +63,8 @@ public class ApiApp {
         Config config = ConfigFactory.load();
         ApiConfiguration apiConfiguration = ApiConfiguration.parse(config);
 
-        httpApplication(apiConfiguration, __ -> {})
+        httpApplication(apiConfiguration, __ -> {
+        })
             .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
     }
 
@@ -97,9 +102,11 @@ public class ApiApp {
         CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
         EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
-        KeyValueStore keyValueStore = new RedisKeyValueStore(apiConfiguration.redisConfiguration().uri());
+        RedisKeyValueStore redisKeyValueStore =
+            new RedisKeyValueStore(apiConfiguration.redisConfiguration().uri());
+
         KeyValueStore authenticationKeyValueStore =
-            new NamespacedKeyValueStore(keyValueStore, AuthenticationToken.class.getSimpleName());
+            new NamespacedKeyValueStore(redisKeyValueStore, AuthenticationToken.class.getSimpleName());
 
         Clock clock = Clock.systemClock();
         RandomGenerator<String> tokenGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
@@ -125,7 +132,7 @@ public class ApiApp {
                 clock
             );
 
-        ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
+        ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(4);
         LockService lockService = new LocalLockService(scheduledExecutorService, clock);
 
         ExtendedCrawlManager extendedCrawlManager =
@@ -152,7 +159,28 @@ public class ApiApp {
                 clock
             );
 
-        Routes routes = new Routes(extendedCrawlManager, userService, authenticationService, linkedInCredentialsService);
+        OkHttpClient httpClient =
+            new OkHttpClient.Builder()
+                .callTimeout(Duration.ofSeconds(20))
+                .build();
+
+        HealthService healthService =
+            new HealthServiceImpl(
+                elasticsearchAsyncClient,
+                redisKeyValueStore.getRedisAsyncCommands(),
+                httpClient,
+                crawler,
+                scheduledExecutorService
+            );
+
+        Routes routes =
+            new Routes(
+                extendedCrawlManager,
+                userService,
+                authenticationService,
+                linkedInCredentialsService,
+                healthService
+            );
 
         return routes;
     }

@@ -36,6 +36,10 @@ public class RedisKeyValueStore implements KeyValueStore, AutoCloseable {
         return redisAsyncCommands.del(key).toCompletableFuture().thenApply(count -> count == 1);
     }
 
+    public RedisAsyncCommands<String, String> getRedisAsyncCommands() {
+        return redisAsyncCommands;
+    }
+
     @Override
     public void close() {
         redisConnection.close();
