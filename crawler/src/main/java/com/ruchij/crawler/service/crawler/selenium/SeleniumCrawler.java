@@ -9,6 +9,8 @@ import com.ruchij.crawler.service.crawler.selenium.site.pages.JobsPage;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +29,9 @@ public class SeleniumCrawler implements Crawler {
     public Flowable<CrawledJob> crawl(String crawlerTaskId, String email, String password) {
         logger.info("Started SeleniumCrawler id=%s".formatted(crawlerTaskId));
 
-        return Flowable.fromSupplier(ChromeDriver::new)
-            .concatMap(chromeDriver -> {
-                LinkedIn linkedIn = new LinkedIn(chromeDriver);
+        return Flowable.fromSupplier(this::remoteWebDriver)
+            .concatMap(remoteWebDriver -> {
+                LinkedIn linkedIn = new LinkedIn(remoteWebDriver);
 
                 HomePage homePage = linkedIn.login(email, password);
                 JobsPage jobsPage = homePage.jobsPage();
@@ -44,25 +46,38 @@ public class SeleniumCrawler implements Crawler {
                     )
                     .doOnError(throwable -> logger.error("Error occurred with crawlTaskId=%s".formatted(crawlerTaskId), throwable))
                     .doFinally(() -> {
-                        chromeDriver.quit();
+                        remoteWebDriver.quit();
                         logger.info("Completed SeleniumCrawler for crawlTaskId=%s".formatted(crawlerTaskId));
                     });
             });
     }
 
+    private RemoteWebDriver remoteWebDriver() {
+        ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions.setHeadless(true);
+        chromeOptions.addArguments(
+            "--disable-dev-shm-usage",
+            "--no-sandbox"
+        );
+
+        RemoteWebDriver chromeDriver = new ChromeDriver(chromeOptions);
+
+        return chromeDriver;
+    }
+
     @Override
     public CompletableFuture<Boolean> isHealthy() {
-        ChromeDriver chromeDriver = new ChromeDriver();
+        RemoteWebDriver remoteWebDriver = remoteWebDriver();
 
         try {
-            LinkedIn linkedIn = new LinkedIn(chromeDriver);
+            LinkedIn linkedIn = new LinkedIn(remoteWebDriver);
             linkedIn.open();
             return CompletableFuture.completedFuture(true);
         } catch (Exception exception) {
             logger.error("Unable to open LinkedIn webpage", exception);
             return CompletableFuture.completedFuture(false);
         } finally {
-            chromeDriver.quit();
+            remoteWebDriver.quit();
         }
     }
 }
