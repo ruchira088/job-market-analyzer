@@ -6,6 +6,7 @@ import com.ruchij.api.config.ApiSecurityConfiguration;
 import com.ruchij.api.config.HttpConfiguration;
 import com.ruchij.api.config.RedisConfiguration;
 import com.ruchij.development.providers.ConfigurationProvider;
+import com.ruchij.development.providers.ContainerConfigurationProvider;
 import com.ruchij.development.providers.DockerComposeConfigurationProvider;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
 import org.eclipse.jetty.server.Connector;
@@ -22,8 +23,8 @@ public class DevelopmentApp {
     private static final Logger logger = LoggerFactory.getLogger(DevelopmentApp.class);
 
     public static void main(String[] args) throws Exception {
-//        ConfigurationProvider configurationProvider = new ContainerConfigurationProvider();
-        ConfigurationProvider configurationProvider = new DockerComposeConfigurationProvider();
+        ConfigurationProvider configurationProvider = new ContainerConfigurationProvider();
+//        ConfigurationProvider configurationProvider = new DockerComposeConfigurationProvider();
 
         ElasticsearchConfiguration elasticsearchConfiguration = configurationProvider.elasticsearchConfiguration();
 

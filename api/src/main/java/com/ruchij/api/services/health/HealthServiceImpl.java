@@ -81,7 +81,13 @@ public class HealthServiceImpl implements HealthService {
     private CompletableFuture<HealthStatus> race(CompletableFuture<HealthStatus> completableFuture) {
         CompletableFuture<HealthStatus> result = new CompletableFuture<>();
 
-        completableFuture.thenAccept(result::complete);
+        completableFuture.whenComplete(((healthStatus, throwable) -> {
+            if (throwable != null) {
+                result.complete(HealthStatus.UNHEALTHY);
+            } else {
+                result.complete(healthStatus);
+            }
+        }));
 
         scheduledExecutorService.schedule(
             () -> {
