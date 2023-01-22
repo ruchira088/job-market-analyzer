@@ -25,9 +25,7 @@ class ElasticsearchCrawlerTaskDaoTest {
             String crawlerTaskId = idGenerator.generate();
             String userId = idGenerator.generate();
 
-            Clock clock = Clock.systemClock();
-            Instant startTimestamp = clock.timestamp();
-
+            Instant startTimestamp = Instant.parse("2023-01-22T07:01:14.050Z");
             CrawlerTask crawlerTask = new CrawlerTask(crawlerTaskId, userId, startTimestamp, Optional.empty());
 
             String insertionResult = waitFor(elasticsearchCrawlerTaskDao.insert(crawlerTask));
@@ -38,7 +36,7 @@ class ElasticsearchCrawlerTaskDaoTest {
             Assertions.assertTrue(maybeCrawlerTask.isPresent());
             Assertions.assertEquals(crawlerTask, maybeCrawlerTask.get());
 
-            Instant finishTimestamp = clock.timestamp();
+            Instant finishTimestamp = Instant.parse("2023-01-22T08:01:14.050Z");
             CrawlerTask finishedCrawlerTask =
                 new CrawlerTask(crawlerTaskId, userId, startTimestamp, Optional.of(finishTimestamp));
 
