@@ -82,17 +82,19 @@ public class SeleniumCrawler implements Crawler {
 
     @Override
     public CompletableFuture<Boolean> isHealthy() {
-        RemoteWebDriver remoteWebDriver = remoteWebDriver();
+        return CompletableFuture.supplyAsync(() -> {
+            RemoteWebDriver remoteWebDriver = remoteWebDriver();
 
-        try {
-            LinkedIn linkedIn = new LinkedIn(remoteWebDriver);
-            linkedIn.open();
-            return CompletableFuture.completedFuture(true);
-        } catch (Exception exception) {
-            logger.error("Unable to open LinkedIn webpage", exception);
-            return CompletableFuture.completedFuture(false);
-        } finally {
-            remoteWebDriver.quit();
-        }
+            try {
+                LinkedIn linkedIn = new LinkedIn(remoteWebDriver);
+                linkedIn.open();
+                return true;
+            } catch (Exception exception) {
+                logger.error("Unable to open LinkedIn webpage", exception);
+                return false;
+            } finally {
+                remoteWebDriver.quit();
+            }
+        });
     }
 }
