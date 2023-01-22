@@ -4,7 +4,7 @@ import com.ruchij.migration.config.ElasticsearchConfiguration;
 
 public class ElasticsearchContainer extends org.testcontainers.elasticsearch.ElasticsearchContainer {
     public ElasticsearchContainer() {
-        super("docker.elastic.co/elasticsearch/elasticsearch:8.5.2");
+        super("docker.elastic.co/elasticsearch/elasticsearch:8.5.3");
         addEnv("xpack.security.enabled", "false");
     }
 
