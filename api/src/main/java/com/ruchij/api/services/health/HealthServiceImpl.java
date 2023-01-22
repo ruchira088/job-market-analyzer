@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HealthServiceImpl implements HealthService {
     private static final Logger logger = LoggerFactory.getLogger(HealthServiceImpl.class);
-    private static final Duration TIME_OUT = Duration.ofSeconds(25);
+    private static final Duration TIME_OUT = Duration.ofSeconds(50);
 
     private final ElasticsearchAsyncClient elasticsearchAsyncClient;
     private final RedisAsyncCommands<String, String> redisAsyncCommands;
