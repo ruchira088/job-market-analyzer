@@ -10,6 +10,8 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +55,19 @@ public class SeleniumCrawler implements Crawler {
     }
 
     private RemoteWebDriver remoteWebDriver() {
+        return firefoxDriver();
+    }
+
+    private FirefoxDriver firefoxDriver() {
+        FirefoxOptions firefoxOptions = new FirefoxOptions();
+        firefoxOptions.setHeadless(true);
+
+        FirefoxDriver firefoxDriver = new FirefoxDriver(firefoxOptions);
+
+        return firefoxDriver;
+    }
+
+    private ChromeDriver chromeDriver() {
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.setHeadless(true);
         chromeOptions.addArguments(
@@ -60,7 +75,7 @@ public class SeleniumCrawler implements Crawler {
             "--no-sandbox"
         );
 
-        RemoteWebDriver chromeDriver = new ChromeDriver(chromeOptions);
+        ChromeDriver chromeDriver = new ChromeDriver(chromeOptions);
 
         return chromeDriver;
     }
