@@ -120,6 +120,8 @@ public class HealthServiceImpl implements HealthService {
                 } else {
                     completableFuture.complete(HealthStatus.UNHEALTHY);
                 }
+
+                response.close();
             }
         });
 
