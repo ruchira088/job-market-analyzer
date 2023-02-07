@@ -22,3 +22,7 @@ dependencies {
 application {
     mainClass = 'com.ruchij.migration.MigrationApp'
 }
+
+distTar {
+    archiveFileName = 'migration-app.tar'
+}

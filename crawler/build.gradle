@@ -35,3 +35,7 @@ application {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+distTar {
+    archiveFileName = 'crawler.tar'
+}
