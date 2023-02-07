@@ -2,7 +2,6 @@ package com.ruchij.crawler.service.crawler.selenium.site.pages;
 
 import com.ruchij.crawler.dao.job.models.Job;
 import com.ruchij.crawler.dao.job.models.WorkplaceType;
-import com.ruchij.crawler.service.clock.Clock;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import org.openqa.selenium.By;
@@ -14,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -34,6 +34,49 @@ public class JobsPage {
         this.webDriverWait = new WebDriverWait(remoteWebDriver, Duration.ofSeconds(5));
     }
 
+    static Optional<Job> parse(String jobId, String crawlId, Instant timestamp, WebElement jobDetails, String currentUrl) {
+        try {
+            URL pageUrl = new URL(currentUrl);
+
+            String href = jobDetails.findElement(By.cssSelector(".jobs-unified-top-card__content--two-pane a.ember-view"))
+                .getDomAttribute("href");
+
+            URL jobUrl = new URL("%s://%s%s".formatted(pageUrl.getProtocol(), pageUrl.getHost(), href));
+
+            Function<String, String> findText =
+                cssSelector -> jobDetails.findElement(By.cssSelector(cssSelector)).getText();
+
+            String title = findText.apply(".jobs-unified-top-card__job-title");
+            String companyName = findText.apply(".jobs-unified-top-card__company-name");
+            String location = findText.apply(".jobs-unified-top-card__bullet");
+
+            String jobDescription = findText.apply(".jobs-description");
+
+            List<WebElement> workplaceTypes =
+                jobDetails.findElements(By.cssSelector(".jobs-unified-top-card__workplace-type"));
+
+            Optional<WorkplaceType> workplaceType =
+                workplaceTypes.isEmpty() ? Optional.empty() : WorkplaceType.parse(workplaceTypes.get(0).getText());
+
+            Job job = new Job();
+            job.setId(jobId);
+            job.setCrawlId(crawlId);
+            job.setCrawledAt(timestamp);
+            job.setLink(jobUrl);
+            job.setTitle(title);
+            job.setCompanyName(companyName);
+            job.setLocation(location);
+            job.setWorkplaceType(workplaceType);
+            job.setDetails(jobDescription);
+
+            return Optional.of(job);
+        } catch (Exception exception) {
+            logger.error("Error occurred parsing WebElement to a Job", exception);
+
+            return Optional.empty();
+        }
+    }
+
     public int pageCount() {
         showAllJobs();
 
@@ -42,7 +85,7 @@ public class JobsPage {
 
         return pagination.findElements(By.cssSelector("li[%s]".formatted(paginationAttribute))).stream()
             .flatMap(element -> Optional.ofNullable(element.getAttribute(paginationAttribute)).stream())
-            .flatMap(string ->  {
+            .flatMap(string -> {
                 try {
                     return Stream.of(Integer.parseInt(string));
                 } catch (NumberFormatException numberFormatException) {
@@ -95,7 +138,7 @@ public class JobsPage {
                     webDriverWait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(".artdeco-loader")));
 
                     WebElement jobDetails = remoteWebDriver.findElement(By.cssSelector(".jobs-details"));
-                    parse(jobId, crawlId, clock.timestamp(), jobDetails, remoteWebDriver.getCurrentUrl()).ifPresent(onJob);
+                    parse(jobId, crawlId, clock.instant(), jobDetails, remoteWebDriver.getCurrentUrl()).ifPresent(onJob);
                 }
             }
 
@@ -118,49 +161,6 @@ public class JobsPage {
         }
 
         onComplete.run();
-    }
-
-    static Optional<Job> parse(String jobId, String crawlId, Instant timestamp, WebElement jobDetails, String currentUrl) {
-        try {
-            URL pageUrl = new URL(currentUrl);
-
-            String href = jobDetails.findElement(By.cssSelector(".jobs-unified-top-card__content--two-pane a.ember-view"))
-                .getDomAttribute("href");
-
-            URL jobUrl = new URL("%s://%s%s".formatted(pageUrl.getProtocol(), pageUrl.getHost(), href));
-
-            Function<String, String> findText =
-                cssSelector -> jobDetails.findElement(By.cssSelector(cssSelector)).getText();
-
-            String title = findText.apply(".jobs-unified-top-card__job-title");
-            String companyName = findText.apply(".jobs-unified-top-card__company-name");
-            String location = findText.apply(".jobs-unified-top-card__bullet");
-
-            String jobDescription = findText.apply(".jobs-description");
-
-            List<WebElement> workplaceTypes =
-                jobDetails.findElements(By.cssSelector(".jobs-unified-top-card__workplace-type"));
-
-            Optional<WorkplaceType> workplaceType =
-                workplaceTypes.isEmpty() ? Optional.empty() : WorkplaceType.parse(workplaceTypes.get(0).getText());
-
-            Job job = new Job();
-            job.setId(jobId);
-            job.setCrawlId(crawlId);
-            job.setCrawledAt(timestamp);
-            job.setLink(jobUrl);
-            job.setTitle(title);
-            job.setCompanyName(companyName);
-            job.setLocation(location);
-            job.setWorkplaceType(workplaceType);
-            job.setDetails(jobDescription);
-
-            return Optional.of(job);
-        } catch (Exception exception) {
-            logger.error("Error occurred parsing WebElement to a Job", exception);
-
-            return Optional.empty();
-        }
     }
 
     void showAllJobs() {

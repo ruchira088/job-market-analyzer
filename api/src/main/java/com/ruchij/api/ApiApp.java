@@ -31,7 +31,6 @@ import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentials
 import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.task.CrawlerTaskDao;
 import com.ruchij.crawler.dao.task.ElasticsearchCrawlerTaskDao;
-import com.ruchij.crawler.service.clock.Clock;
 import com.ruchij.crawler.service.crawler.CrawlManager;
 import com.ruchij.crawler.service.crawler.CrawlManagerImpl;
 import com.ruchij.crawler.service.crawler.Crawler;
@@ -50,6 +49,7 @@ import io.javalin.json.JavalinJackson;
 import okhttp3.OkHttpClient;
 
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
@@ -108,7 +108,6 @@ public class ApiApp {
         KeyValueStore authenticationKeyValueStore =
             new NamespacedKeyValueStore(redisKeyValueStore, AuthenticationToken.class.getSimpleName());
 
-        Clock clock = Clock.systemClock();
         RandomGenerator<String> tokenGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
         RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
 
@@ -117,6 +116,8 @@ public class ApiApp {
                 apiConfiguration.apiSecurityConfiguration().encryptionKey(),
                 SecureRandom.getInstanceStrong()
             );
+
+        Clock clock = Clock.systemUTC();
 
         LinkedInCredentialsService linkedInCredentialsService =
             new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
@@ -170,7 +171,9 @@ public class ApiApp {
                 redisKeyValueStore.getRedisAsyncCommands(),
                 httpClient,
                 crawler,
-                scheduledExecutorService
+                scheduledExecutorService,
+                System.getProperties(),
+                clock
             );
 
         Routes routes =

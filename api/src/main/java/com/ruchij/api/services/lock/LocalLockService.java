@@ -1,8 +1,8 @@
 package com.ruchij.api.services.lock;
 
 import com.ruchij.api.services.lock.models.Lock;
-import com.ruchij.crawler.service.clock.Clock;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class LocalLockService implements LockService {
         if (locks.containsKey(lockId)) {
             return CompletableFuture.completedFuture(Optional.empty());
         } else {
-            Instant timestamp = clock.timestamp();
+            Instant timestamp = clock.instant();
             Lock lock = new Lock(lockId, timestamp, timestamp.plus(timeout));
             locks.put(lockId, lock);
 

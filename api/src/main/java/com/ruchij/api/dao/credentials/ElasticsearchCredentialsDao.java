@@ -4,7 +4,6 @@ import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch._types.WriteResponseBase;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import com.ruchij.api.dao.credentials.models.Credentials;
 
 import java.util.Optional;

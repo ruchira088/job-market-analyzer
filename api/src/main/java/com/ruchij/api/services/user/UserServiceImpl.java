@@ -6,9 +6,9 @@ import com.ruchij.api.dao.user.UserDao;
 import com.ruchij.api.dao.user.models.User;
 import com.ruchij.api.exceptions.ResourceConflictException;
 import com.ruchij.api.services.hashing.PasswordHashingService;
-import com.ruchij.crawler.service.clock.Clock;
 import com.ruchij.crawler.service.random.RandomGenerator;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
             })
             .thenCompose(__ -> {
                 String userId = idGenerator.generate();
-                Instant timestamp = clock.timestamp();
+                Instant timestamp = clock.instant();
 
                 User user =
                     new User(userId, timestamp, email, firstName, lastName);

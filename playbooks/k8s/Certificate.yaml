@@ -2,11 +2,11 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: my-http4s-project-certificate
-  namespace: {{ namespace }}
+  namespace: { { namespace } }
 spec:
   secretName: my-http4s-project-tls
   issuerRef:
     kind: ClusterIssuer
     name: lets-encrypt
   dnsNames:
-    - {{ hostname }}
+    - { { hostname } }

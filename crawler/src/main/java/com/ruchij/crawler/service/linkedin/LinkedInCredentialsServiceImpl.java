@@ -4,13 +4,13 @@ import com.ruchij.crawler.dao.elasticsearch.models.EncryptedText;
 import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.linkedin.models.EncryptedLinkedInCredentials;
 import com.ruchij.crawler.exceptions.ResourceNotFoundException;
-import com.ruchij.crawler.service.clock.Clock;
 import com.ruchij.crawler.service.encryption.EncryptionService;
 import com.ruchij.crawler.service.linkedin.models.LinkedInCredentials;
 import com.ruchij.crawler.utils.Transformers;
 import io.reactivex.rxjava3.core.Flowable;
 
 import java.security.GeneralSecurityException;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
@@ -58,7 +58,7 @@ public class LinkedInCredentialsServiceImpl implements LinkedInCredentialsServic
     @Override
     public CompletableFuture<LinkedInCredentials> insert(String userId, String email, String password) {
         try {
-            Instant timestamp = clock.timestamp();
+            Instant timestamp = clock.instant();
 
             String encryptedEmail = encryptionService.encrypt(email.getBytes());
             String encryptedPassword = encryptionService.encrypt(password.getBytes());

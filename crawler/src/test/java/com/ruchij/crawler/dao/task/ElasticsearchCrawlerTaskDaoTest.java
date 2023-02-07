@@ -1,7 +1,6 @@
 package com.ruchij.crawler.dao.task;
 
 import com.ruchij.crawler.dao.task.models.CrawlerTask;
-import com.ruchij.crawler.service.clock.Clock;
 import com.ruchij.crawler.service.random.RandomGenerator;
 import com.ruchij.test.ElasticsearchTest;
 import org.junit.jupiter.api.Assertions;

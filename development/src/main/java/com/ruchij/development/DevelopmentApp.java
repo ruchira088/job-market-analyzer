@@ -7,7 +7,6 @@ import com.ruchij.api.config.HttpConfiguration;
 import com.ruchij.api.config.RedisConfiguration;
 import com.ruchij.development.providers.ConfigurationProvider;
 import com.ruchij.development.providers.ContainerConfigurationProvider;
-import com.ruchij.development.providers.DockerComposeConfigurationProvider;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;

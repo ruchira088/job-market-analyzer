@@ -1,10 +1,12 @@
 package com.ruchij.api.services.health;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import com.ruchij.api.services.health.models.BuildInformation;
 import com.ruchij.api.services.health.models.HealthCheck;
 import com.ruchij.api.services.health.models.HealthStatus;
 import com.ruchij.api.services.health.models.ServiceInformation;
 import com.ruchij.crawler.service.crawler.Crawler;
+import com.ruchij.crawler.utils.JsonUtils;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -26,23 +32,50 @@ public class HealthServiceImpl implements HealthService {
     private final OkHttpClient okHttpClient;
     private final Crawler crawler;
     private final ScheduledExecutorService scheduledExecutorService;
+    private final Properties properties;
+    private final Clock clock;
 
     public HealthServiceImpl(ElasticsearchAsyncClient elasticsearchAsyncClient,
                              RedisAsyncCommands<String, String> redisAsyncCommands,
                              OkHttpClient okHttpClient,
                              Crawler crawler,
-                             ScheduledExecutorService scheduledExecutorService) {
+                             ScheduledExecutorService scheduledExecutorService,
+                             Properties properties,
+                             Clock clock) {
         this.elasticsearchAsyncClient = elasticsearchAsyncClient;
         this.redisAsyncCommands = redisAsyncCommands;
         this.okHttpClient = okHttpClient;
         this.crawler = crawler;
-
         this.scheduledExecutorService = scheduledExecutorService;
+        this.properties = properties;
+        this.clock = clock;
     }
 
     @Override
     public CompletableFuture<ServiceInformation> serviceInformation() {
-        return null;
+        try {
+            String javaVersion = properties.getProperty("java.version", "unknown");
+            Instant timestamp = clock.instant();
+
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("build-information.json");
+            BuildInformation buildInformation = JsonUtils.objectMapper.readValue(inputStream, BuildInformation.class);
+
+            ServiceInformation serviceInformation =
+                new ServiceInformation(
+                    buildInformation.name(),
+                    buildInformation.version(),
+                    javaVersion,
+                    buildInformation.gradleVersion(),
+                    timestamp,
+                    buildInformation.gitBranch(),
+                    buildInformation.gitCommit(),
+                    buildInformation.buildTimestamp()
+                );
+
+            return CompletableFuture.completedFuture(serviceInformation);
+        } catch (IOException ioException) {
+            return CompletableFuture.failedFuture(ioException);
+        }
     }
 
     @Override

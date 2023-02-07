@@ -3,12 +3,12 @@ package com.ruchij.api.service.lock;
 import com.ruchij.api.services.lock.LocalLockService;
 import com.ruchij.api.services.lock.LockService;
 import com.ruchij.api.services.lock.models.Lock;
-import com.ruchij.crawler.service.clock.Clock;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LockServiceTest {
     private final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(4);
-    private final Clock clock = Clock.systemClock();
+    private final Clock clock = Clock.systemUTC();
 
     private final LockService lockService = new LocalLockService(scheduledExecutorService, clock);
 
@@ -88,7 +88,7 @@ class LockServiceTest {
 
     @Test
     void lockTimeouts() throws Exception {
-        Instant instant = clock.timestamp();
+        Instant instant = clock.instant();
         String lockId = UUID.randomUUID().toString();
         Duration timeout = Duration.ofMillis(500);
 
@@ -97,7 +97,7 @@ class LockServiceTest {
 
         Assertions.assertTrue(optionalLock.isPresent());
 
-        while (clock.timestamp().isBefore(instant.plus(timeout))) {
+        while (clock.instant().isBefore(instant.plus(timeout))) {
             Assertions.assertFalse(
                 lockService.lock(lockId, timeout)
                     .get(100, TimeUnit.MILLISECONDS)

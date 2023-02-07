@@ -9,7 +9,6 @@ import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentials
 import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.task.CrawlerTaskDao;
 import com.ruchij.crawler.dao.task.ElasticsearchCrawlerTaskDao;
-import com.ruchij.crawler.service.clock.Clock;
 import com.ruchij.crawler.service.crawler.CrawlManager;
 import com.ruchij.crawler.service.crawler.CrawlManagerImpl;
 import com.ruchij.crawler.service.crawler.Crawler;
@@ -25,6 +24,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.util.UUID;
 
 public class CrawlerApp {
@@ -48,7 +48,7 @@ public class CrawlerApp {
             CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
             EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
-            Clock clock = Clock.systemClock();
+            Clock clock = Clock.systemUTC();
             RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
 
             EncryptionService encryptionService =

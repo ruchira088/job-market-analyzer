@@ -8,5 +8,5 @@ public interface EncryptionService {
 
     String encrypt(byte[] input, IvParameterSpec iv) throws GeneralSecurityException;
 
-    byte[] decrypt(String encryptedData)throws GeneralSecurityException;
+    byte[] decrypt(String encryptedData) throws GeneralSecurityException;
 }

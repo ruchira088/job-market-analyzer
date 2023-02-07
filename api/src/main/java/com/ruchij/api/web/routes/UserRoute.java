@@ -1,7 +1,6 @@
 package com.ruchij.api.web.routes;
 
 import com.ruchij.api.services.user.UserService;
-import com.ruchij.api.web.middleware.AuthenticationMiddleware;
 import com.ruchij.api.web.requests.CreateUserRequest;
 import com.ruchij.api.web.responses.UserResponse;
 import io.javalin.apibuilder.EndpointGroup;

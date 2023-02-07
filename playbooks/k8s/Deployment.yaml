@@ -2,18 +2,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-http4s-project-deployment
-  namespace: {{ namespace }}
+  namespace: { { namespace } }
 spec:
   selector:
     matchLabels:
       app: my-http4s-project
-      branch: {{ git_branch }}
+      branch: { { git_branch } }
   replicas: 1
   template:
     metadata:
       labels:
         app: my-http4s-project
-        branch: {{ git_branch }}
+        branch: { { git_branch } }
     spec:
       containers:
         - name: my-http4s-project-container

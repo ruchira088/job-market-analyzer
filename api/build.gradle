@@ -1,6 +1,9 @@
+import java.time.Instant
+
 plugins {
     id 'application'
     id 'com.github.ben-manes.versions' version "$dependencyUpdatesPluginVersion"
+    id 'net.researchgate.release' version "$releasePluginVersion"
 }
 
 group = 'com.ruchij.api'
@@ -22,7 +25,6 @@ dependencies {
             "ch.qos.logback:logback-classic:$logbackVersion",
             "org.testcontainers:testcontainers:$testContainersVersion",
             "com.squareup.okhttp3:okhttp:$okHttpVersion"
-
     )
 
     testImplementation(
@@ -34,6 +36,50 @@ application {
     mainClass = 'com.ruchij.api.ApiApp'
 }
 
+task buildInformation {
+    doLast {
+        def file = new File("$buildDir/resources/main/build-information.json")
+        file.parentFile.mkdirs()
+
+        if (file.exists()) {
+            file.delete()
+        }
+
+        def buildInfo =
+                """{
+                "name": "job-market-analyzer-api",
+                "group": "${project.group}",
+                "version": "${project.version}",
+                "gradleVersion": "${gradle.gradleVersion}",
+                "buildTimestamp": "${Instant.now()}",
+                "gitBranch": "${'git rev-parse --abbrev-ref HEAD'.execute().text.trim()}",
+                "gitCommit": "${'git rev-parse --short HEAD'.execute().text.trim()}"
+            }"""
+
+        file.withWriter { writer ->
+            writer.write(buildInfo)
+        }
+    }
+}
+
+compileJava {
+    dependsOn buildInformation
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+distTar {
+    archiveFileName = 'api.tar'
+}
+
+release {
+    preTagCommitMessage = 'Setting release version: '
+    newVersionCommitMessage = 'Setting development version: '
+    pushReleaseVersionBranch = 'main'
+
+    git {
+        requireBranch.set('dev')
+    }
 }

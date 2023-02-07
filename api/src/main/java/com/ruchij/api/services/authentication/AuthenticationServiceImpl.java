@@ -9,11 +9,11 @@ import com.ruchij.api.kv.KeyValueStore;
 import com.ruchij.api.services.authentication.models.AuthenticationToken;
 import com.ruchij.api.services.hashing.PasswordHashingService;
 import com.ruchij.crawler.exceptions.ResourceNotFoundException;
-import com.ruchij.crawler.service.clock.Clock;
 import com.ruchij.crawler.service.random.RandomGenerator;
 import com.ruchij.crawler.utils.JsonUtils;
 import com.ruchij.crawler.utils.Transformers;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
@@ -68,7 +68,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             )
             .thenCompose(user -> {
                 String token = tokenGenerator.generate();
-                Instant timestamp = clock.timestamp();
+                Instant timestamp = clock.instant();
 
                 AuthenticationToken authenticationToken =
                     new AuthenticationToken(timestamp, user.userId(), token, timestamp.plus(SESSION_DURATION), 0);
@@ -87,7 +87,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public CompletableFuture<User> authenticate(String token) {
         return existingToken(token)
             .thenCompose(authenticationToken -> {
-                Instant timestamp = clock.timestamp();
+                Instant timestamp = clock.instant();
 
                 if (authenticationToken.expiresAt().isAfter(timestamp)) {
                     try {

@@ -7,8 +7,6 @@ import com.ruchij.migration.containers.ElasticsearchContainer;
 import com.ruchij.migration.elasticsearch.ElasticsearchClientBuilder;
 
 public interface ElasticsearchTest {
-    void run(ElasticsearchAsyncClient elasticsearchAsyncClient) throws Exception;
-
     static void run(ElasticsearchTest elasticsearchTest) throws Exception {
         try (ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer();
              ElasticsearchClientBuilder elasticsearchClientBuilder =
@@ -18,4 +16,6 @@ public interface ElasticsearchTest {
             elasticsearchTest.run(elasticsearchAsyncClient);
         }
     }
+
+    void run(ElasticsearchAsyncClient elasticsearchAsyncClient) throws Exception;
 }

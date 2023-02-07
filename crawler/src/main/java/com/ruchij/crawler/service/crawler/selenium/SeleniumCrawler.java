@@ -1,6 +1,5 @@
 package com.ruchij.crawler.service.crawler.selenium;
 
-import com.ruchij.crawler.service.clock.Clock;
 import com.ruchij.crawler.service.crawler.Crawler;
 import com.ruchij.crawler.service.crawler.models.CrawledJob;
 import com.ruchij.crawler.service.crawler.selenium.site.LinkedIn;
@@ -16,6 +15,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.concurrent.CompletableFuture;
 
 public class SeleniumCrawler implements Crawler {

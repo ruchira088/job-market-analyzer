@@ -3,11 +3,11 @@ package com.ruchij.crawler.service.crawler;
 import com.ruchij.crawler.dao.job.JobDao;
 import com.ruchij.crawler.dao.task.CrawlerTaskDao;
 import com.ruchij.crawler.dao.task.models.CrawlerTask;
-import com.ruchij.crawler.service.clock.Clock;
 import com.ruchij.crawler.service.crawler.models.CrawledJob;
 import com.ruchij.crawler.service.random.RandomGenerator;
 import io.reactivex.rxjava3.core.Flowable;
 
+import java.time.Clock;
 import java.util.Optional;
 
 public class CrawlManagerImpl implements CrawlManager {
@@ -36,13 +36,13 @@ public class CrawlManagerImpl implements CrawlManager {
         String crawlerTaskId = idGenerator.generate();
 
         CrawlerTask crawlerTask =
-            new CrawlerTask(crawlerTaskId, userId, clock.timestamp(), Optional.empty());
+            new CrawlerTask(crawlerTaskId, userId, clock.instant(), Optional.empty());
 
         return Flowable.fromCompletionStage(crawlerTaskDao.insert(crawlerTask))
             .concatMap(value -> crawler.crawl(crawlerTaskId, linkedInEmail, linkedInPassword))
             .concatMap(crawledJob -> Flowable.fromCompletionStage(jobDao.insert(crawledJob.job())).map(__ -> crawledJob))
             .concatWith(
-                Flowable.fromCompletionStage(crawlerTaskDao.setFinishedTimestamp(crawlerTaskId, clock.timestamp()))
+                Flowable.fromCompletionStage(crawlerTaskDao.setFinishedTimestamp(crawlerTaskId, clock.instant()))
                     .concatMap(__ -> Flowable.empty())
             );
     }

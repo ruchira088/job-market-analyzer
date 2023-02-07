@@ -33,11 +33,11 @@ public class AuthenticationRoute implements EndpointGroup {
                 .future(() ->
                     authenticationService.login(userLoginRequest.email(), userLoginRequest.password())
                         .thenAccept(authenticationToken -> {
-                            Cookie authenticationCookie =
-                                new Cookie(AuthenticationMiddleware.AUTHENTICATION_COOKIE, authenticationToken.token());
+                                Cookie authenticationCookie =
+                                    new Cookie(AuthenticationMiddleware.AUTHENTICATION_COOKIE, authenticationToken.token());
 
-                            authenticationCookie.setSameSite(SameSite.NONE);
-                            authenticationCookie.setSecure(true);
+                                authenticationCookie.setSameSite(SameSite.NONE);
+                                authenticationCookie.setSecure(true);
 
                                 context
                                     .status(HttpStatus.OK)
