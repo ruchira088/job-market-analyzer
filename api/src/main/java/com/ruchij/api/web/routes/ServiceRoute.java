@@ -28,5 +28,18 @@ public class ServiceRoute implements EndpointGroup {
                 )
             )
         );
+
+        path("info", () ->
+            get(context ->
+                context.future(() ->
+                    healthService.serviceInformation()
+                        .thenAccept(serviceInformation ->
+                            context
+                                .status(HttpStatus.OK)
+                                .json(serviceInformation)
+                        )
+                )
+            )
+        );
     }
 }
