@@ -5,6 +5,7 @@ import com.ruchij.api.config.ApiConfiguration;
 import com.ruchij.api.config.ApiSecurityConfiguration;
 import com.ruchij.api.config.HttpConfiguration;
 import com.ruchij.api.config.RedisConfiguration;
+import com.ruchij.api.web.Routes;
 import com.ruchij.development.providers.ConfigurationProvider;
 import com.ruchij.development.providers.ContainerConfigurationProvider;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
@@ -41,8 +42,10 @@ public class DevelopmentApp {
         ApiConfiguration apiConfiguration =
             new ApiConfiguration(elasticsearchConfiguration, redisConfiguration, apiSecurityConfiguration, httpConfiguration);
 
+        Routes routes = ApiApp.routes(apiConfiguration);
+
         ApiApp.httpApplication(
-                apiConfiguration,
+                routes,
                 javalinConfig -> javalinConfig.jetty.server(() -> jettyServer(httpConfiguration))
             )
             .start();

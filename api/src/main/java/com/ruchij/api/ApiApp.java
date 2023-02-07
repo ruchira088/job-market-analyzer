@@ -62,16 +62,16 @@ public class ApiApp {
     public static void main(String[] args) throws Exception {
         Config config = ConfigFactory.load();
         ApiConfiguration apiConfiguration = ApiConfiguration.parse(config);
+        Routes routes = routes(apiConfiguration);
 
-        httpApplication(apiConfiguration, __ -> {
-        })
+        httpApplication(routes, __ -> {})
             .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
     }
 
     public static Javalin httpApplication(
-        ApiConfiguration apiConfiguration,
+        Routes routes,
         Consumer<JavalinConfig> configModifier
-    ) throws Exception {
+    ) {
         return Javalin
             .create(javalinConfig -> {
                     javalinConfig.jsonMapper(new JavalinJackson(objectMapper));
@@ -85,10 +85,10 @@ public class ApiApp {
                     configModifier.accept(javalinConfig);
                 }
             )
-            .routes(routes(apiConfiguration));
+            .routes(routes);
     }
 
-    private static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
+    public static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
         ElasticsearchClientBuilder elasticsearchClientBuilder =
             new ElasticsearchClientBuilder(
                 apiConfiguration.elasticsearchConfiguration(),

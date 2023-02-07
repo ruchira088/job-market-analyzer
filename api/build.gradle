@@ -28,7 +28,8 @@ dependencies {
     )
 
     testImplementation(
-            "org.junit.jupiter:junit-jupiter:$junitVersion"
+            "org.junit.jupiter:junit-jupiter:$junitVersion",
+            "org.mockito:mockito-core:$mockitoVersion"
     )
 }
 
