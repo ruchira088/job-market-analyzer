@@ -3,6 +3,11 @@ version: "3.9"
 services:
   nginx:
     image: nginx:stable-alpine
+    healthcheck:
+      test: "curl -f http://localhost/service/info"
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
     depends_on:
       api:
         condition: service_healthy
