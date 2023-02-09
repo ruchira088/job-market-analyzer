@@ -50,7 +50,7 @@
       shell: |
         docker buildx build \
           --push \
-          --platform linux/amd64 \
+          --platform linux/arm64,linux/amd64 \
           -t ghcr.io/ruchira088/job-market-analyzer-{{ app }}:{{ git_branch }} \
           -t ghcr.io/ruchira088/job-market-analyzer-{{ app }}:{{ git_branch }}-{{ git_commit }} \
           -f output/Dockerfile-{{ app }} \
