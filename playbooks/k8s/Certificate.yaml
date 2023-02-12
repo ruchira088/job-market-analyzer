@@ -1,10 +1,10 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: my-http4s-project-certificate
+  name: job-market-analyzer-api-certificate
   namespace: { { namespace } }
 spec:
-  secretName: my-http4s-project-tls
+  secretName: job-market-analyzer-api-tls
   issuerRef:
     kind: ClusterIssuer
     name: lets-encrypt

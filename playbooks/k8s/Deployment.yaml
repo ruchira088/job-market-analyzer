@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-http4s-project-deployment
+  name: job-market-analyzer-api-deployment
   namespace: { { namespace } }
 spec:
   selector:
     matchLabels:
-      app: my-http4s-project
+      app: job-market-analyzer-api
       branch: { { git_branch } }
   replicas: 1
   template:
     metadata:
       labels:
-        app: my-http4s-project
+        app: job-market-analyzer-api
         branch: { { git_branch } }
     spec:
       containers:
-        - name: my-http4s-project-container
-          image: ghcr.io/ruchira088/my-http4s-project:{{ git_branch }}-{{ git_commit }}
+        - name: job-market-analyzer-api-container
+          image: ghcr.io/ruchira088/job-market-analyzer-api:{{ git_branch }}-{{ git_commit }}
           envFrom:
             - configMapRef:
-                name: my-http4s-project-data-config-map
+                name: job-market-analyzer-api-data-config-map
             - secretRef:
-                name: my-http4s-project-secrets
+                name: job-market-analyzer-api-secrets
           readinessProbe:
             httpGet:
               port: http4s-port
@@ -55,7 +55,7 @@ spec:
       volumes:
         - name: file-config-map
           configMap:
-            name: my-http4s-project-file-config-map
+            name: job-market-analyzer-api-file-config-map
       imagePullSecrets:
         - name: docker-registry-credentials
 

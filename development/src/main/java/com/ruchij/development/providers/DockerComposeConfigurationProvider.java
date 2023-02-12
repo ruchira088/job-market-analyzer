@@ -13,6 +13,12 @@ public class DockerComposeConfigurationProvider implements ConfigurationProvider
 
     @Override
     public ElasticsearchConfiguration elasticsearchConfiguration() {
-        return new ElasticsearchConfiguration("localhost", 9200);
+        return new ElasticsearchConfiguration(
+            "localhost",
+            9200,
+            Optional.of(
+                new ElasticsearchConfiguration.Credentials("elastic", "my-password")
+            )
+        );
     }
 }

@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: my-http4s-project-ingress
+  name: job-market-analyzer-api-ingress
   namespace: { { namespace } }
 spec:
   tls:
-    - secretName: my-http4s-project-tls
+    - secretName: job-market-analyzer-api-tls
       hosts:
         - { { hostname } }
   rules:
@@ -15,6 +15,6 @@ spec:
           - pathType: ImplementationSpecific
             backend:
               service:
-                name: my-http4s-project-service
+                name: job-market-analyzer-api-service
                 port:
                   name: http4s-port

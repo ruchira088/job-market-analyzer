@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: my-http4s-project-data-config-map
+  name: job-market-analyzer-api-data-config-map
   namespace: { { namespace } }
 data:
   { % for key, value in config_values.items() % }

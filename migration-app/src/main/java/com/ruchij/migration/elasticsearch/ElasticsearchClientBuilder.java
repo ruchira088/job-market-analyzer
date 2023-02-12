@@ -8,7 +8,12 @@ import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
+
+import java.util.Optional;
 
 public class ElasticsearchClientBuilder implements AutoCloseable {
     private final RestClient restClient;
@@ -22,7 +27,26 @@ public class ElasticsearchClientBuilder implements AutoCloseable {
         HttpHost elasticsearchHost =
             new HttpHost(elasticsearchConfiguration.host(), elasticsearchConfiguration.port());
 
-        restClient = RestClient.builder(elasticsearchHost).build();
+        Optional<BasicCredentialsProvider> maybeCredentialsProvider = elasticsearchConfiguration.credentials()
+            .map(credentials -> {
+                BasicCredentialsProvider basicCredentialsProvider = new BasicCredentialsProvider();
+                basicCredentialsProvider.setCredentials(
+                    AuthScope.ANY,
+                    new UsernamePasswordCredentials(credentials.username(), credentials.password())
+                );
+
+                return basicCredentialsProvider;
+            });
+
+        restClient =
+            RestClient.builder(elasticsearchHost)
+                .setHttpClientConfigCallback(httpClientBuilder -> {
+                    maybeCredentialsProvider.ifPresent(httpClientBuilder::setDefaultCredentialsProvider);
+
+                    return httpClientBuilder;
+                })
+                .build();
+
         elasticsearchTransport = new RestClientTransport(restClient, jsonpMapper);
     }
 

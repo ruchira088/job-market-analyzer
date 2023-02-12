@@ -1,5 +1,6 @@
 package com.ruchij.api.config;
 
+import com.ruchij.migration.config.ConfigReaders;
 import com.typesafe.config.Config;
 
 import java.util.Optional;

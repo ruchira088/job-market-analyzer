@@ -1,4 +1,4 @@
-package com.ruchij.api.config;
+package com.ruchij.migration.config;
 
 import com.typesafe.config.ConfigException;
 
