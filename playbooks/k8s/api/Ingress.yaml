@@ -17,4 +17,4 @@ spec:
               service:
                 name: job-market-analyzer-api-service
                 port:
-                  name: http4s-port
+                  name: javalin-port

@@ -1,35 +1,16 @@
-- name: Create output directories
-  block:
-    - name: Delete existing output directory
-      file:
-        path: k8s-output
-        state: absent
+- name: Render common K8s resource files
+  import_tasks: tasks/common-k8s-resource-files.yml
 
-    - name: Create output directory
-      file:
-        path: k8s-output
-        state: directory
-
-    - name: Create output directory
-      file:
-        path: k8s-output/api
-        state: directory
-
-- name: Gather git information
-  import_tasks: tasks/git-info.yml
+- name: Create output directory
+  file:
+    path: k8s-output/api
+    state: directory
 
 - name: Set config values and secrets
   import_tasks: tasks/configs-and-secrets.yml
 
 - name: Render K8s resource files
   block:
-    - name: Render K8s common resource files
-      template:
-        src: "{{ item }}"
-        dest: k8s-output/{{ item | basename }}
-      with_fileglob:
-        - k8s/*.yaml
-
     - name: Render K8s API resource files
       template:
         src: "{{ item }}"

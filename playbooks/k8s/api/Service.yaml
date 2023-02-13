@@ -8,5 +8,5 @@ spec:
     app: job-market-analyzer-api
     branch: {{ git_branch }}
   ports:
-    - name: http4s-port
+    - name: javalin-port
       port: 8080

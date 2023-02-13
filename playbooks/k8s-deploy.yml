@@ -11,76 +11,99 @@
 
     - set_fact:
         namespace: "{{ 'job-market-analyzer' if git_branch == 'main' else 'job-market-analyzer-' + git_branch }}"
+        ghcr_credentials: "{{ lookup('aws_ssm', '/github/ghcr/docker-config', region='ap-southeast-2') }}"
+
+    - name: Render common K8s resource files
+      import_tasks: tasks/common-k8s-resource-files.yml
+
+    - name: Set kube_config
+      import_tasks: tasks/k8s-config.yml
+
+    - name: Deploy K8s resources
+      block:
+        - name: Create Namespace
+          command: kubectl apply -f k8s-output/Namespace.yaml --kubeconfig {{ kubeconfig }}
+
+        - name: Create Docker registry secret
+          command: kubectl apply -f k8s-output/DockerRegistryCredentials.yaml --kubeconfig {{ kubeconfig }}
+
+        - name: Deploy Elasticsearch
+          block:
+#            - name: Install CRDs (Custom Resource Definitions)
+#              command: kubectl create -f https://download.elastic.co/downloads/eck/2.6.1/crds.yaml --kubeconfig {{ kubeconfig }}
+#
+#            - name: Install K8s operator
+#              command: kubectl apply -f https://download.elastic.co/downloads/eck/2.6.1/operator.yaml --kubeconfig {{ kubeconfig }}
+
+            - name: Install Elasticsearch
+              command: kubectl apply -f k8s-output/Elasticsearch.yaml --kubeconfig {{ kubeconfig }}
+
+            - name: Extract Elasticsearch password
+              shell: kubectl -n {{ namespace }} get secret job-market-analyzer-es-elastic-user -o json | jq -r '.data.elastic' | base64 --decode
+              register: elasticsearch_password_output
+
+            - name: Persist Elasticsearch password in AWS SSM
+              community.aws.ssm_parameter:
+                name: /job-market-analyzer/{{ git_branch }}/elasticsearch/password
+                region: ap-southeast-2
+                string_type: SecureString
+                value: "{{ elasticsearch_password_output.stdout }}"
+
+        - name: Deploy Redis Helm chart
+          block:
+            - name: Add Bitnami Helm charts repository
+              command: helm repo add bitnami https://charts.bitnami.com/bitnami
+
+            - name: Update Helm repositories
+              command: helm repo update
+
+            - name: Deploy Redis
+              block:
+                - name: Check Redis service in K8s
+                  k8s_info:
+                    kind: Service
+                    namespace: "{{ namespace }}"
+                    name: redis-master
+                    kubeconfig: "{{ kubeconfig }}"
+                  register: redis_output
+
+                - name: Set config values and secrets
+                  import_tasks: tasks/configs-and-secrets.yml
+                  when: redis_output.resources | length == 0
+
+                - name: Install Redis Helm chart
+                  shell: |
+                    KUBECONFIG={{ kubeconfig }} \
+                      helm install redis \
+                        --set auth.password="{{ secrets.redis_password }}" \
+                        --set architecture=standalone \
+                        --set image.tag=7.0.8-debian-11-r0 \
+                        --namespace {{ namespace }} \
+                        bitnami/redis
+                  when: redis_output.resources | length == 0
 
     - name: Render K8s resource files
       import_tasks: tasks/k8s-resource-files.yml
       vars:
         domain: job-market-analyzer-api.dev.ruchij.com
         hostname: "{{ domain if git_branch == 'main' else git_branch + '.' + domain }}"
-        ghcr_credentials: "{{ lookup('aws_ssm', '/github/ghcr/docker-config', region='ap-southeast-2') }}"
 
-#    - name: Set kube_config
-#      import_tasks: tasks/k8s-config.yml
-#
-#    - name: Deploy K8s resources
-#      block:
-#        - name: Create Namespace
-#          command: kubectl apply -f k8s-output/Namespace.yaml --kubeconfig {{ kubeconfig }}
-#
-#        - name: Create Docker registry secret
-#          command: kubectl apply -f k8s-output/DockerRegistryCredentials.yaml --kubeconfig {{ kubeconfig }}
-#
-#        - name: Deploy Redis Helm chart
-#          block:
-#            - name: Add Bitnami Helm charts repository
-#              command: helm repo add bitnami https://charts.bitnami.com/bitnami
-#
-#            - name: Update Helm repositories
-#              command: helm repo update
-#
-#            - name: Deploy Redis
-#              block:
-#                - name: Check Redis service in K8s
-#                  k8s_info:
-#                    kind: Service
-#                    namespace: "{{ namespace }}"
-#                    name: redis-master
-#                    kubeconfig: "{{ kubeconfig }}"
-#                  register: redis_output
-#
-#                - name: Install Redis Helm chart
-#                  shell: |
-#                    KUBECONFIG={{ kubeconfig }} \
-#                      helm install redis \
-#                        --set auth.password="{{ secrets.redis_password }}" \
-#                        --set architecture=standalone \
-#                        --set image.tag=7.0.8-debian-11-r0 \
-#                        --namespace {{ namespace }} \
-#                        bitnami/redis
-#                  when: redis_output.resources | length == 0
-#
-#        - name: Deploy Elasticsearch
-#          block:
-#            - name: Install CRDs (Custom Resource Definitions)
-#              command: kubectl create -f https://download.elastic.co/downloads/eck/2.6.1/crds.yaml --kubeconfig {{ kubeconfig }}
-#
-#            - name: Install K8s operator
-#              command: kubectl apply -f https://download.elastic.co/downloads/eck/2.6.1/operator.yaml --kubeconfig {{ kubeconfig }}
-#
-#        - name: Create data ConfigMap
-#          command: kubectl apply -f k8s-output/DataConfigMap.yaml --kubeconfig {{ kubeconfig }}
-#
-#        - name: Create file ConfigMap
-#          command: kubectl apply -f k8s-output/FileConfigMap.yaml --kubeconfig {{ kubeconfig }}
-#
-#        - name: Create Secrets
-#          command: kubectl apply -f k8s-output/Secrets.yaml --kubeconfig {{ kubeconfig }}
-#
-#        - name: Deploy application
-#          command: kubectl apply -f k8s-output --kubeconfig {{ kubeconfig }}
-#
-#        - name: Wait for successful deployment
-#          command: kubectl rollout status deployment job-market-analyzer-deployment --kubeconfig {{ kubeconfig }} -n {{ namespace }}
+    - name: Deploy API
+      block:
+        - name: Create data ConfigMap
+          command: kubectl apply -f k8s-output/api/DataConfigMap.yaml --kubeconfig {{ kubeconfig }}
+
+        - name: Create file ConfigMap
+          command: kubectl apply -f k8s-output/api/FileConfigMap.yaml --kubeconfig {{ kubeconfig }}
+
+        - name: Create Secrets
+          command: kubectl apply -f k8s-output/api/Secrets.yaml --kubeconfig {{ kubeconfig }}
+
+        - name: Deploy application
+          command: kubectl apply -f k8s-output/api --kubeconfig {{ kubeconfig }}
+
+        - name: Wait for successful deployment
+          command: kubectl rollout status deployment job-market-analyzer-api-deployment --kubeconfig {{ kubeconfig }} -n {{ namespace }}
 #
 #    - name: Clean up output directory
 #      file:
