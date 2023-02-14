@@ -57,7 +57,7 @@ task buildInformation {
                 "gitCommit": "${'git rev-parse --short HEAD'.execute().text.trim()}"
             }"""
 
-        file.withWriter { writer ->
+        file.withWriter('UTF-8') { writer ->
             writer.write(buildInfo)
         }
     }
