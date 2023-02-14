@@ -1,6 +1,3 @@
-- name: Render common K8s resource files
-  import_tasks: tasks/common-k8s-resource-files.yml
-
 - name: Create output directory
   file:
     path: k8s-output/api
@@ -10,6 +7,9 @@
   file:
     path: k8s-output/migration-app
     state: directory
+
+- name: Gather git information
+  import_tasks: tasks/git-info.yml
 
 - name: Set config values and secrets
   import_tasks: tasks/configs-and-secrets.yml

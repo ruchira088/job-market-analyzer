@@ -37,7 +37,6 @@
                 kubeconfig: "{{ kubeconfig }}"
               register: elasticsearch_output
 
-
             - name: Create Elasticsearch cluster
               when: elasticsearch_output.resources | length == 0
               block:
@@ -142,8 +141,8 @@
 
         - name: Wait for successful deployment
           command: kubectl rollout status deployment job-market-analyzer-api-deployment --kubeconfig {{ kubeconfig }} -n {{ namespace }}
-#
-#    - name: Clean up output directory
-#      file:
-#        path: k8s-output
-#        state: absent
+
+    - name: Clean up output directory
+      file:
+        path: k8s-output
+        state: absent
