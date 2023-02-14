@@ -6,11 +6,23 @@
     path: k8s-output/api
     state: directory
 
+- name: Create output directory
+  file:
+    path: k8s-output/migration-app
+    state: directory
+
 - name: Set config values and secrets
   import_tasks: tasks/configs-and-secrets.yml
 
 - name: Render K8s resource files
   block:
+    - name: Render K8s migration app resource files
+      template:
+        src: "{{ item }}"
+        dest: k8s-output/migration-app/{{ item | basename }}
+      with_fileglob:
+        - k8s/migration-app/*.yaml
+
     - name: Render K8s API resource files
       template:
         src: "{{ item }}"
