@@ -93,7 +93,7 @@ jobs:
             ${{ runner.os }}
 
       - name: Build and publish Docker images
-        run: ansible-playbook playbooks/build-and-publish-docker-image.yml -vvv -e app=${{ matrix.app }}
+        run: ansible-playbook playbooks/build-and-publish-docker-image.yml -vvv -e application=${{ matrix.app }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
