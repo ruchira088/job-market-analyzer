@@ -54,7 +54,7 @@
                     seconds: 30
 
                 - name: Extract Elasticsearch password
-                  shell: kubectl -n {{ namespace }} get secret job-market-analyzer-es-elastic-user -o json | jq -r '.data.elastic' | base64 --decode
+                  shell: kubectl -n {{ namespace }} --kubeconfig {{ kubeconfig }} get secret job-market-analyzer-es-elastic-user -o json | jq -r '.data.elastic' | base64 --decode
                   register: elasticsearch_password_output
 
                 - name: Persist Elasticsearch password in AWS SSM
