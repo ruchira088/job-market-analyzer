@@ -4,6 +4,7 @@
 
   vars:
     application: "{{ app }}"
+    publish: true
 
   tasks:
     - name: Install dependencies
