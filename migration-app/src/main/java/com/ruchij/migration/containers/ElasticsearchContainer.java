@@ -8,7 +8,7 @@ public class ElasticsearchContainer extends org.testcontainers.elasticsearch.Ela
     private static final String PASSWORD = "my-password";
 
     public ElasticsearchContainer() {
-        super("docker.elastic.co/elasticsearch/elasticsearch:8.6.1");
+        super("docker.elastic.co/elasticsearch/elasticsearch:8.6.2");
         addEnv("xpack.security.http.ssl.enabled", "false");
         addEnv("ELASTIC_PASSWORD", PASSWORD);
     }
