@@ -2,7 +2,7 @@ import java.time.Instant
 
 plugins {
     id 'application'
-    id 'com.github.ben-manes.versions' version "$dependencyUpdatesPluginVersion"
+    id 'jacoco'
     id 'net.researchgate.release' version "$releasePluginVersion"
 }
 
@@ -35,6 +35,10 @@ dependencies {
 
 application {
     mainClass = 'com.ruchij.api.ApiApp'
+}
+
+jacocoTestReport {
+    dependsOn test
 }
 
 task buildInformation {

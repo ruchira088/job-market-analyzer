@@ -1,6 +1,6 @@
 plugins {
     id 'application'
-    id 'com.github.ben-manes.versions' version "$dependencyUpdatesPluginVersion"
+    id 'jacoco'
 }
 
 group = 'com.ruchij.migration'
@@ -17,6 +17,10 @@ dependencies {
             "ch.qos.logback:logback-classic:$logbackVersion",
             "org.testcontainers:elasticsearch:$testContainersVersion"
     )
+}
+
+jacocoTestReport {
+    dependsOn test
 }
 
 application {
