@@ -37,7 +37,7 @@ public class LinkedIn {
         WebElement submitButton = remoteWebDriver.findElement(By.cssSelector("button[aria-label='Sign in']"));
         submitButton.click();
 
-        return new HomePage(remoteWebDriver);
+        return new HomePage(remoteWebDriver, webDriverWait);
     }
 
 }

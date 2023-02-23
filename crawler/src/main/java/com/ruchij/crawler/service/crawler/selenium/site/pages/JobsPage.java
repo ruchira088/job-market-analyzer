@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
@@ -29,9 +28,9 @@ public class JobsPage {
     private final WebDriverWait webDriverWait;
     private boolean showingAllJobs = false;
 
-    public JobsPage(RemoteWebDriver remoteWebDriver) {
+    public JobsPage(RemoteWebDriver remoteWebDriver, WebDriverWait webDriverWait) {
         this.remoteWebDriver = remoteWebDriver;
-        this.webDriverWait = new WebDriverWait(remoteWebDriver, Duration.ofSeconds(5));
+        this.webDriverWait = webDriverWait;
     }
 
     static Optional<Job> parse(String jobId, String crawlId, Instant timestamp, WebElement jobDetails, String currentUrl) {
