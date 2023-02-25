@@ -47,6 +47,7 @@ public class SeleniumCrawler implements Crawler {
                         (job, integer) -> new CrawledJob(crawlerTaskId, job, integer, pageCount)
                     )
                     .doOnError(throwable -> logger.error("Error occurred with crawlTaskId=%s".formatted(crawlerTaskId), throwable))
+                    .doOnCancel(() -> logger.info("SeleniumCrawler for crawlTaskId=%s was cancelled".formatted(crawlerTaskId)))
                     .doFinally(() -> {
                         remoteWebDriver.quit();
                         logger.info("Completed SeleniumCrawler for crawlTaskId=%s".formatted(crawlerTaskId));

@@ -112,6 +112,13 @@ public class LinkedInRoute implements EndpointGroup {
                                     }
                                 );
                         }
+                    )
+                    .thenAccept(disposable ->
+                        sseClient.onClose(() -> {
+                            if (!disposable.isDisposed()) {
+                                disposable.dispose();
+                            }
+                        })
                     );
             })
         );
