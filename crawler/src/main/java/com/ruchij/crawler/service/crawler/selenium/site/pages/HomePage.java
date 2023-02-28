@@ -1,28 +1,19 @@
 package com.ruchij.crawler.service.crawler.selenium.site.pages;
 
-import org.openqa.selenium.By;
+import com.ruchij.crawler.service.crawler.selenium.driver.AwaitableWebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class HomePage {
-    private final RemoteWebDriver remoteWebDriver;
-    private final WebDriverWait webDriverWait;
+    private final AwaitableWebDriver awaitableWebDriver;
 
-    public HomePage(RemoteWebDriver remoteWebDriver, WebDriverWait webDriverWait) {
-        this.remoteWebDriver = remoteWebDriver;
-        this.webDriverWait = webDriverWait;
+    public HomePage(AwaitableWebDriver awaitableWebDriver) {
+        this.awaitableWebDriver = awaitableWebDriver;
     }
 
     public JobsPage jobsPage() {
-        By jobsTabSelector = By.cssSelector(".app-aware-link span[title=Jobs]");
-
-        webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(jobsTabSelector));
-
-        WebElement jobsTab = remoteWebDriver.findElement(jobsTabSelector);
+        WebElement jobsTab = this.awaitableWebDriver.findElementByCss(".app-aware-link span[title=Jobs]");
         jobsTab.click();
 
-        return new JobsPage(remoteWebDriver, webDriverWait);
+        return new JobsPage(this.awaitableWebDriver);
     }
 }

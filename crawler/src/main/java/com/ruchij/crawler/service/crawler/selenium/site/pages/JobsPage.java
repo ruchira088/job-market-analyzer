@@ -2,13 +2,12 @@ package com.ruchij.crawler.service.crawler.selenium.site.pages;
 
 import com.ruchij.crawler.dao.job.models.Job;
 import com.ruchij.crawler.dao.job.models.WorkplaceType;
+import com.ruchij.crawler.service.crawler.selenium.driver.AwaitableWebDriver;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,13 +23,11 @@ import java.util.stream.Stream;
 public class JobsPage {
     private static final Logger logger = LoggerFactory.getLogger(JobsPage.class);
 
-    private final RemoteWebDriver remoteWebDriver;
-    private final WebDriverWait webDriverWait;
+    private final AwaitableWebDriver awaitableWebDriver;
     private boolean showingAllJobs = false;
 
-    public JobsPage(RemoteWebDriver remoteWebDriver, WebDriverWait webDriverWait) {
-        this.remoteWebDriver = remoteWebDriver;
-        this.webDriverWait = webDriverWait;
+    public JobsPage(AwaitableWebDriver awaitableWebDriver) {
+        this.awaitableWebDriver = awaitableWebDriver;
     }
 
     static Optional<Job> parse(String jobId, String crawlId, Instant timestamp, WebElement jobDetails, String currentUrl) {
@@ -80,7 +77,7 @@ public class JobsPage {
         showAllJobs();
 
         String paginationAttribute = "data-test-pagination-page-btn";
-        WebElement pagination = remoteWebDriver.findElement(By.cssSelector(".jobs-search-results-list__pagination"));
+        WebElement pagination = this.awaitableWebDriver.findElementByCss(".jobs-search-results-list__pagination");
 
         return pagination.findElements(By.cssSelector("li[%s]".formatted(paginationAttribute))).stream()
             .flatMap(element -> Optional.ofNullable(element.getAttribute(paginationAttribute)).stream())
@@ -120,7 +117,7 @@ public class JobsPage {
         while (query && shouldContinue.get()) {
             query = false;
 
-            List<WebElement> jobCards = remoteWebDriver.findElements(By.cssSelector(".job-card-list"));
+            List<WebElement> jobCards = this.awaitableWebDriver.findElementsByCss(".job-card-list");
 
             for (WebElement jobCard : jobCards) {
                 String jobId = jobCard.getAttribute("data-job-id");
@@ -134,10 +131,10 @@ public class JobsPage {
 
                     jobCard.click();
 
-                    webDriverWait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(".artdeco-loader")));
+                    this.awaitableWebDriver.waitUntil((ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(".artdeco-loader"))));
 
-                    WebElement jobDetails = remoteWebDriver.findElement(By.cssSelector(".jobs-details"));
-                    parse(jobId, crawlId, clock.instant(), jobDetails, remoteWebDriver.getCurrentUrl()).ifPresent(onJob);
+                    WebElement jobDetails = this.awaitableWebDriver.findElementByCss(".jobs-details");
+                    parse(jobId, crawlId, clock.instant(), jobDetails, this.awaitableWebDriver.remoteWebDriver().getCurrentUrl()).ifPresent(onJob);
                 }
             }
 
@@ -147,7 +144,7 @@ public class JobsPage {
                 pageNumber++;
 
                 List<WebElement> elements =
-                    remoteWebDriver.findElements(By.cssSelector("li[data-test-pagination-page-btn='%s']".formatted(pageNumber)));
+                    this.awaitableWebDriver.findElementsByCss("li[data-test-pagination-page-btn='%s']".formatted(pageNumber));
 
                 if (!elements.isEmpty()) {
                     WebElement nextPage = elements.get(0);
@@ -164,14 +161,10 @@ public class JobsPage {
 
     void showAllJobs() {
         if (!showingAllJobs) {
-            By showAllSelector = By.cssSelector(".jobs-job-board-list__footer");
-
-            webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(showAllSelector));
-            WebElement showAll = remoteWebDriver.findElement(showAllSelector);
-
+            WebElement showAll = this.awaitableWebDriver.findElementByCss(".jobs-job-board-list__footer");
             showAll.click();
 
-            webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".jobs-details")));
+            this.awaitableWebDriver.findElementByCss(".jobs-details");
             showingAllJobs = true;
         }
     }

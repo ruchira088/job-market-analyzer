@@ -2,6 +2,8 @@ package com.ruchij.crawler.service.crawler.selenium;
 
 import com.ruchij.crawler.service.crawler.Crawler;
 import com.ruchij.crawler.service.crawler.models.CrawledJob;
+import com.ruchij.crawler.service.crawler.selenium.driver.AwaitableWebDriver;
+import com.ruchij.crawler.service.crawler.selenium.driver.SeleniumWebDriver;
 import com.ruchij.crawler.service.crawler.selenium.site.LinkedIn;
 import com.ruchij.crawler.service.crawler.selenium.site.pages.HomePage;
 import com.ruchij.crawler.service.crawler.selenium.site.pages.JobsPage;
@@ -12,10 +14,12 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 public class SeleniumCrawler implements Crawler {
@@ -31,9 +35,9 @@ public class SeleniumCrawler implements Crawler {
     public Flowable<CrawledJob> crawl(String crawlerTaskId, String email, String password) {
         logger.info("Started SeleniumCrawler id=%s".formatted(crawlerTaskId));
 
-        return Flowable.fromSupplier(this::remoteWebDriver)
-            .concatMap(remoteWebDriver -> {
-                LinkedIn linkedIn = new LinkedIn(remoteWebDriver);
+        return Flowable.fromSupplier(this::awaitableWebDriver)
+            .concatMap(awaitableWebDriver -> {
+                LinkedIn linkedIn = new LinkedIn(awaitableWebDriver);
 
                 HomePage homePage = linkedIn.login(email, password);
                 JobsPage jobsPage = homePage.jobsPage();
@@ -49,14 +53,17 @@ public class SeleniumCrawler implements Crawler {
                     .doOnError(throwable -> logger.error("Error occurred with crawlTaskId=%s".formatted(crawlerTaskId), throwable))
                     .doOnCancel(() -> logger.info("SeleniumCrawler for crawlTaskId=%s was cancelled".formatted(crawlerTaskId)))
                     .doFinally(() -> {
-                        remoteWebDriver.quit();
+                        awaitableWebDriver.remoteWebDriver().quit();
                         logger.info("Completed SeleniumCrawler for crawlTaskId=%s".formatted(crawlerTaskId));
                     });
             });
     }
 
-    private RemoteWebDriver remoteWebDriver() {
-        return firefoxDriver();
+    private AwaitableWebDriver awaitableWebDriver() {
+        RemoteWebDriver remoteWebDriver = firefoxDriver();
+        WebDriverWait webDriverWait = new WebDriverWait(remoteWebDriver, Duration.ofSeconds(15));
+
+        return new SeleniumWebDriver(remoteWebDriver, webDriverWait);
     }
 
     private FirefoxDriver firefoxDriver() {
@@ -84,17 +91,16 @@ public class SeleniumCrawler implements Crawler {
     @Override
     public CompletableFuture<Boolean> isHealthy() {
         return CompletableFuture.supplyAsync(() -> {
-            RemoteWebDriver remoteWebDriver = remoteWebDriver();
-
+            AwaitableWebDriver awaitableWebDriver = awaitableWebDriver();
             try {
-                LinkedIn linkedIn = new LinkedIn(remoteWebDriver);
+                LinkedIn linkedIn = new LinkedIn(awaitableWebDriver);
                 linkedIn.open();
                 return true;
             } catch (Exception exception) {
                 logger.error("Unable to open LinkedIn webpage", exception);
                 return false;
             } finally {
-                remoteWebDriver.quit();
+                awaitableWebDriver.remoteWebDriver().quit();
             }
         });
     }
