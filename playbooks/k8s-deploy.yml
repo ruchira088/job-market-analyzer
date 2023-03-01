@@ -99,7 +99,7 @@
     - name: Render K8s resource files
       import_tasks: tasks/k8s-resource-files.yml
       vars:
-        domain: job-market-analyzer-api.dev.ruchij.com
+        domain: jobs-api.home.ruchij.com
         hostname: "{{ domain if git_branch == 'main' else git_branch + '.' + domain }}"
 
     - name: Deploy migration Job
