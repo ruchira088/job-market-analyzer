@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public class Job {
     private String id;
-    private String crawlId;
+    private String crawlerId;
     private Instant crawledAt;
     private URL link;
     private String title;
@@ -23,12 +23,12 @@ public class Job {
         this.id = id;
     }
 
-    public String getCrawlId() {
-        return crawlId;
+    public String getCrawlerId() {
+        return crawlerId;
     }
 
-    public void setCrawlId(String crawlId) {
-        this.crawlId = crawlId;
+    public void setCrawlerId(String crawlerId) {
+        this.crawlerId = crawlerId;
     }
 
     public Instant getCrawledAt() {
@@ -91,7 +91,7 @@ public class Job {
     public String toString() {
         return "Job{" +
             "id='" + id + '\'' +
-            ", crawlId='" + crawlId + '\'' +
+            ", crawlId='" + crawlerId + '\'' +
             ", crawledAt=" + crawledAt +
             ", link=" + link +
             ", title='" + title + '\'' +

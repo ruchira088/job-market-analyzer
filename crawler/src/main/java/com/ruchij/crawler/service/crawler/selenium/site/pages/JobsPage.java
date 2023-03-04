@@ -56,7 +56,7 @@ public class JobsPage {
 
             Job job = new Job();
             job.setId(jobId);
-            job.setCrawlId(crawlId);
+            job.setCrawlerId(crawlId);
             job.setCrawledAt(timestamp);
             job.setLink(jobUrl);
             job.setTitle(title);

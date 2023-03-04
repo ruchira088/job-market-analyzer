@@ -5,6 +5,8 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import com.ruchij.api.config.ApiConfiguration;
 import com.ruchij.api.dao.credentials.CredentialsDao;
 import com.ruchij.api.dao.credentials.ElasticsearchCredentialsDao;
+import com.ruchij.api.dao.job.ElasticsearchSearchableJobDao;
+import com.ruchij.api.dao.job.SearchableJobDao;
 import com.ruchij.api.dao.user.ElasticsearchUserDao;
 import com.ruchij.api.dao.user.UserDao;
 import com.ruchij.api.kv.KeyValueStore;
@@ -21,12 +23,12 @@ import com.ruchij.api.services.health.HealthService;
 import com.ruchij.api.services.health.HealthServiceImpl;
 import com.ruchij.api.services.lock.LocalLockService;
 import com.ruchij.api.services.lock.LockService;
+import com.ruchij.api.services.search.JobSearchService;
+import com.ruchij.api.services.search.JobSearchServiceImpl;
 import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
 import com.ruchij.api.web.plugins.ExceptionHandlerPlugin;
-import com.ruchij.crawler.dao.job.ElasticsearchJobDao;
-import com.ruchij.crawler.dao.job.JobDao;
 import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.task.CrawlerTaskDao;
@@ -64,7 +66,8 @@ public class ApiApp {
         ApiConfiguration apiConfiguration = ApiConfiguration.parse(config);
         Routes routes = routes(apiConfiguration);
 
-        httpApplication(routes, __ -> {})
+        httpApplication(routes, __ -> {
+        })
             .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
     }
 
@@ -98,7 +101,7 @@ public class ApiApp {
 
         UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
         CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
-        JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
+        SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
         CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
         EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
@@ -122,13 +125,15 @@ public class ApiApp {
         LinkedInCredentialsService linkedInCredentialsService =
             new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
 
+        JobSearchService jobSearchService = new JobSearchServiceImpl(searchableJobDao);
+
         Crawler crawler = new SeleniumCrawler(clock);
 
         CrawlManager crawlManager =
             new CrawlManagerImpl(
                 crawler,
                 crawlerTaskDao,
-                jobDao,
+                searchableJobDao,
                 idGenerator,
                 clock
             );
@@ -182,6 +187,7 @@ public class ApiApp {
                 userService,
                 authenticationService,
                 linkedInCredentialsService,
+                jobSearchService,
                 healthService
             );
 
