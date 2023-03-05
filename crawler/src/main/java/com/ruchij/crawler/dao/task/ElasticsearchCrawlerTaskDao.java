@@ -29,7 +29,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
                 builder
                     .index(INDEX)
                     .refresh(Refresh.True)
-                    .id(crawlerTask.crawlerId())
+                    .id(crawlerTask.id())
                     .document(crawlerTask)
             );
 

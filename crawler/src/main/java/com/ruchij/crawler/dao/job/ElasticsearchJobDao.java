@@ -40,7 +40,7 @@ public class ElasticsearchJobDao implements JobDao {
     }
 
     @Override
-    public CompletableFuture<List<Job>> findByCrawlerId(String crawlerId, int pageSize, int pageNumber) {
+    public CompletableFuture<List<Job>> findByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber) {
         SearchRequest searchRequest = SearchRequest.of(builder ->
             builder
                 .index(INDEX)
@@ -49,7 +49,7 @@ public class ElasticsearchJobDao implements JobDao {
                 .query(queryBuilder ->
                     queryBuilder.match(
                         MatchQuery.of(matchQueryBuilder ->
-                            matchQueryBuilder.field("crawlerId").query(crawlerId)
+                            matchQueryBuilder.field("id").query(crawlerTaskId)
                         )
                     )
                 )

@@ -11,5 +11,5 @@ public interface JobDao {
 
     CompletableFuture<Optional<Job>> findById(String jobId);
 
-    CompletableFuture<List<Job>> findByCrawlerId(String crawlerId, int pageSize, int pageNumber);
+    CompletableFuture<List<Job>> findByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber);
 }

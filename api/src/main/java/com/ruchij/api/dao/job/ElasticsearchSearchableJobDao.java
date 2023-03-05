@@ -32,12 +32,12 @@ public class ElasticsearchSearchableJobDao implements SearchableJobDao {
     }
 
     @Override
-    public CompletableFuture<List<Job>> findByCrawlerId(String crawlerId, int pageSize, int pageNumber) {
-        return this.elasticsearchJobDao.findByCrawlerId(crawlerId, pageSize, pageNumber);
+    public CompletableFuture<List<Job>> findByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber) {
+        return this.elasticsearchJobDao.findByCrawlerTaskId(crawlerTaskId, pageSize, pageNumber);
     }
 
     @Override
-    public CompletableFuture<List<Job>> search(String keyword, String crawlerId, int pageSize, int pageNumber) {
+    public CompletableFuture<List<Job>> search(String keyword, String crawlerTaskId, int pageSize, int pageNumber) {
         SearchRequest searchRequest = SearchRequest.of(builder ->
             builder
                 .index(ElasticsearchJobDao.INDEX)
@@ -54,7 +54,7 @@ public class ElasticsearchSearchableJobDao implements SearchableJobDao {
                             )
                             .must(
                                 MatchQuery.of(matchQueryBuilder ->
-                                        matchQueryBuilder.field("crawlerId").query(crawlerId)
+                                        matchQueryBuilder.field("id").query(crawlerTaskId)
                                     )
                                     ._toQuery()
                             )

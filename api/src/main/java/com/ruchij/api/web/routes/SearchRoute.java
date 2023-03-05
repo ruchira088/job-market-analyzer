@@ -2,7 +2,6 @@ package com.ruchij.api.web.routes;
 
 import com.ruchij.api.services.search.JobSearchService;
 import com.ruchij.api.web.responses.PaginatedResponse;
-import com.ruchij.crawler.dao.job.models.Job;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
@@ -20,9 +19,9 @@ public class SearchRoute implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
-        path("crawler-id/<crawlerId>", () ->
+        path("crawler-task-id/<id>", () ->
             get(context -> {
-                    String crawlerId = context.pathParamAsClass("crawlerId", String.class).get();
+                    String crawlerTaskId = context.pathParamAsClass("id", String.class).get();
                     Integer pageSize =
                         Optional.ofNullable(context.queryParamAsClass("page-size", Integer.class).allowNullable().get())
                             .orElse(20);
@@ -31,7 +30,7 @@ public class SearchRoute implements EndpointGroup {
                             .orElse(0);
 
                     context.future(() ->
-                        jobSearchService.findByCrawlerId(crawlerId, pageSize, pageNumber)
+                        jobSearchService.findByCrawlerTaskId(crawlerTaskId, pageSize, pageNumber)
                             .thenApply(jobs ->
                                 context
                                     .status(HttpStatus.OK)

@@ -1,7 +1,7 @@
 package com.ruchij.crawler.service.crawler.selenium.site.pages;
 
-import com.ruchij.crawler.dao.job.models.Job;
 import com.ruchij.crawler.dao.job.models.WorkplaceType;
+import com.ruchij.crawler.service.crawler.models.LinkedInJob;
 import com.ruchij.crawler.service.crawler.selenium.driver.AwaitableWebDriver;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
@@ -30,7 +30,7 @@ public class JobsPage {
         this.awaitableWebDriver = awaitableWebDriver;
     }
 
-    static Optional<Job> parse(String jobId, String crawlId, Instant timestamp, WebElement jobDetails, String currentUrl) {
+    static Optional<LinkedInJob> parse(String jobId, Instant timestamp, WebElement jobDetails, String currentUrl) {
         try {
             URL pageUrl = new URL(currentUrl);
 
@@ -54,18 +54,10 @@ public class JobsPage {
             Optional<WorkplaceType> workplaceType =
                 workplaceTypes.isEmpty() ? Optional.empty() : WorkplaceType.parse(workplaceTypes.get(0).getText());
 
-            Job job = new Job();
-            job.setId(jobId);
-            job.setCrawlerId(crawlId);
-            job.setCrawledAt(timestamp);
-            job.setLink(jobUrl);
-            job.setTitle(title);
-            job.setCompanyName(companyName);
-            job.setLocation(location);
-            job.setWorkplaceType(workplaceType);
-            job.setDetails(jobDescription);
+            LinkedInJob linkedInJob =
+                new LinkedInJob(jobId, timestamp, jobUrl, title, companyName, location, workplaceType, jobDescription);
 
-            return Optional.of(job);
+            return Optional.of(linkedInJob);
         } catch (Exception exception) {
             logger.error("Error occurred parsing WebElement to a Job", exception);
 
@@ -92,11 +84,11 @@ public class JobsPage {
             .orElse(1);
     }
 
-    public Flowable<Job> listJobs(Clock clock, String crawlId) {
+    public Flowable<LinkedInJob> listJobs(Clock clock, String crawlerTaskId) {
         return Flowable.create(emitter ->
                 traverseJobs(
                     clock,
-                    crawlId,
+                    crawlerTaskId,
                     emitter::onNext,
                     () -> !emitter.isCancelled(),
                     emitter::onComplete
@@ -105,14 +97,14 @@ public class JobsPage {
         );
     }
 
-    void traverseJobs(Clock clock, String crawlId, Consumer<Job> onJob, Supplier<Boolean> shouldContinue, Runnable onComplete) {
+    void traverseJobs(Clock clock, String crawlerTaskId, Consumer<LinkedInJob> onLinkedInJob, Supplier<Boolean> shouldContinue, Runnable onComplete) {
         showAllJobs();
         Set<String> jobIds = new HashSet<>();
         int pageNumber = 1;
 
         boolean query = true;
 
-        logger.info("Started crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
+        logger.info("Started crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
 
         while (query && shouldContinue.get()) {
             query = false;
@@ -134,12 +126,12 @@ public class JobsPage {
                     this.awaitableWebDriver.waitUntil((ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(".artdeco-loader"))));
 
                     WebElement jobDetails = this.awaitableWebDriver.findElementByCss(".jobs-details");
-                    parse(jobId, crawlId, clock.instant(), jobDetails, this.awaitableWebDriver.remoteWebDriver().getCurrentUrl()).ifPresent(onJob);
+                    parse(jobId, clock.instant(), jobDetails, this.awaitableWebDriver.remoteWebDriver().getCurrentUrl()).ifPresent(onLinkedInJob);
                 }
             }
 
             if (!query) {
-                logger.info("Completed crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
+                logger.info("Completed crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
 
                 pageNumber++;
 
@@ -151,7 +143,7 @@ public class JobsPage {
                     nextPage.click();
                     query = true;
 
-                    logger.info("Started crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
+                    logger.info("Started crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
                 }
             }
         }

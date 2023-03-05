@@ -6,8 +6,9 @@ import java.util.Optional;
 
 public class Job {
     private String id;
-    private String crawlerId;
+    private String crawlerTaskId;
     private Instant crawledAt;
+    private int position;
     private URL link;
     private String title;
     private String companyName;
@@ -23,12 +24,12 @@ public class Job {
         this.id = id;
     }
 
-    public String getCrawlerId() {
-        return crawlerId;
+    public String getCrawlerTaskId() {
+        return crawlerTaskId;
     }
 
-    public void setCrawlerId(String crawlerId) {
-        this.crawlerId = crawlerId;
+    public void setCrawlerTaskId(String crawlerTaskId) {
+        this.crawlerTaskId = crawlerTaskId;
     }
 
     public Instant getCrawledAt() {
@@ -37,6 +38,14 @@ public class Job {
 
     public void setCrawledAt(Instant crawledAt) {
         this.crawledAt = crawledAt;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 
     public URL getLink() {
@@ -89,10 +98,10 @@ public class Job {
 
     @Override
     public String toString() {
-        return "Job{" +
-            "id='" + id + '\'' +
-            ", crawlId='" + crawlerId + '\'' +
+        return "Job{" + "id='" + id + '\'' +
+            ", crawlerTaskId='" + crawlerTaskId + '\'' +
             ", crawledAt=" + crawledAt +
+            ", position=" + position +
             ", link=" + link +
             ", title='" + title + '\'' +
             ", companyName='" + companyName + '\'' +

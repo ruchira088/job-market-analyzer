@@ -2,10 +2,21 @@ package com.ruchij.crawler.service.crawler.models;
 
 import com.ruchij.crawler.dao.job.models.Job;
 
-public record CrawledJob(String crawlId, Job job, int currentJobPosition, int allPages) {
-    private static final int JOBS_PER_PAGE = 24;
+public record CrawledJob(String crawlerTaskId, LinkedInJob linkedInJob, int position, int progress) {
+    public Job job() {
+        Job job = new Job();
 
-    public int estimatedJobCount() {
-        return allPages * JOBS_PER_PAGE;
+        job.setId(linkedInJob.id());
+        job.setCrawlerTaskId(crawlerTaskId);
+        job.setCrawledAt(linkedInJob.crawledAt());
+        job.setPosition(position);
+        job.setLink(linkedInJob.link());
+        job.setTitle(linkedInJob.title());
+        job.setCompanyName(linkedInJob.companyName());
+        job.setLocation(linkedInJob.location());
+        job.setWorkplaceType(linkedInJob.workplaceType());
+        job.setDetails(linkedInJob.details());
+
+        return job;
     }
 }

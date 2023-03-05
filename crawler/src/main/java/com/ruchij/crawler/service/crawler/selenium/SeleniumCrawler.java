@@ -23,6 +23,8 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 public class SeleniumCrawler implements Crawler {
+    private static final int JOBS_PER_PAGE = 24;
+
     private static final Logger logger = LoggerFactory.getLogger(SeleniumCrawler.class);
 
     private final Clock clock;
@@ -48,13 +50,13 @@ public class SeleniumCrawler implements Crawler {
                     .subscribeOn(Schedulers.io())
                     .zipWith(
                         Flowable.range(1, Integer.MAX_VALUE),
-                        (job, integer) -> new CrawledJob(crawlerTaskId, job, integer, pageCount)
+                        (crawledJob, position) -> new CrawledJob(crawlerTaskId, crawledJob, position, position * 100 / (pageCount * JOBS_PER_PAGE))
                     )
-                    .doOnError(throwable -> logger.error("Error occurred with crawlTaskId=%s".formatted(crawlerTaskId), throwable))
-                    .doOnCancel(() -> logger.info("SeleniumCrawler for crawlTaskId=%s was cancelled".formatted(crawlerTaskId)))
+                    .doOnError(throwable -> logger.error("Error occurred with crawlerTaskId=%s".formatted(crawlerTaskId), throwable))
+                    .doOnCancel(() -> logger.info("SeleniumCrawler for crawlerTaskId=%s was cancelled".formatted(crawlerTaskId)))
                     .doFinally(() -> {
                         awaitableWebDriver.remoteWebDriver().quit();
-                        logger.info("Completed SeleniumCrawler for crawlTaskId=%s".formatted(crawlerTaskId));
+                        logger.info("Completed SeleniumCrawler for crawlerTaskId=%s".formatted(crawlerTaskId));
                     });
             });
     }
