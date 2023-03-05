@@ -49,7 +49,7 @@ public class ElasticsearchJobDao implements JobDao {
                 .query(queryBuilder ->
                     queryBuilder.match(
                         MatchQuery.of(matchQueryBuilder ->
-                            matchQueryBuilder.field("id").query(crawlerTaskId)
+                            matchQueryBuilder.field("crawlerTaskId").query(crawlerTaskId)
                         )
                     )
                 )

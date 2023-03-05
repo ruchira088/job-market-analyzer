@@ -50,7 +50,7 @@ public class SeleniumCrawler implements Crawler {
                     .subscribeOn(Schedulers.io())
                     .zipWith(
                         Flowable.range(1, Integer.MAX_VALUE),
-                        (crawledJob, position) -> new CrawledJob(crawlerTaskId, crawledJob, position, position * 100 / (pageCount * JOBS_PER_PAGE))
+                        (linkedInJob, position) -> new CrawledJob(linkedInJob.job(crawlerTaskId, position), position * 100 / (pageCount * JOBS_PER_PAGE))
                     )
                     .doOnError(throwable -> logger.error("Error occurred with crawlerTaskId=%s".formatted(crawlerTaskId), throwable))
                     .doOnCancel(() -> logger.info("SeleniumCrawler for crawlerTaskId=%s was cancelled".formatted(crawlerTaskId)))
