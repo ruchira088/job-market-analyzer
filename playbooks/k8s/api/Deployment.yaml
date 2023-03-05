@@ -2,18 +2,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: job-market-analyzer-api-deployment
-  namespace: { { namespace } }
+  namespace: {{ namespace }}
 spec:
   selector:
     matchLabels:
       app: job-market-analyzer-api
-      branch: { { git_branch } }
+      branch: {{ git_branch }}
   replicas: 1
   template:
     metadata:
       labels:
         app: job-market-analyzer-api
-        branch: { { git_branch } }
+        branch: {{ git_branch }}
     spec:
       containers:
         - name: job-market-analyzer-api-container

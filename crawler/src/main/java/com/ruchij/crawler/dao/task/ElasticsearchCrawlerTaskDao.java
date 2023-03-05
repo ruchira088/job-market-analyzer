@@ -1,9 +1,7 @@
 package com.ruchij.crawler.dao.task;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch._types.Refresh;
-import co.elastic.clients.elasticsearch._types.WriteResponseBase;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
@@ -76,6 +74,11 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
 				.index(INDEX)
 				.size(pageSize)
 				.from(pageSize * pageNumber)
+				.sort(SortOptions.of(sortOptionsBuilder ->
+						sortOptionsBuilder.field(fieldSortBuilder ->
+							fieldSortBuilder.field("startedAt").order(SortOrder.Desc))
+					)
+				)
 				.query(queryBuilder ->
 					queryBuilder.match(MatchQuery.of(matchQueryBuilder ->
 							matchQueryBuilder.field("userId").query(userId)

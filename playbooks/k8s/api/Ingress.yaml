@@ -2,14 +2,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: job-market-analyzer-api-ingress
-  namespace: { { namespace } }
+  namespace: {{ namespace }}
 spec:
   tls:
     - secretName: job-market-analyzer-api-tls
       hosts:
-        - { { hostname } }
+        - {{ hostname }}
   rules:
-    - host: { { hostname } }
+    - host: {{ hostname }}
       http:
         paths:
           - pathType: ImplementationSpecific
