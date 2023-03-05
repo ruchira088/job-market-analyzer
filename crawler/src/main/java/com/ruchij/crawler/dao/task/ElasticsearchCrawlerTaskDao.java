@@ -76,7 +76,8 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
 				.from(pageSize * pageNumber)
 				.sort(SortOptions.of(sortOptionsBuilder ->
 						sortOptionsBuilder.field(fieldSortBuilder ->
-							fieldSortBuilder.field("startedAt").order(SortOrder.Desc))
+							fieldSortBuilder.field("startedAt").order(SortOrder.Desc)
+						)
 					)
 				)
 				.query(queryBuilder ->
