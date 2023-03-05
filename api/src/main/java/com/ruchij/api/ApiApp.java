@@ -61,136 +61,136 @@ import java.util.function.Consumer;
 import static com.ruchij.crawler.utils.JsonUtils.objectMapper;
 
 public class ApiApp {
-    public static void main(String[] args) throws Exception {
-        Config config = ConfigFactory.load();
-        ApiConfiguration apiConfiguration = ApiConfiguration.parse(config);
-        Routes routes = routes(apiConfiguration);
+	public static void main(String[] args) throws Exception {
+		Config config = ConfigFactory.load();
+		ApiConfiguration apiConfiguration = ApiConfiguration.parse(config);
+		Routes routes = routes(apiConfiguration);
 
-        httpApplication(routes, __ -> {
-        })
-            .start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
-    }
+		httpApplication(routes, __ -> {
+		})
+			.start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
+	}
 
-    public static Javalin httpApplication(
-        Routes routes,
-        Consumer<JavalinConfig> configModifier
-    ) {
-        return Javalin
-            .create(javalinConfig -> {
-                    javalinConfig.jsonMapper(new JavalinJackson(objectMapper));
-                    javalinConfig.plugins.register(new ExceptionHandlerPlugin());
-                    javalinConfig.plugins.enableCors(
-                        corsContainer -> corsContainer.add(corsPluginConfig -> {
-                            corsPluginConfig.reflectClientOrigin = true;
-                            corsPluginConfig.allowCredentials = true;
-                        })
-                    );
-                    configModifier.accept(javalinConfig);
-                }
-            )
-            .routes(routes);
-    }
+	public static Javalin httpApplication(
+		Routes routes,
+		Consumer<JavalinConfig> configModifier
+	) {
+		return Javalin
+			.create(javalinConfig -> {
+					javalinConfig.jsonMapper(new JavalinJackson(objectMapper));
+					javalinConfig.plugins.register(new ExceptionHandlerPlugin());
+					javalinConfig.plugins.enableCors(
+						corsContainer -> corsContainer.add(corsPluginConfig -> {
+							corsPluginConfig.reflectClientOrigin = true;
+							corsPluginConfig.allowCredentials = true;
+						})
+					);
+					configModifier.accept(javalinConfig);
+				}
+			)
+			.routes(routes);
+	}
 
-    public static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
-        ElasticsearchClientBuilder elasticsearchClientBuilder =
-            new ElasticsearchClientBuilder(
-                apiConfiguration.elasticsearchConfiguration(),
-                new JacksonJsonpMapper(objectMapper)
-            );
-        ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
+	public static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
+		ElasticsearchClientBuilder elasticsearchClientBuilder =
+			new ElasticsearchClientBuilder(
+				apiConfiguration.elasticsearchConfiguration(),
+				new JacksonJsonpMapper(objectMapper)
+			);
+		ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
 
-        UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
-        CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
-        SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
-        CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
-        EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
+		UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
+		CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
+		SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
+		CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
+		EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
-        RedisKeyValueStore redisKeyValueStore =
-            new RedisKeyValueStore(apiConfiguration.redisConfiguration().uri());
+		RedisKeyValueStore redisKeyValueStore =
+			new RedisKeyValueStore(apiConfiguration.redisConfiguration().uri());
 
-        KeyValueStore authenticationKeyValueStore =
-            new NamespacedKeyValueStore(redisKeyValueStore, AuthenticationToken.class.getSimpleName());
+		KeyValueStore authenticationKeyValueStore =
+			new NamespacedKeyValueStore(redisKeyValueStore, AuthenticationToken.class.getSimpleName());
 
-        RandomGenerator<String> tokenGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
-        RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
+		RandomGenerator<String> tokenGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
+		RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
 
-        EncryptionService encryptionService =
-            new AesEncryptionService(
-                apiConfiguration.apiSecurityConfiguration().encryptionKey(),
-                SecureRandom.getInstanceStrong()
-            );
+		EncryptionService encryptionService =
+			new AesEncryptionService(
+				apiConfiguration.apiSecurityConfiguration().encryptionKey(),
+				SecureRandom.getInstanceStrong()
+			);
 
-        Clock clock = Clock.systemUTC();
+		Clock clock = Clock.systemUTC();
 
-        LinkedInCredentialsService linkedInCredentialsService =
-            new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
+		LinkedInCredentialsService linkedInCredentialsService =
+			new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
 
-        JobSearchService jobSearchService = new JobSearchServiceImpl(searchableJobDao);
+		JobSearchService jobSearchService = new JobSearchServiceImpl(searchableJobDao);
 
-        Crawler crawler = new SeleniumCrawler(clock);
+		Crawler crawler = new SeleniumCrawler(clock);
 
-        CrawlManager crawlManager =
-            new CrawlManagerImpl(
-                crawler,
-                crawlerTaskDao,
-                searchableJobDao,
-                idGenerator,
-                clock
-            );
+		CrawlManager crawlManager =
+			new CrawlManagerImpl(
+				crawler,
+				crawlerTaskDao,
+				searchableJobDao,
+				idGenerator,
+				clock
+			);
 
-        ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(4);
-        LockService lockService = new LocalLockService(scheduledExecutorService, clock);
+		ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(4);
+		LockService lockService = new LocalLockService(scheduledExecutorService, clock);
 
-        ExtendedCrawlManager extendedCrawlManager =
-            new ExtendedCrawlManagerImpl(crawlManager, lockService, linkedInCredentialsService);
+		ExtendedCrawlManager extendedCrawlManager =
+			new ExtendedCrawlManagerImpl(crawlManager, lockService, linkedInCredentialsService);
 
-        PasswordHashingService passwordHashingService = new BCryptPasswordHashingService();
+		PasswordHashingService passwordHashingService = new BCryptPasswordHashingService();
 
-        UserService userService =
-            new UserServiceImpl(
-                userDao,
-                credentialsDao,
-                passwordHashingService,
-                idGenerator,
-                clock
-            );
+		UserService userService =
+			new UserServiceImpl(
+				userDao,
+				credentialsDao,
+				passwordHashingService,
+				idGenerator,
+				clock
+			);
 
-        AuthenticationService authenticationService =
-            new AuthenticationServiceImpl(
-                authenticationKeyValueStore,
-                tokenGenerator,
-                passwordHashingService,
-                userDao,
-                credentialsDao,
-                clock
-            );
+		AuthenticationService authenticationService =
+			new AuthenticationServiceImpl(
+				authenticationKeyValueStore,
+				tokenGenerator,
+				passwordHashingService,
+				userDao,
+				credentialsDao,
+				clock
+			);
 
-        OkHttpClient httpClient =
-            new OkHttpClient.Builder()
-                .callTimeout(Duration.ofSeconds(20))
-                .build();
+		OkHttpClient httpClient =
+			new OkHttpClient.Builder()
+				.callTimeout(Duration.ofSeconds(20))
+				.build();
 
-        HealthService healthService =
-            new HealthServiceImpl(
-                elasticsearchAsyncClient,
-                redisKeyValueStore.getRedisAsyncCommands(),
-                httpClient,
-                crawler,
-                scheduledExecutorService,
-                System.getProperties(),
-                clock
-            );
+		HealthService healthService =
+			new HealthServiceImpl(
+				elasticsearchAsyncClient,
+				redisKeyValueStore.getRedisAsyncCommands(),
+				httpClient,
+				crawler,
+				scheduledExecutorService,
+				System.getProperties(),
+				clock
+			);
 
-        Routes routes =
-            new Routes(
-                extendedCrawlManager,
-                userService,
-                authenticationService,
-                linkedInCredentialsService,
-                jobSearchService,
-                healthService
-            );
+		Routes routes =
+			new Routes(
+				extendedCrawlManager,
+				userService,
+				authenticationService,
+				linkedInCredentialsService,
+				jobSearchService,
+				healthService
+			);
 
-        return routes;
-    }
+		return routes;
+	}
 }

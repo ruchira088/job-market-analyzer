@@ -8,11 +8,11 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface EncryptedLinkedInCredentialsDao {
-    CompletableFuture<String> insert(EncryptedLinkedInCredentials encryptedLinkedInCredentials);
+	CompletableFuture<String> insert(EncryptedLinkedInCredentials encryptedLinkedInCredentials);
 
-    Flowable<EncryptedLinkedInCredentials> getAll();
+	Flowable<EncryptedLinkedInCredentials> getAll();
 
-    CompletableFuture<Optional<EncryptedLinkedInCredentials>> findByUserId(String userId);
+	CompletableFuture<Optional<EncryptedLinkedInCredentials>> findByUserId(String userId);
 
-    CompletableFuture<Boolean> deleteByUserId(String userId);
+	CompletableFuture<Boolean> deleteByUserId(String userId);
 }

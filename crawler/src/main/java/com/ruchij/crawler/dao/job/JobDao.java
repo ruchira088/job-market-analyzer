@@ -7,9 +7,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface JobDao {
-    CompletableFuture<String> insert(Job job);
+	CompletableFuture<String> insert(Job job);
 
-    CompletableFuture<Optional<Job>> findById(String jobId);
+	CompletableFuture<Optional<Job>> findById(String jobId);
 
-    CompletableFuture<List<Job>> findByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber);
+	CompletableFuture<List<Job>> findByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber);
 }

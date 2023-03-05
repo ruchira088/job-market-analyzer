@@ -9,31 +9,31 @@ import io.javalin.http.HttpStatus;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
 public class UserRoute implements EndpointGroup {
-    private final UserService userService;
+	private final UserService userService;
 
-    public UserRoute(UserService userService) {
-        this.userService = userService;
-    }
+	public UserRoute(UserService userService) {
+		this.userService = userService;
+	}
 
-    @Override
-    public void addEndpoints() {
-        post(context -> {
-            CreateUserRequest createUserRequest = context.bodyStreamAsClass(CreateUserRequest.class);
+	@Override
+	public void addEndpoints() {
+		post(context -> {
+			CreateUserRequest createUserRequest = context.bodyStreamAsClass(CreateUserRequest.class);
 
-            context
-                .future(() ->
-                    userService.create(
-                            createUserRequest.email(),
-                            createUserRequest.password(),
-                            createUserRequest.firstName(),
-                            createUserRequest.lastName()
-                        )
-                        .thenAccept(user ->
-                            context
-                                .status(HttpStatus.CREATED)
-                                .json(UserResponse.from(user))
-                        )
-                );
-        });
-    }
+			context
+				.future(() ->
+					userService.create(
+							createUserRequest.email(),
+							createUserRequest.password(),
+							createUserRequest.firstName(),
+							createUserRequest.lastName()
+						)
+						.thenAccept(user ->
+							context
+								.status(HttpStatus.CREATED)
+								.json(UserResponse.from(user))
+						)
+				);
+		});
+	}
 }

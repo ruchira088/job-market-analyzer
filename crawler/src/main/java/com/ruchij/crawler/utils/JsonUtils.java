@@ -7,18 +7,18 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ruchij.crawler.dao.elasticsearch.models.EncryptedText;
 
 public class JsonUtils {
-    public static final ObjectMapper objectMapper = objectMapper();
+	public static final ObjectMapper objectMapper = objectMapper();
 
-    private static ObjectMapper objectMapper() {
-        SimpleModule simpleModule = new SimpleModule();
-        simpleModule.addSerializer(EncryptedText.class, EncryptedText.jsonSerializer);
-        simpleModule.addDeserializer(EncryptedText.class, EncryptedText.jsonDeserializer);
+	private static ObjectMapper objectMapper() {
+		SimpleModule simpleModule = new SimpleModule();
+		simpleModule.addSerializer(EncryptedText.class, EncryptedText.jsonSerializer);
+		simpleModule.addDeserializer(EncryptedText.class, EncryptedText.jsonDeserializer);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.registerModule(new Jdk8Module());
-        objectMapper.registerModule(simpleModule);
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.registerModule(new Jdk8Module());
+		objectMapper.registerModule(simpleModule);
 
-        return objectMapper;
-    }
+		return objectMapper;
+	}
 }

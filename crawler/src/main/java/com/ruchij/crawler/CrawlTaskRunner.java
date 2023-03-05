@@ -8,29 +8,29 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CrawlTaskRunner {
-    private final CrawlManager crawlManager;
-    private final LinkedInCredentialsService linkedInCredentialsService;
+	private final CrawlManager crawlManager;
+	private final LinkedInCredentialsService linkedInCredentialsService;
 
-    public CrawlTaskRunner(
-        CrawlManager crawlManager,
-        LinkedInCredentialsService linkedInCredentialsService
-    ) {
-        this.crawlManager = crawlManager;
-        this.linkedInCredentialsService = linkedInCredentialsService;
-    }
+	public CrawlTaskRunner(
+		CrawlManager crawlManager,
+		LinkedInCredentialsService linkedInCredentialsService
+	) {
+		this.crawlManager = crawlManager;
+		this.linkedInCredentialsService = linkedInCredentialsService;
+	}
 
-    public void run() {
-        ExecutorService executorService = Executors.newFixedThreadPool(4);
+	public void run() {
+		ExecutorService executorService = Executors.newFixedThreadPool(4);
 
-        linkedInCredentialsService.getAll()
-            .flatMap(linkedInCredentials ->
-                crawlManager.run(
-                        linkedInCredentials.userId(),
-                        linkedInCredentials.email(),
-                        linkedInCredentials.password()
-                    )
-                    .subscribeOn(Schedulers.from(executorService))
-            )
-            .blockingSubscribe();
-    }
+		linkedInCredentialsService.getAll()
+			.flatMap(linkedInCredentials ->
+				crawlManager.run(
+						linkedInCredentials.userId(),
+						linkedInCredentials.email(),
+						linkedInCredentials.password()
+					)
+					.subscribeOn(Schedulers.from(executorService))
+			)
+			.blockingSubscribe();
+	}
 }

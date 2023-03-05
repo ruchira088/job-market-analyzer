@@ -13,35 +13,35 @@ import io.javalin.apibuilder.EndpointGroup;
 import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class Routes implements EndpointGroup {
-    private final UserRoute userRoute;
-    private final LinkedInRoute linkedInRoute;
-    private final AuthenticationRoute authenticationRoute;
-    private final SearchRoute searchRoute;
-    private final ServiceRoute serviceRoute;
+	private final UserRoute userRoute;
+	private final LinkedInRoute linkedInRoute;
+	private final AuthenticationRoute authenticationRoute;
+	private final SearchRoute searchRoute;
+	private final ServiceRoute serviceRoute;
 
-    public Routes(
-        ExtendedCrawlManager extendedCrawlManager,
-        UserService userService,
-        AuthenticationService authenticationService,
-        LinkedInCredentialsService linkedInCredentialsService,
-        JobSearchService jobSearchService,
-        HealthService healthService
-    ) {
-        AuthenticationMiddleware authenticationMiddleware = new AuthenticationMiddleware(authenticationService);
+	public Routes(
+		ExtendedCrawlManager extendedCrawlManager,
+		UserService userService,
+		AuthenticationService authenticationService,
+		LinkedInCredentialsService linkedInCredentialsService,
+		JobSearchService jobSearchService,
+		HealthService healthService
+	) {
+		AuthenticationMiddleware authenticationMiddleware = new AuthenticationMiddleware(authenticationService);
 
-        this.userRoute = new UserRoute(userService);
-        this.authenticationRoute = new AuthenticationRoute(authenticationService, authenticationMiddleware);
-        this.linkedInRoute = new LinkedInRoute(linkedInCredentialsService, extendedCrawlManager, authenticationMiddleware);
-        this.searchRoute = new SearchRoute(jobSearchService);
-        this.serviceRoute = new ServiceRoute(healthService);
-    }
+		this.userRoute = new UserRoute(userService);
+		this.authenticationRoute = new AuthenticationRoute(authenticationService, authenticationMiddleware);
+		this.linkedInRoute = new LinkedInRoute(linkedInCredentialsService, extendedCrawlManager, authenticationMiddleware);
+		this.searchRoute = new SearchRoute(jobSearchService);
+		this.serviceRoute = new ServiceRoute(healthService);
+	}
 
-    @Override
-    public void addEndpoints() {
-        path("user", userRoute);
-        path("authentication", authenticationRoute);
-        path("linkedIn", linkedInRoute);
-        path("service", serviceRoute);
-        path("search", searchRoute);
-    }
+	@Override
+	public void addEndpoints() {
+		path("user", userRoute);
+		path("authentication", authenticationRoute);
+		path("linkedIn", linkedInRoute);
+		path("service", serviceRoute);
+		path("search", searchRoute);
+	}
 }

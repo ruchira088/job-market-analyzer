@@ -10,28 +10,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ContainerConfigurationProvider implements ConfigurationProvider {
-    private static final Logger logger = LoggerFactory.getLogger(ContainerConfigurationProvider.class);
+	private static final Logger logger = LoggerFactory.getLogger(ContainerConfigurationProvider.class);
 
-    @Override
-    public RedisConfiguration redisConfiguration() {
-        return new RedisContainer().redisConfiguration();
-    }
+	@Override
+	public RedisConfiguration redisConfiguration() {
+		return new RedisContainer().redisConfiguration();
+	}
 
-    @Override
-    public ElasticsearchConfiguration elasticsearchConfiguration() {
-        ElasticsearchConfiguration elasticsearchConfiguration =
-            new ElasticsearchContainer().elasticsearchConfiguration();
+	@Override
+	public ElasticsearchConfiguration elasticsearchConfiguration() {
+		ElasticsearchConfiguration elasticsearchConfiguration =
+			new ElasticsearchContainer().elasticsearchConfiguration();
 
-        MigrationConfiguration migrationConfiguration = new MigrationConfiguration(elasticsearchConfiguration);
+		MigrationConfiguration migrationConfiguration = new MigrationConfiguration(elasticsearchConfiguration);
 
-        try {
-            MigrationApp.run(migrationConfiguration);
-        } catch (Exception exception) {
-            throw new RuntimeException("Error occurred during migration", exception);
-        }
+		try {
+			MigrationApp.run(migrationConfiguration);
+		} catch (Exception exception) {
+			throw new RuntimeException("Error occurred during migration", exception);
+		}
 
-        logger.info("Migration completed");
+		logger.info("Migration completed");
 
-        return elasticsearchConfiguration;
-    }
+		return elasticsearchConfiguration;
+	}
 }

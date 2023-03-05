@@ -7,14 +7,14 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class JobSearchServiceImpl implements JobSearchService {
-    private final SearchableJobDao searchableJobDao;
+	private final SearchableJobDao searchableJobDao;
 
-    public JobSearchServiceImpl(SearchableJobDao searchableJobDao) {
-        this.searchableJobDao = searchableJobDao;
-    }
+	public JobSearchServiceImpl(SearchableJobDao searchableJobDao) {
+		this.searchableJobDao = searchableJobDao;
+	}
 
-    @Override
-    public CompletableFuture<List<Job>> findByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber) {
-        return this.searchableJobDao.findByCrawlerTaskId(crawlerTaskId, pageSize, pageNumber);
-    }
+	@Override
+	public CompletableFuture<List<Job>> findByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber) {
+		return this.searchableJobDao.findByCrawlerTaskId(crawlerTaskId, pageSize, pageNumber);
+	}
 }

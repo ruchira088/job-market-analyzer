@@ -40,11 +40,11 @@
             - name: Create Elasticsearch cluster
               when: elasticsearch_output.resources | length == 0
               block:
-#            - name: Install CRDs (Custom Resource Definitions)
-#              command: kubectl create -f https://download.elastic.co/downloads/eck/2.6.1/crds.yaml --kubeconfig {{ kubeconfig }}
-#
-#            - name: Install K8s operator
-#              command: kubectl apply -f https://download.elastic.co/downloads/eck/2.6.1/operator.yaml --kubeconfig {{ kubeconfig }}
+                #            - name: Install CRDs (Custom Resource Definitions)
+                #              command: kubectl create -f https://download.elastic.co/downloads/eck/2.6.1/crds.yaml --kubeconfig {{ kubeconfig }}
+                #
+                #            - name: Install K8s operator
+                #              command: kubectl apply -f https://download.elastic.co/downloads/eck/2.6.1/operator.yaml --kubeconfig {{ kubeconfig }}
                 - name: Install Elasticsearch
                   command: kubectl apply -f k8s-output/Elasticsearch.yaml --kubeconfig {{ kubeconfig }}
 

@@ -8,38 +8,38 @@ import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class ServiceRoute implements EndpointGroup {
-    private final HealthService healthService;
+	private final HealthService healthService;
 
-    public ServiceRoute(HealthService healthService) {
-        this.healthService = healthService;
-    }
+	public ServiceRoute(HealthService healthService) {
+		this.healthService = healthService;
+	}
 
-    @Override
-    public void addEndpoints() {
-        path("health", () ->
-            get(context ->
-                context.future(() ->
-                    healthService.healthCheck()
-                        .thenAccept(healthCheck ->
-                            context
-                                .status(healthCheck.isHealthy() ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE)
-                                .json(healthCheck)
-                        )
-                )
-            )
-        );
+	@Override
+	public void addEndpoints() {
+		path("health", () ->
+			get(context ->
+				context.future(() ->
+					healthService.healthCheck()
+						.thenAccept(healthCheck ->
+							context
+								.status(healthCheck.isHealthy() ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE)
+								.json(healthCheck)
+						)
+				)
+			)
+		);
 
-        path("info", () ->
-            get(context ->
-                context.future(() ->
-                    healthService.serviceInformation()
-                        .thenAccept(serviceInformation ->
-                            context
-                                .status(HttpStatus.OK)
-                                .json(serviceInformation)
-                        )
-                )
-            )
-        );
-    }
+		path("info", () ->
+			get(context ->
+				context.future(() ->
+					healthService.serviceInformation()
+						.thenAccept(serviceInformation ->
+							context
+								.status(HttpStatus.OK)
+								.json(serviceInformation)
+						)
+				)
+			)
+		);
+	}
 }

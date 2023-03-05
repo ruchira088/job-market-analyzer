@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface LockService {
-    CompletableFuture<Optional<Lock>> lock(String lockId, Duration timeout);
+	CompletableFuture<Optional<Lock>> lock(String lockId, Duration timeout);
 
-    CompletableFuture<Boolean> release(String lockId);
+	CompletableFuture<Boolean> release(String lockId);
 }

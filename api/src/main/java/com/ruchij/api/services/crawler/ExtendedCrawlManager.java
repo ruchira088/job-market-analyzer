@@ -5,5 +5,5 @@ import com.ruchij.crawler.service.crawler.models.CrawledJob;
 import io.reactivex.rxjava3.core.Flowable;
 
 public interface ExtendedCrawlManager extends CrawlManager {
-    Flowable<CrawledJob> runWithLock(String userId);
+	Flowable<CrawledJob> runWithLock(String userId);
 }

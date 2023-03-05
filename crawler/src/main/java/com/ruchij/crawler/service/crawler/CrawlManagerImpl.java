@@ -11,39 +11,39 @@ import java.time.Clock;
 import java.util.Optional;
 
 public class CrawlManagerImpl implements CrawlManager {
-    private final Crawler crawler;
-    private final CrawlerTaskDao crawlerTaskDao;
-    private final JobDao jobDao;
-    private final RandomGenerator<String> idGenerator;
-    private final Clock clock;
+	private final Crawler crawler;
+	private final CrawlerTaskDao crawlerTaskDao;
+	private final JobDao jobDao;
+	private final RandomGenerator<String> idGenerator;
+	private final Clock clock;
 
-    public CrawlManagerImpl(
-        Crawler crawler,
-        CrawlerTaskDao crawlerTaskDao,
-        JobDao jobDao,
-        RandomGenerator<String> idGenerator,
-        Clock clock
-    ) {
-        this.crawler = crawler;
-        this.crawlerTaskDao = crawlerTaskDao;
-        this.jobDao = jobDao;
-        this.idGenerator = idGenerator;
-        this.clock = clock;
-    }
+	public CrawlManagerImpl(
+		Crawler crawler,
+		CrawlerTaskDao crawlerTaskDao,
+		JobDao jobDao,
+		RandomGenerator<String> idGenerator,
+		Clock clock
+	) {
+		this.crawler = crawler;
+		this.crawlerTaskDao = crawlerTaskDao;
+		this.jobDao = jobDao;
+		this.idGenerator = idGenerator;
+		this.clock = clock;
+	}
 
-    @Override
-    public Flowable<CrawledJob> run(String userId, String linkedInEmail, String linkedInPassword) {
-        String crawlerTaskId = idGenerator.generate();
+	@Override
+	public Flowable<CrawledJob> run(String userId, String linkedInEmail, String linkedInPassword) {
+		String crawlerTaskId = idGenerator.generate();
 
-        CrawlerTask crawlerTask =
-            new CrawlerTask(crawlerTaskId, userId, clock.instant(), Optional.empty());
+		CrawlerTask crawlerTask =
+			new CrawlerTask(crawlerTaskId, userId, clock.instant(), Optional.empty());
 
-        return Flowable.fromCompletionStage(crawlerTaskDao.insert(crawlerTask))
-            .concatMap(value -> crawler.crawl(crawlerTaskId, linkedInEmail, linkedInPassword))
-            .concatMap(crawledJob -> Flowable.fromCompletionStage(jobDao.insert(crawledJob.job())).map(__ -> crawledJob))
-            .concatWith(
-                Flowable.fromCompletionStage(crawlerTaskDao.setFinishedTimestamp(crawlerTaskId, clock.instant()))
-                    .concatMap(__ -> Flowable.empty())
-            );
-    }
+		return Flowable.fromCompletionStage(crawlerTaskDao.insert(crawlerTask))
+			.concatMap(value -> crawler.crawl(crawlerTaskId, linkedInEmail, linkedInPassword))
+			.concatMap(crawledJob -> Flowable.fromCompletionStage(jobDao.insert(crawledJob.job())).map(__ -> crawledJob))
+			.concatWith(
+				Flowable.fromCompletionStage(crawlerTaskDao.setFinishedTimestamp(crawlerTaskId, clock.instant()))
+					.concatMap(__ -> Flowable.empty())
+			);
+	}
 }

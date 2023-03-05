@@ -22,61 +22,62 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ServiceRouteTest {
 
-    @Test
-    void shouldReturnServiceInformation() {
-        HealthService healthService = Mockito.mock(HealthService.class);
-        Instant instant = Instant.parse("2023-02-05T04:37:42.566735Z");
+	@Test
+	void shouldReturnServiceInformation() {
+		HealthService healthService = Mockito.mock(HealthService.class);
+		Instant instant = Instant.parse("2023-02-05T04:37:42.566735Z");
 
-        Mockito.when(healthService.serviceInformation())
-            .thenReturn(
-                CompletableFuture.completedFuture(
-                    new ServiceInformation(
-                        "job-market-analyzer-api",
-                        "0.0.1-SNAPSHOT",
-                        "17.0.6",
-                        "7.6",
-                        instant,
-                        "main",
-                        "my-commit",
-                        instant
-                    )
-                )
-            );
+		Mockito.when(healthService.serviceInformation())
+			.thenReturn(
+				CompletableFuture.completedFuture(
+					new ServiceInformation(
+						"job-market-analyzer-api",
+						"0.0.1-SNAPSHOT",
+						"17.0.6",
+						"7.6",
+						instant,
+						"main",
+						"my-commit",
+						instant
+					)
+				)
+			);
 
-        Routes routes =
-            new Routes(
-                Mockito.mock(ExtendedCrawlManager.class),
-                Mockito.mock(UserService.class),
-                Mockito.mock(AuthenticationService.class),
-                Mockito.mock(LinkedInCredentialsService.class),
-                Mockito.mock(JobSearchService.class),
-                healthService
-            );
+		Routes routes =
+			new Routes(
+				Mockito.mock(ExtendedCrawlManager.class),
+				Mockito.mock(UserService.class),
+				Mockito.mock(AuthenticationService.class),
+				Mockito.mock(LinkedInCredentialsService.class),
+				Mockito.mock(JobSearchService.class),
+				healthService
+			);
 
-        JavalinTest.test(
-            ApiApp.httpApplication(routes, javalinConfig -> {}),
-            (server, client) -> {
-                Response response = client.get("/service/info");
-                assertEquals(200, response.code());
+		JavalinTest.test(
+			ApiApp.httpApplication(routes, javalinConfig -> {
+			}),
+			(server, client) -> {
+				Response response = client.get("/service/info");
+				assertEquals(200, response.code());
 
-                String expectedResponseBody = """
-                {
-                    "serviceName":"job-market-analyzer-api",
-                    "serviceVersion":"0.0.1-SNAPSHOT",
-                    "javaVersion":"17.0.6",
-                    "gradleVersion":"7.6",
-                    "currentTimestamp":1675571862.566735000,
-                    "gitBranch":"main",
-                    "gitCommit":"my-commit",
-                    "buildTimestamp":1675571862.566735000
-                 }
-                """;
+				String expectedResponseBody = """
+					{
+					    "serviceName":"job-market-analyzer-api",
+					    "serviceVersion":"0.0.1-SNAPSHOT",
+					    "javaVersion":"17.0.6",
+					    "gradleVersion":"7.6",
+					    "currentTimestamp":1675571862.566735000,
+					    "gitBranch":"main",
+					    "gitCommit":"my-commit",
+					    "buildTimestamp":1675571862.566735000
+					 }
+					""";
 
-                assertEquals(
-                    objectMapper.readTree(expectedResponseBody),
-                    objectMapper.readTree(response.body().byteStream())
-                );
-            }
-        );
-    }
+				assertEquals(
+					objectMapper.readTree(expectedResponseBody),
+					objectMapper.readTree(response.body().byteStream())
+				);
+			}
+		);
+	}
 }

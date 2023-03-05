@@ -28,52 +28,52 @@ import java.time.Clock;
 import java.util.UUID;
 
 public class CrawlerApp {
-    public static void main(String[] args) throws Exception {
-        Config config = ConfigFactory.load();
-        CrawlerConfiguration crawlerConfiguration = CrawlerConfiguration.parse(config);
+	public static void main(String[] args) throws Exception {
+		Config config = ConfigFactory.load();
+		CrawlerConfiguration crawlerConfiguration = CrawlerConfiguration.parse(config);
 
-        run(crawlerConfiguration);
-    }
+		run(crawlerConfiguration);
+	}
 
-    public static void run(CrawlerConfiguration crawlerConfiguration) throws Exception {
-        try (ElasticsearchClientBuilder elasticsearchClientBuilder =
-                 new ElasticsearchClientBuilder(
-                     crawlerConfiguration.elasticsearchConfiguration(),
-                     new JacksonJsonpMapper(JsonUtils.objectMapper)
-                 )
-        ) {
-            ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
+	public static void run(CrawlerConfiguration crawlerConfiguration) throws Exception {
+		try (ElasticsearchClientBuilder elasticsearchClientBuilder =
+			     new ElasticsearchClientBuilder(
+				     crawlerConfiguration.elasticsearchConfiguration(),
+				     new JacksonJsonpMapper(JsonUtils.objectMapper)
+			     )
+		) {
+			ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
 
-            JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
-            CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
-            EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
+			JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
+			CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
+			EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
-            Clock clock = Clock.systemUTC();
-            RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
+			Clock clock = Clock.systemUTC();
+			RandomGenerator<String> idGenerator = RandomGenerator.uuidGenerator().map(UUID::toString);
 
-            EncryptionService encryptionService =
-                new AesEncryptionService(
-                    crawlerConfiguration.crawlerSecurityConfiguration().encryptionKey(),
-                    SecureRandom.getInstanceStrong()
-                );
+			EncryptionService encryptionService =
+				new AesEncryptionService(
+					crawlerConfiguration.crawlerSecurityConfiguration().encryptionKey(),
+					SecureRandom.getInstanceStrong()
+				);
 
-            LinkedInCredentialsService linkedInCredentialsService =
-                new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
+			LinkedInCredentialsService linkedInCredentialsService =
+				new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
 
-            Crawler crawler = new SeleniumCrawler(clock);
+			Crawler crawler = new SeleniumCrawler(clock);
 
-            CrawlManager crawlManager =
-                new CrawlManagerImpl(
-                    crawler,
-                    crawlerTaskDao,
-                    jobDao,
-                    idGenerator,
-                    clock
-                );
+			CrawlManager crawlManager =
+				new CrawlManagerImpl(
+					crawler,
+					crawlerTaskDao,
+					jobDao,
+					idGenerator,
+					clock
+				);
 
-            CrawlTaskRunner crawlTaskRunner = new CrawlTaskRunner(crawlManager, linkedInCredentialsService);
+			CrawlTaskRunner crawlTaskRunner = new CrawlTaskRunner(crawlManager, linkedInCredentialsService);
 
-            crawlTaskRunner.run();
-        }
-    }
+			crawlTaskRunner.run();
+		}
+	}
 }

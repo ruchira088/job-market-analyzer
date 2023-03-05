@@ -13,40 +13,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MigrationApp {
-    private static final String[] INDICES = {
-        "users",
-        "credentials",
-        "linkedin_credentials",
-        "jobs",
-        "crawler_tasks"
-    };
+	private static final String[] INDICES = {
+		"users",
+		"credentials",
+		"linkedin_credentials",
+		"jobs",
+		"crawler_tasks"
+	};
 
-    private static final Logger logger = LoggerFactory.getLogger(MigrationApp.class);
+	private static final Logger logger = LoggerFactory.getLogger(MigrationApp.class);
 
-    public static void main(String[] args) throws Exception {
-        Config config = ConfigFactory.load();
-        MigrationConfiguration migrationConfiguration = MigrationConfiguration.parse(config);
+	public static void main(String[] args) throws Exception {
+		Config config = ConfigFactory.load();
+		MigrationConfiguration migrationConfiguration = MigrationConfiguration.parse(config);
 
-        run(migrationConfiguration);
-    }
+		run(migrationConfiguration);
+	}
 
-    public static void run(MigrationConfiguration migrationConfiguration) throws Exception {
-        try (ElasticsearchClientBuilder elasticsearchClientBuilder = new ElasticsearchClientBuilder(migrationConfiguration.elasticsearchConfiguration())) {
-            ElasticsearchClient elasticsearchClient = elasticsearchClientBuilder.buildClient();
-            ElasticsearchIndicesClient elasticsearchIndicesClient = elasticsearchClient.indices();
+	public static void run(MigrationConfiguration migrationConfiguration) throws Exception {
+		try (ElasticsearchClientBuilder elasticsearchClientBuilder = new ElasticsearchClientBuilder(migrationConfiguration.elasticsearchConfiguration())) {
+			ElasticsearchClient elasticsearchClient = elasticsearchClientBuilder.buildClient();
+			ElasticsearchIndicesClient elasticsearchIndicesClient = elasticsearchClient.indices();
 
-            for (String index : INDICES) {
-                BooleanResponse existsResponse = elasticsearchIndicesClient.exists(ExistsRequest.of(builder -> builder.index(index)));
+			for (String index : INDICES) {
+				BooleanResponse existsResponse = elasticsearchIndicesClient.exists(ExistsRequest.of(builder -> builder.index(index)));
 
-                if (!existsResponse.value()) {
-                    CreateIndexRequest createIndexRequest = CreateIndexRequest.of(builder -> builder.index(index));
-                    elasticsearchIndicesClient.create(createIndexRequest);
+				if (!existsResponse.value()) {
+					CreateIndexRequest createIndexRequest = CreateIndexRequest.of(builder -> builder.index(index));
+					elasticsearchIndicesClient.create(createIndexRequest);
 
-                    logger.info("Created index=%s for Elasticsearch".formatted(index));
-                }
-            }
-        }
+					logger.info("Created index=%s for Elasticsearch".formatted(index));
+				}
+			}
+		}
 
-        logger.info("Migration Completed");
-    }
+		logger.info("Migration Completed");
+	}
 }

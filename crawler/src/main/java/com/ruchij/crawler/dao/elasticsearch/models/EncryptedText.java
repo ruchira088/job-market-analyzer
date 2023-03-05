@@ -11,19 +11,19 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
 
 public record EncryptedText(String value) {
-    public static final JsonSerializer<EncryptedText> jsonSerializer =
-        new JsonSerializer<>() {
-            @Override
-            public void serialize(EncryptedText encryptedText, JsonGenerator jsonGenerator, SerializerProvider serializers) throws IOException {
-                jsonGenerator.writeString(encryptedText.value());
-            }
-        };
+	public static final JsonSerializer<EncryptedText> jsonSerializer =
+		new JsonSerializer<>() {
+			@Override
+			public void serialize(EncryptedText encryptedText, JsonGenerator jsonGenerator, SerializerProvider serializers) throws IOException {
+				jsonGenerator.writeString(encryptedText.value());
+			}
+		};
 
-    public static final JsonDeserializer<EncryptedText> jsonDeserializer =
-        new JsonDeserializer<>() {
-            @Override
-            public EncryptedText deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
-                return new EncryptedText(jsonParser.getText());
-            }
-        };
+	public static final JsonDeserializer<EncryptedText> jsonDeserializer =
+		new JsonDeserializer<>() {
+			@Override
+			public EncryptedText deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+				return new EncryptedText(jsonParser.getText());
+			}
+		};
 }

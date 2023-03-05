@@ -4,7 +4,7 @@ import com.ruchij.api.config.RedisConfiguration;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
 
 public interface ConfigurationProvider {
-    RedisConfiguration redisConfiguration();
+	RedisConfiguration redisConfiguration();
 
-    ElasticsearchConfiguration elasticsearchConfiguration();
+	ElasticsearchConfiguration elasticsearchConfiguration();
 }
