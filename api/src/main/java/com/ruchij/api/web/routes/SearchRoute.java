@@ -37,12 +37,5 @@ public class SearchRoute implements EndpointGroup {
 				);
 			}
 		);
-
-		path("crawler-task", () -> {
-			path("user/<id>}", () ->
-				get(context -> {
-				})
-			);
-		});
 	}
 }
