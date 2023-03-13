@@ -15,6 +15,8 @@ import com.ruchij.api.kv.RedisKeyValueStore;
 import com.ruchij.api.services.authentication.AuthenticationService;
 import com.ruchij.api.services.authentication.AuthenticationServiceImpl;
 import com.ruchij.api.services.authentication.models.AuthenticationToken;
+import com.ruchij.api.services.authorization.AuthorizationService;
+import com.ruchij.api.services.authorization.AuthorizationServiceImpl;
 import com.ruchij.api.services.crawler.ExtendedCrawlManager;
 import com.ruchij.api.services.crawler.ExtendedCrawlManagerImpl;
 import com.ruchij.api.services.hashing.BCryptPasswordHashingService;
@@ -23,8 +25,8 @@ import com.ruchij.api.services.health.HealthService;
 import com.ruchij.api.services.health.HealthServiceImpl;
 import com.ruchij.api.services.lock.LocalLockService;
 import com.ruchij.api.services.lock.LockService;
-import com.ruchij.api.services.search.JobSearchService;
-import com.ruchij.api.services.search.JobSearchServiceImpl;
+import com.ruchij.api.services.search.SearchService;
+import com.ruchij.api.services.search.SearchServiceImpl;
 import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
@@ -125,7 +127,7 @@ public class ApiApp {
 		LinkedInCredentialsService linkedInCredentialsService =
 			new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
 
-		JobSearchService jobSearchService = new JobSearchServiceImpl(searchableJobDao);
+		SearchService searchService = new SearchServiceImpl(searchableJobDao, crawlerTaskDao);
 
 		Crawler crawler = new SeleniumCrawler(clock);
 
@@ -165,6 +167,8 @@ public class ApiApp {
 				clock
 			);
 
+		AuthorizationService authorizationService = new AuthorizationServiceImpl(crawlerTaskDao, searchableJobDao);
+
 		OkHttpClient httpClient =
 			new OkHttpClient.Builder()
 				.callTimeout(Duration.ofSeconds(20))
@@ -186,8 +190,9 @@ public class ApiApp {
 				extendedCrawlManager,
 				userService,
 				authenticationService,
+				authorizationService,
 				linkedInCredentialsService,
-				jobSearchService,
+				searchService,
 				healthService
 			);
 

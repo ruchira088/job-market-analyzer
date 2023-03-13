@@ -2,10 +2,11 @@ package com.ruchij.api.web.routes;
 
 import com.ruchij.api.ApiApp;
 import com.ruchij.api.services.authentication.AuthenticationService;
+import com.ruchij.api.services.authorization.AuthorizationService;
 import com.ruchij.api.services.crawler.ExtendedCrawlManager;
 import com.ruchij.api.services.health.HealthService;
 import com.ruchij.api.services.health.models.ServiceInformation;
-import com.ruchij.api.services.search.JobSearchService;
+import com.ruchij.api.services.search.SearchService;
 import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.web.Routes;
 import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
@@ -48,8 +49,9 @@ class ServiceRouteTest {
 				Mockito.mock(ExtendedCrawlManager.class),
 				Mockito.mock(UserService.class),
 				Mockito.mock(AuthenticationService.class),
+				Mockito.mock(AuthorizationService.class),
 				Mockito.mock(LinkedInCredentialsService.class),
-				Mockito.mock(JobSearchService.class),
+				Mockito.mock(SearchService.class),
 				healthService
 			);
 
