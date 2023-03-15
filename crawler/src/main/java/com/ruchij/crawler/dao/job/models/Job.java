@@ -6,6 +6,7 @@ import java.util.Optional;
 
 public class Job {
 	private String id;
+	private String linkedInId;
 	private String crawlerTaskId;
 	private Instant crawledAt;
 	private int position;
@@ -22,6 +23,14 @@ public class Job {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getLinkedInId() {
+		return linkedInId;
+	}
+
+	public void setLinkedInId(String linkedInId) {
+		this.linkedInId = linkedInId;
 	}
 
 	public String getCrawlerTaskId() {
@@ -99,6 +108,7 @@ public class Job {
 	@Override
 	public String toString() {
 		return "Job{" + "id='" + id + '\'' +
+			", linkedInId='" + linkedInId + '\'' +
 			", crawlerTaskId='" + crawlerTaskId + '\'' +
 			", crawledAt=" + crawledAt +
 			", position=" + position +
@@ -107,7 +117,7 @@ public class Job {
 			", companyName='" + companyName + '\'' +
 			", location='" + location + '\'' +
 			", workplaceType=" + workplaceType +
-			", details='" + (details == null ? null : details.substring(0, 50)) + '\'' +
+			", details='" + details + '\'' +
 			'}';
 	}
 }

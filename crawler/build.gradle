@@ -17,7 +17,6 @@ dependencies {
             "io.reactivex.rxjava3:rxjava:$rxJavaVersion",
             "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
             "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
-            "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion",
             "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion",
             "ch.qos.logback:logback-classic:$logbackVersion",
             "org.testcontainers:elasticsearch:$testContainersVersion"

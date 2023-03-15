@@ -9,10 +9,11 @@ import java.util.Optional;
 
 public record LinkedInJob(String id, Instant crawledAt, URL link, String title, String companyName,
                           String location, Optional<WorkplaceType> workplaceType, String details) {
-	public Job job(String crawlerTaskId, int position) {
+	public Job job(String jobId, String crawlerTaskId, int position) {
 		Job job = new Job();
 
-		job.setId(id);
+		job.setId(jobId);
+		job.setLinkedInId(id);
 		job.setCrawlerTaskId(crawlerTaskId);
 		job.setCrawledAt(crawledAt);
 		job.setPosition(position);

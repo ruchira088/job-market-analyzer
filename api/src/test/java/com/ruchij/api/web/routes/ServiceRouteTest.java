@@ -64,14 +64,14 @@ class ServiceRouteTest {
 
 				String expectedResponseBody = """
 					{
-					    "serviceName":"job-market-analyzer-api",
-					    "serviceVersion":"0.0.1-SNAPSHOT",
-					    "javaVersion":"17.0.6",
+					    "serviceName": "job-market-analyzer-api",
+					    "serviceVersion": "0.0.1-SNAPSHOT",
+					    "javaVersion": "17.0.6",
 					    "gradleVersion":"7.6",
-					    "currentTimestamp":1675571862.566735000,
-					    "gitBranch":"main",
-					    "gitCommit":"my-commit",
-					    "buildTimestamp":1675571862.566735000
+					    "currentTimestamp": "2023-02-05T04:37:42.566735Z",
+					    "gitBranch": "main",
+					    "gitCommit": "my-commit",
+					    "buildTimestamp": "2023-02-05T04:37:42.566735Z"
 					 }
 					""";
 

@@ -60,7 +60,7 @@ public class CrawlerApp {
 			LinkedInCredentialsService linkedInCredentialsService =
 				new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
 
-			Crawler crawler = new SeleniumCrawler(clock);
+			Crawler crawler = new SeleniumCrawler(idGenerator, clock);
 
 			CrawlManager crawlManager =
 				new CrawlManagerImpl(

@@ -44,6 +44,7 @@ public class CrawlManagerImpl implements CrawlManager {
 			.concatWith(
 				Flowable.fromCompletionStage(crawlerTaskDao.setFinishedTimestamp(crawlerTaskId, clock.instant()))
 					.concatMap(__ -> Flowable.empty())
-			);
+			)
+			.doOnCancel(() -> {});
 	}
 }

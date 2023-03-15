@@ -7,6 +7,7 @@ import com.ruchij.crawler.service.crawler.selenium.driver.SeleniumWebDriver;
 import com.ruchij.crawler.service.crawler.selenium.site.LinkedIn;
 import com.ruchij.crawler.service.crawler.selenium.site.pages.HomePage;
 import com.ruchij.crawler.service.crawler.selenium.site.pages.JobsPage;
+import com.ruchij.crawler.service.random.RandomGenerator;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -27,9 +28,11 @@ public class SeleniumCrawler implements Crawler {
 
 	private static final Logger logger = LoggerFactory.getLogger(SeleniumCrawler.class);
 
+	private final RandomGenerator<String> idGenerator;
 	private final Clock clock;
 
-	public SeleniumCrawler(Clock clock) {
+	public SeleniumCrawler(RandomGenerator<String> idGenerator, Clock clock) {
+		this.idGenerator = idGenerator;
 		this.clock = clock;
 	}
 
@@ -50,7 +53,11 @@ public class SeleniumCrawler implements Crawler {
 					.subscribeOn(Schedulers.io())
 					.zipWith(
 						Flowable.range(1, Integer.MAX_VALUE),
-						(linkedInJob, position) -> new CrawledJob(linkedInJob.job(crawlerTaskId, position), position * 100 / (pageCount * JOBS_PER_PAGE))
+						(linkedInJob, position) ->
+							new CrawledJob(
+								linkedInJob.job(this.idGenerator.generate(), crawlerTaskId, position),
+								position * 100 / (pageCount * JOBS_PER_PAGE)
+							)
 					)
 					.doOnError(throwable -> logger.error("Error occurred with crawlerTaskId=%s".formatted(crawlerTaskId), throwable))
 					.doOnCancel(() -> logger.info("SeleniumCrawler for crawlerTaskId=%s was cancelled".formatted(crawlerTaskId)))

@@ -129,7 +129,7 @@ public class ApiApp {
 
 		SearchService searchService = new SearchServiceImpl(searchableJobDao, crawlerTaskDao);
 
-		Crawler crawler = new SeleniumCrawler(clock);
+		Crawler crawler = new SeleniumCrawler(idGenerator, clock);
 
 		CrawlManager crawlManager =
 			new CrawlManagerImpl(
