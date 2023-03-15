@@ -23,6 +23,11 @@ public class SearchServiceImpl implements SearchService {
 	}
 
 	@Override
+	public CompletableFuture<Long> countJobsByCrawlerTaskId(String crawlerTaskId) {
+		return this.searchableJobDao.countJobsByCrawlerTaskId(crawlerTaskId);
+	}
+
+	@Override
 	public CompletableFuture<List<CrawlerTask>> findCrawlerTasksByUserId(String userId, int pageSize, int pageNumber) {
 		return this.crawlerTaskDao.findByUserId(userId, pageSize, pageNumber);
 	}

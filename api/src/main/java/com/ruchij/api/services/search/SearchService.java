@@ -9,5 +9,7 @@ import java.util.concurrent.CompletableFuture;
 public interface SearchService {
 	CompletableFuture<List<Job>> findJobsByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber);
 
+	CompletableFuture<Long> countJobsByCrawlerTaskId(String crawlerTaskId);
+
 	CompletableFuture<List<CrawlerTask>> findCrawlerTasksByUserId(String userId, int pageSize, int pageNumber);
 }

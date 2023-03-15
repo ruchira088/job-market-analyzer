@@ -8,4 +8,6 @@ import java.util.concurrent.CompletableFuture;
 
 public interface SearchableJobDao extends JobDao {
 	CompletableFuture<List<Job>> search(String keyword, String crawlerTaskId, int pageSize, int pageNumber);
+
+	CompletableFuture<Long> countJobsByCrawlerTaskId(String crawlerTaskId);
 }
