@@ -13,6 +13,7 @@ public class Job {
 	private URL link;
 	private String title;
 	private String companyName;
+	private String companyLogoUrl;
 	private String location;
 	private Optional<WorkplaceType> workplaceType;
 	private String details;
@@ -81,6 +82,14 @@ public class Job {
 		this.companyName = companyName;
 	}
 
+	public String getCompanyLogoUrl() {
+		return companyLogoUrl;
+	}
+
+	public void setCompanyLogoUrl(String companyLogoUrl) {
+		this.companyLogoUrl = companyLogoUrl;
+	}
+
 	public String getLocation() {
 		return location;
 	}
@@ -107,7 +116,8 @@ public class Job {
 
 	@Override
 	public String toString() {
-		return "Job{" + "id='" + id + '\'' +
+		return "Job{" +
+			"id='" + id + '\'' +
 			", linkedInId='" + linkedInId + '\'' +
 			", crawlerTaskId='" + crawlerTaskId + '\'' +
 			", crawledAt=" + crawledAt +
@@ -115,6 +125,7 @@ public class Job {
 			", link=" + link +
 			", title='" + title + '\'' +
 			", companyName='" + companyName + '\'' +
+			", companyLogoUrl='" + companyLogoUrl + '\'' +
 			", location='" + location + '\'' +
 			", workplaceType=" + workplaceType +
 			", details='" + details + '\'' +

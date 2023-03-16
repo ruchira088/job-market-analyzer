@@ -30,7 +30,7 @@ public class JobsPage {
 		this.awaitableWebDriver = awaitableWebDriver;
 	}
 
-	static Optional<LinkedInJob> parse(String jobId, Instant timestamp, WebElement jobDetails, String currentUrl) {
+	static Optional<LinkedInJob> parse(String jobId, Instant timestamp, WebElement jobDetails, WebElement jobCard, String currentUrl) {
 		try {
 			URL pageUrl = new URL(currentUrl);
 
@@ -44,6 +44,12 @@ public class JobsPage {
 
 			String title = findText.apply(".jobs-unified-top-card__job-title");
 			String companyName = findText.apply(".jobs-unified-top-card__company-name");
+
+			String companyLogoUrl =
+				Optional.ofNullable(jobCard.findElement(By.cssSelector(".job-card-list__logo img")))
+					.map(element -> element.getAttribute("src"))
+					.orElse("https://via.placeholder.com/100x100");
+
 			String location = findText.apply(".jobs-unified-top-card__bullet");
 
 			String jobDescription = findText.apply(".jobs-description");
@@ -55,7 +61,7 @@ public class JobsPage {
 				workplaceTypes.isEmpty() ? Optional.empty() : WorkplaceType.parse(workplaceTypes.get(0).getText());
 
 			LinkedInJob linkedInJob =
-				new LinkedInJob(jobId, timestamp, jobUrl, title, companyName, location, workplaceType, jobDescription);
+				new LinkedInJob(jobId, timestamp, jobUrl, title, companyName, companyLogoUrl, location, workplaceType, jobDescription);
 
 			return Optional.of(linkedInJob);
 		} catch (Exception exception) {
@@ -119,14 +125,14 @@ public class JobsPage {
 					return;
 				} else if (!jobIds.contains(jobId)) {
 					query = true;
-					jobIds.add(jobId);
 
+					jobIds.add(jobId);
 					jobCard.click();
 
 					this.awaitableWebDriver.waitUntil((ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(".artdeco-loader"))));
 
 					WebElement jobDetails = this.awaitableWebDriver.findElementByCss(".jobs-details");
-					parse(jobId, clock.instant(), jobDetails, this.awaitableWebDriver.remoteWebDriver().getCurrentUrl()).ifPresent(onLinkedInJob);
+					parse(jobId, clock.instant(), jobDetails, jobCard, this.awaitableWebDriver.remoteWebDriver().getCurrentUrl()).ifPresent(onLinkedInJob);
 				}
 			}
 

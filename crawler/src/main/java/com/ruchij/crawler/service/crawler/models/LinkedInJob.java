@@ -7,7 +7,7 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.Optional;
 
-public record LinkedInJob(String id, Instant crawledAt, URL link, String title, String companyName,
+public record LinkedInJob(String id, Instant crawledAt, URL link, String title, String companyName, String companyLogoUrl,
                           String location, Optional<WorkplaceType> workplaceType, String details) {
 	public Job job(String jobId, String crawlerTaskId, int position) {
 		Job job = new Job();
@@ -20,6 +20,7 @@ public record LinkedInJob(String id, Instant crawledAt, URL link, String title, 
 		job.setLink(link);
 		job.setTitle(title);
 		job.setCompanyName(companyName);
+		job.setCompanyLogoUrl(companyLogoUrl);
 		job.setLocation(location);
 		job.setWorkplaceType(workplaceType);
 		job.setDetails(details);
