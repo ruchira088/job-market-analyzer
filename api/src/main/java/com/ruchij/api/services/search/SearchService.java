@@ -12,4 +12,6 @@ public interface SearchService {
 	CompletableFuture<Long> countJobsByCrawlerTaskId(String crawlerTaskId);
 
 	CompletableFuture<List<CrawlerTask>> findCrawlerTasksByUserId(String userId, int pageSize, int pageNumber);
+
+	CompletableFuture<Job> getJobById(String jobId);
 }

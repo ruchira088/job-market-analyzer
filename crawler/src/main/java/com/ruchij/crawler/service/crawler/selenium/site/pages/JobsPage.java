@@ -52,7 +52,8 @@ public class JobsPage {
 
 			String location = findText.apply(".jobs-unified-top-card__bullet");
 
-			String jobDescription = findText.apply(".jobs-description");
+			String jobDescription =
+				jobDetails.findElement(By.cssSelector(".jobs-description")).getAttribute("innerHTML");
 
 			List<WebElement> workplaceTypes =
 				jobDetails.findElements(By.cssSelector(".jobs-unified-top-card__workplace-type"));

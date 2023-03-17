@@ -34,7 +34,7 @@ public class SearchRoute implements EndpointGroup {
 							context.future(() ->
 								this.authorizationMiddleware.hasPermission(context, EntityType.CRAWLER_TASK, crawlerTaskId)
 									.thenCompose(__ -> this.searchService.countJobsByCrawlerTaskId(crawlerTaskId))
-									.thenApply(jobsCount ->
+									.thenAccept(jobsCount ->
 										context
 											.status(HttpStatus.OK)
 											.json(new CountResponse(jobsCount))
@@ -51,7 +51,7 @@ public class SearchRoute implements EndpointGroup {
 										.thenCompose(__ ->
 											this.searchService.findJobsByCrawlerTaskId(crawlerTaskId, pagination.pageSize(), pagination.pageNumber())
 										)
-										.thenApply(jobs ->
+										.thenAccept(jobs ->
 											context
 												.status(HttpStatus.OK)
 												.json(new PaginatedResponse<>(pagination.pageSize(), pagination.pageNumber(), jobs))
@@ -61,6 +61,16 @@ public class SearchRoute implements EndpointGroup {
 						);
 					}
 				);
+
+				get("id/<id>", context -> {
+					String jobId = context.pathParamAsClass("id", String.class).get();
+
+					context.future(() ->
+						this.authorizationMiddleware.hasPermission(context, EntityType.JOB, jobId)
+							.thenCompose(__ -> this.searchService.getJobById(jobId))
+							.thenAccept(job -> context.status(HttpStatus.OK).json(job))
+						);
+				});
 			}
 		);
 
@@ -73,7 +83,7 @@ public class SearchRoute implements EndpointGroup {
 						.thenCompose(user ->
 							searchService.findCrawlerTasksByUserId(user.userId(), pagination.pageSize(), pagination.pageNumber())
 						)
-						.thenApply(crawlerTasks ->
+						.thenAccept(crawlerTasks ->
 							context
 								.status(HttpStatus.OK)
 								.json(new PaginatedResponse<>(pagination.pageSize(), pagination.pageNumber(), crawlerTasks))
