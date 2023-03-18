@@ -57,7 +57,7 @@ public class ElasticsearchSearchableJobDao implements SearchableJobDao {
 							)
 							.must(
 								MatchQuery.of(matchQueryBuilder ->
-										matchQueryBuilder.field("id").query(crawlerTaskId)
+										matchQueryBuilder.field("crawlerTaskId").query(crawlerTaskId)
 									)
 									._toQuery()
 							)

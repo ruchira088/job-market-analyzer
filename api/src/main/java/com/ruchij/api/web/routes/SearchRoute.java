@@ -10,6 +10,8 @@ import com.ruchij.api.web.responses.PaginatedResponse;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
 
+import java.util.Optional;
+
 import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 
@@ -44,12 +46,28 @@ public class SearchRoute implements EndpointGroup {
 
 						get("<id>", context -> {
 								String crawlerTaskId = context.pathParamAsClass("id", String.class).get();
-								Pagination pagination = Pagination.from(context);
+							Optional<String> maybeKeyword = Optional.ofNullable(context.queryParam("keyword"));
+							Pagination pagination = Pagination.from(context);
 
 								context.future(() ->
 									this.authorizationMiddleware.hasPermission(context, EntityType.CRAWLER_TASK, crawlerTaskId)
 										.thenCompose(__ ->
-											this.searchService.findJobsByCrawlerTaskId(crawlerTaskId, pagination.pageSize(), pagination.pageNumber())
+											maybeKeyword
+												.map(keyword ->
+													this.searchService.searchByCrawlerTaskId(
+														keyword,
+														crawlerTaskId,
+														pagination.pageSize(),
+														pagination.pageNumber()
+													)
+												)
+												.orElseGet(() ->
+													this.searchService.findJobsByCrawlerTaskId(
+														crawlerTaskId,
+														pagination.pageSize(),
+														pagination.pageNumber()
+													)
+												)
 										)
 										.thenAccept(jobs ->
 											context

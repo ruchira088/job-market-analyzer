@@ -10,7 +10,7 @@ import java.util.Base64;
 
 class CrawlerAppTest {
 	@Test
-	void appHasAGreeting() throws NoSuchAlgorithmException {
+	void run() throws NoSuchAlgorithmException {
 		KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
 		keyGenerator.init(256);
 

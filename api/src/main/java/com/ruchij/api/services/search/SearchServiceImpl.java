@@ -19,6 +19,11 @@ public class SearchServiceImpl implements SearchService {
 	}
 
 	@Override
+	public CompletableFuture<List<Job>> searchByCrawlerTaskId(String keyword, String crawlerTaskId, int pageSize, int pageNumber) {
+		return this.searchableJobDao.search(keyword, crawlerTaskId, pageSize, pageNumber);
+	}
+
+	@Override
 	public CompletableFuture<List<Job>> findJobsByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber) {
 		return this.searchableJobDao.findByCrawlerTaskId(crawlerTaskId, pageSize, pageNumber);
 	}
