@@ -7,6 +7,7 @@ import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,12 +110,17 @@ public class JobsPage {
 		Set<String> jobIds = new HashSet<>();
 		int pageNumber = 1;
 
-		boolean query = true;
+		boolean scanPageForJobs = true;
 
 		logger.info("Started crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
 
-		while (query && shouldContinue.get()) {
-			query = false;
+		while (scanPageForJobs && shouldContinue.get()) {
+			scanPageForJobs = false;
+
+			// Scroll to the bottom of the jobs list
+			WebElement pagination = this.awaitableWebDriver.findElementByCss(".jobs-search-results-list__pagination");
+			this.awaitableWebDriver.remoteWebDriver()
+				.executeScript("arguments[0].scrollIntoView(true)", pagination);
 
 			List<WebElement> jobCards = this.awaitableWebDriver.findElementsByCss(".job-card-list");
 
@@ -125,7 +131,7 @@ public class JobsPage {
 					onComplete.run();
 					return;
 				} else if (!jobIds.contains(jobId)) {
-					query = true;
+					scanPageForJobs = true;
 
 					jobIds.add(jobId);
 					jobCard.click();
@@ -137,7 +143,7 @@ public class JobsPage {
 				}
 			}
 
-			if (!query) {
+			if (!scanPageForJobs) {
 				logger.info("Completed crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
 
 				pageNumber++;
@@ -148,7 +154,7 @@ public class JobsPage {
 				if (!elements.isEmpty()) {
 					WebElement nextPage = elements.get(0);
 					nextPage.click();
-					query = true;
+					scanPageForJobs = true;
 
 					logger.info("Started crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
 				}
