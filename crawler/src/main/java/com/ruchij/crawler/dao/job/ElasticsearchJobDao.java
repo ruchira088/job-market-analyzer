@@ -25,7 +25,7 @@ public class ElasticsearchJobDao implements JobDao {
 	@Override
 	public CompletableFuture<String> insert(Job job) {
 		IndexRequest<Job> indexRequest =
-			IndexRequest.of(builder -> builder.index(INDEX).id(job.getId()).document(job));
+			IndexRequest.of(builder -> builder.index(INDEX).id(job.id()).document(job));
 
 		return this.elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
 	}

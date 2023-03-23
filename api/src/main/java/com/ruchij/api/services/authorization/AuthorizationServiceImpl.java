@@ -25,7 +25,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 				);
 
 			case JOB -> this.jobDao.findById(entityId)
-				.thenApply(maybeJob -> maybeJob.map(Job::getCrawlerTaskId))
+				.thenApply(maybeJob -> maybeJob.map(Job::crawlerTaskId))
 				.thenCompose(maybeCrawlerTaskId ->
 					maybeCrawlerTaskId
 						.map(crawlerTaskId -> hasPermission(userId, EntityType.CRAWLER_TASK, crawlerTaskId))
