@@ -1,4 +1,4 @@
-package com.ruchij.crawler.dao.keyword.models;
+package com.ruchij.api.dao.keyword.models;
 
 import java.time.Instant;
 import java.util.Optional;
