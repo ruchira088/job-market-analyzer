@@ -14,6 +14,7 @@ dependencies {
             "com.typesafe:config:$typesafeConfigVersion",
             "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
             "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
+            "org.flywaydb:flyway-core:$flywayVersion",
             "ch.qos.logback:logback-classic:$logbackVersion",
             "org.testcontainers:elasticsearch:$testContainersVersion"
     )
