@@ -1,5 +1,6 @@
 plugins {
     id 'application'
+    id 'java-library'
     id 'jacoco'
 }
 
@@ -18,8 +19,7 @@ dependencies {
             "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
             "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
             "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion",
-            "ch.qos.logback:logback-classic:$logbackVersion",
-            "org.testcontainers:elasticsearch:$testContainersVersion"
+            "ch.qos.logback:logback-classic:$logbackVersion"
     )
 
     testImplementation(

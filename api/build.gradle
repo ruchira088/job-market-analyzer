@@ -23,7 +23,6 @@ dependencies {
             "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
             "io.lettuce:lettuce-core:$lettuceVersion",
             "ch.qos.logback:logback-classic:$logbackVersion",
-            "org.testcontainers:testcontainers:$testContainersVersion",
             "com.squareup.okhttp3:okhttp:$okHttpVersion"
     )
 

@@ -3,9 +3,11 @@ package com.ruchij.development.providers;
 import com.ruchij.api.config.RedisConfiguration;
 import com.ruchij.api.containers.RedisContainer;
 import com.ruchij.migration.MigrationApp;
+import com.ruchij.migration.config.DatabaseConfiguration;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
 import com.ruchij.migration.config.MigrationConfiguration;
 import com.ruchij.migration.containers.ElasticsearchContainer;
+import com.ruchij.migration.containers.PostgresContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,16 +24,25 @@ public class ContainerConfigurationProvider implements ConfigurationProvider {
 		ElasticsearchConfiguration elasticsearchConfiguration =
 			new ElasticsearchContainer().elasticsearchConfiguration();
 
-		MigrationConfiguration migrationConfiguration = new MigrationConfiguration(elasticsearchConfiguration);
-
 		try {
-			MigrationApp.run(migrationConfiguration);
+			MigrationApp.runElasticsearchMigration(elasticsearchConfiguration);
 		} catch (Exception exception) {
-			throw new RuntimeException("Error occurred during migration", exception);
+			throw new RuntimeException("Error occurred during Elasticsearch migration", exception);
 		}
 
-		logger.info("Migration completed");
-
 		return elasticsearchConfiguration;
+	}
+
+	@Override
+	public DatabaseConfiguration databaseConfiguration() {
+		DatabaseConfiguration databaseConfiguration = new PostgresContainer().databaseConfiguration();
+
+		try {
+			MigrationApp.runDatabaseMigration(databaseConfiguration);
+		} catch (Exception exception) {
+			throw new RuntimeException("Error occurred during Database migration", exception);
+		}
+
+		return databaseConfiguration;
 	}
 }

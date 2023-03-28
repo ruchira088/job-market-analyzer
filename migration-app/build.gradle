@@ -1,5 +1,6 @@
 plugins {
     id 'application'
+    id 'java-library'
     id 'jacoco'
 }
 
@@ -15,8 +16,12 @@ dependencies {
             "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
             "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
             "org.flywaydb:flyway-core:$flywayVersion",
-            "ch.qos.logback:logback-classic:$logbackVersion",
-            "org.testcontainers:elasticsearch:$testContainersVersion"
+            "ch.qos.logback:logback-classic:$logbackVersion"
+    )
+
+    api(
+            "org.testcontainers:elasticsearch:$testContainersVersion",
+            "org.testcontainers:postgresql:$testContainersVersion"
     )
 }
 
