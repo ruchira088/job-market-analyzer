@@ -20,14 +20,14 @@ public class AuthorizationMiddleware {
 	public CompletableFuture<User> hasPermission(Context context, EntityType entityType, String entityId) {
 		return this.authenticationMiddleware.authenticate(context)
 			.thenCompose(user ->
-				this.authorizationService.hasPermission(user.userId(), entityType, entityId)
+				this.authorizationService.hasPermission(user.id(), entityType, entityId)
 					.thenCompose(hasPermission ->
 						hasPermission ?
 							CompletableFuture.completedFuture(user) :
 							CompletableFuture.failedFuture(
 								new AuthorizationException(
 									"%s does not have authorization to access %s (id=%s)"
-										.formatted(user.userId(), entityType, entityId)
+										.formatted(user.id(), entityType, entityId)
 								)
 							)
 					)

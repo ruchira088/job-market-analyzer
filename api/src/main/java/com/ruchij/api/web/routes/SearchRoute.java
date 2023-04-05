@@ -99,7 +99,7 @@ public class SearchRoute implements EndpointGroup {
 				context.future(() ->
 					this.authenticationMiddleware.authenticate(context)
 						.thenCompose(user ->
-							searchService.findCrawlerTasksByUserId(user.userId(), pagination.pageSize(), pagination.pageNumber())
+							searchService.findCrawlerTasksByUserId(user.id(), pagination.pageSize(), pagination.pageNumber())
 						)
 						.thenAccept(crawlerTasks ->
 							context

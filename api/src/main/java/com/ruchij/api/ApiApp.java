@@ -5,9 +5,11 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import com.ruchij.api.config.ApiConfiguration;
 import com.ruchij.api.dao.credentials.CredentialsDao;
 import com.ruchij.api.dao.credentials.ElasticsearchCredentialsDao;
+import com.ruchij.api.dao.credentials.JdbiCredentialsDao;
 import com.ruchij.api.dao.job.ElasticsearchSearchableJobDao;
 import com.ruchij.api.dao.job.SearchableJobDao;
 import com.ruchij.api.dao.user.ElasticsearchUserDao;
+import com.ruchij.api.dao.user.JdbiUserDao;
 import com.ruchij.api.dao.user.UserDao;
 import com.ruchij.api.kv.KeyValueStore;
 import com.ruchij.api.kv.NamespacedKeyValueStore;
@@ -44,6 +46,7 @@ import com.ruchij.crawler.service.encryption.EncryptionService;
 import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
 import com.ruchij.crawler.service.linkedin.LinkedInCredentialsServiceImpl;
 import com.ruchij.crawler.service.random.RandomGenerator;
+import com.ruchij.migration.config.DatabaseConfiguration;
 import com.ruchij.migration.elasticsearch.ElasticsearchClientBuilder;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -51,6 +54,7 @@ import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson;
 import okhttp3.OkHttpClient;
+import org.jdbi.v3.core.Jdbi;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -101,8 +105,13 @@ public class ApiApp {
 			);
 		ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
 
-		UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
-		CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
+		DatabaseConfiguration databaseConfiguration = apiConfiguration.databaseConfiguration();
+		Jdbi jdbi = Jdbi.create(databaseConfiguration.url(), databaseConfiguration.user(), databaseConfiguration.password());
+
+		UserDao userDao = new JdbiUserDao(jdbi);
+		CredentialsDao credentialsDao = new JdbiCredentialsDao(jdbi);
+//		UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
+//		CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
 		SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
 		CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
 		EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);

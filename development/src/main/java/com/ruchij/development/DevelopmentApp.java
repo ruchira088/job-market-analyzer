@@ -7,7 +7,9 @@ import com.ruchij.api.config.HttpConfiguration;
 import com.ruchij.api.config.RedisConfiguration;
 import com.ruchij.api.web.Routes;
 import com.ruchij.development.providers.ConfigurationProvider;
+import com.ruchij.development.providers.ContainerConfigurationProvider;
 import com.ruchij.development.providers.DockerComposeConfigurationProvider;
+import com.ruchij.migration.config.DatabaseConfiguration;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -30,6 +32,10 @@ public class DevelopmentApp {
 
 		logger.info("Elasticsearch is ready");
 
+		DatabaseConfiguration databaseConfiguration = configurationProvider.databaseConfiguration();
+
+		logger.info("Database is ready");
+
 		RedisConfiguration redisConfiguration = configurationProvider.redisConfiguration();
 
 		logger.info("Redis is ready");
@@ -40,7 +46,13 @@ public class DevelopmentApp {
 		HttpConfiguration httpConfiguration = new HttpConfiguration("0.0.0.0", 443);
 
 		ApiConfiguration apiConfiguration =
-			new ApiConfiguration(elasticsearchConfiguration, redisConfiguration, apiSecurityConfiguration, httpConfiguration);
+			new ApiConfiguration(
+				elasticsearchConfiguration,
+				databaseConfiguration,
+				redisConfiguration,
+				apiSecurityConfiguration,
+				httpConfiguration
+			);
 
 		Routes routes = ApiApp.routes(apiConfiguration);
 

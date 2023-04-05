@@ -5,5 +5,5 @@ CREATE TABLE crawler_task(
     finished_at TIMESTAMP NULL,
 
     PRIMARY KEY (id),
-    CONSTRAINT fk_crawler_task_user_id FOREIGN KEY (user_id) REFERENCES api_user(user_id)
+    CONSTRAINT fk_crawler_task_user_id FOREIGN KEY (user_id) REFERENCES api_user(id)
 );

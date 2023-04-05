@@ -53,16 +53,19 @@ services:
 #      interval: 3s
 #      timeout: 2s
 
-  migration-app:
-    image: ghcr.io/ruchira088/job-market-analyzer-migration-app:main
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
+  postgres:
+    image: postgres:15
+    healthcheck:
+      test: "pg_isready -U admin -d job-market-analyzer"
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+    ports:
+      - 5432:5432
     environment:
-      ELASTICSEARCH_HOST: elasticsearch
-      ELASTICSEARCH_PORT: 9200
-      ELASTICSEARCH_USERNAME: "elastic"
-      ELASTICSEARCH_PASSWORD: "my-password"
+      POSTGRES_DB: job-market-analyzer
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
 
   redis:
     image: bitnami/redis:7.0
@@ -90,6 +93,22 @@ services:
       ELASTIC_PASSWORD: "my-password"
       "discovery.type": single-node
       "xpack.security.http.ssl.enabled": false
+
+  migration-app:
+    image: ghcr.io/ruchira088/job-market-analyzer-migration-app:dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_USERNAME: "elastic"
+      ELASTICSEARCH_PASSWORD: "my-password"
+      DATABASE_URL: jdbc:postgresql://postgres:5432/job-market-analyzer
+      DATABASE_USER: "admin"
+      DATABASE_PASSWORD: "password"
 
   kibana-users:
     image: curlimages/curl

@@ -39,7 +39,7 @@ public class LinkedInRoute implements EndpointGroup {
 							authenticationMiddleware.authenticate(context)
 								.thenCompose(user ->
 									linkedInCredentialsService.insert(
-										user.userId(),
+										user.id(),
 										linkedInCredentialsRequest.email(),
 										linkedInCredentialsRequest.password()
 									)
@@ -56,7 +56,7 @@ public class LinkedInRoute implements EndpointGroup {
 					context
 						.future(() ->
 							authenticationMiddleware.authenticate(context)
-								.thenCompose(user -> linkedInCredentialsService.getByUserId(user.userId()))
+								.thenCompose(user -> linkedInCredentialsService.getByUserId(user.id()))
 								.thenAccept(linkedInCredentials ->
 									context
 										.status(HttpStatus.OK)
@@ -69,7 +69,7 @@ public class LinkedInRoute implements EndpointGroup {
 					context
 						.future(() ->
 							authenticationMiddleware.authenticate(context)
-								.thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.userId()))
+								.thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.id()))
 								.thenAccept(linkedInCredentials ->
 									context
 										.status(HttpStatus.OK)
@@ -88,7 +88,7 @@ public class LinkedInRoute implements EndpointGroup {
 					.thenApply(user -> {
 							sseClient.sendEvent(SseType.CRAWL_STARTED.name(), "{}");
 
-							return extendedCrawlManager.runWithLock(user.userId())
+							return extendedCrawlManager.runWithLock(user.id())
 								.doFinally(() -> {
 									if (!sseClient.terminated()) {
 										sseClient.sendEvent(SseType.CRAWL_COMPLETED.name(), "{}");

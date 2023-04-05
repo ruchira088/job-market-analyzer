@@ -32,18 +32,18 @@ public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
 
 	@Override
 	public Flowable<CrawledJob> runWithLock(String userId) {
-		logger.info("Starting job crawl for userId=%s".formatted(userId));
+		logger.info("Starting job crawl for id=%s".formatted(userId));
 
 		return Flowable.fromCompletionStage(lockService.lock(userId, LOCK_TIMEOUT))
 			.concatMap(maybeLock -> {
 				if (maybeLock.isEmpty()) {
 					ResourceConflictException resourceConflictException =
-						new ResourceConflictException("Job crawl is already active for userId=%s".formatted(userId));
+						new ResourceConflictException("Job crawl is already active for id=%s".formatted(userId));
 
 					logger.warn("Crawl already active", resourceConflictException);
 					return Flowable.error(resourceConflictException);
 				} else {
-					logger.info("Acquired crawl lock for userId=%s".formatted(userId));
+					logger.info("Acquired crawl lock for id=%s".formatted(userId));
 
 					return Flowable.fromCompletionStage(linkedInCredentialsService.getByUserId(userId));
 				}
@@ -53,7 +53,7 @@ public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
 			)
 			.doFinally(() -> {
 				lockService.release(userId);
-				logger.info("Released crawl lock for userId=%s".formatted(userId));
+				logger.info("Released crawl lock for id=%s".formatted(userId));
 			});
 	}
 

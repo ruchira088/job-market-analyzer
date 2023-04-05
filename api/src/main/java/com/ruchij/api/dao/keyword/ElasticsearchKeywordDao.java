@@ -47,7 +47,7 @@ public class ElasticsearchKeywordDao implements KeywordDao {
 				.query(queryBuilder ->
 					queryBuilder.match(
 						MatchQuery.of(matchQueryBuilder ->
-							matchQueryBuilder.field("userId").query(userId)
+							matchQueryBuilder.field("id").query(userId)
 						)
 					)
 				)

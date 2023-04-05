@@ -51,11 +51,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				Transformers.convert(optionalUser, () -> new ResourceNotFoundException("User not found"))
 			)
 			.thenCompose(user ->
-				credentialsDao.findByUserId(user.userId())
+				credentialsDao.findByUserId(user.id())
 					.thenCompose(optionalValue ->
 						Transformers.convert(
 							optionalValue,
-							() -> new ResourceNotFoundException("Credentials not found. userId=%s".formatted(user.userId()))
+							() -> new ResourceNotFoundException("Credentials not found. id=%s".formatted(user.id()))
 						)
 					)
 					.thenCompose(credentials -> {
@@ -71,7 +71,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				Instant timestamp = clock.instant();
 
 				AuthenticationToken authenticationToken =
-					new AuthenticationToken(timestamp, user.userId(), token, timestamp.plus(SESSION_DURATION), 0);
+					new AuthenticationToken(timestamp, user.id(), token, timestamp.plus(SESSION_DURATION), 0);
 
 				try {
 					String value = JsonUtils.objectMapper.writeValueAsString(authenticationToken);
