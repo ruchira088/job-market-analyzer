@@ -1,6 +1,7 @@
 package com.ruchij.api.dao.credentials;
 
 import com.ruchij.api.dao.credentials.models.Credentials;
+import com.ruchij.api.dao.jdbi.models.JdbiCredentials;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.Optional;
@@ -38,38 +39,5 @@ public class JdbiCredentialsDao implements CredentialsDao {
 		);
 
 		return CompletableFuture.completedFuture(maybeCredentials);
-	}
-
-	public static class JdbiCredentials {
-		private String userId;
-		private String hashedPassword;
-
-		public String getUserId() {
-			return userId;
-		}
-
-		public void setUserId(String userId) {
-			this.userId = userId;
-		}
-
-		public String getHashedPassword() {
-			return hashedPassword;
-		}
-
-		public void setHashedPassword(String hashedPassword) {
-			this.hashedPassword = hashedPassword;
-		}
-
-		public Credentials credentials() {
-			return new Credentials(userId, hashedPassword);
-		}
-
-		public static JdbiCredentials from(Credentials credentials) {
-			JdbiCredentials jdbiCredentials = new JdbiCredentials();
-			jdbiCredentials.setUserId(credentials.userId());
-			jdbiCredentials.setHashedPassword(credentials.hashedPassword());
-
-			return jdbiCredentials;
-		}
 	}
 }
