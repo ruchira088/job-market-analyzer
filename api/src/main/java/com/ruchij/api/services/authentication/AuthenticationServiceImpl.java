@@ -8,6 +8,7 @@ import com.ruchij.api.exceptions.AuthenticationException;
 import com.ruchij.api.kv.KeyValueStore;
 import com.ruchij.api.services.authentication.models.AuthenticationToken;
 import com.ruchij.api.services.hashing.PasswordHashingService;
+import com.ruchij.crawler.dao.transaction.Transactor;
 import com.ruchij.crawler.exceptions.ResourceNotFoundException;
 import com.ruchij.crawler.service.random.RandomGenerator;
 import com.ruchij.crawler.utils.JsonUtils;
@@ -18,22 +19,24 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
-public class AuthenticationServiceImpl implements AuthenticationService {
+public class AuthenticationServiceImpl<A> implements AuthenticationService {
 	private static final Duration SESSION_DURATION = Duration.ofDays(7);
 
 	private final KeyValueStore keyValueStore;
 	private final RandomGenerator<String> tokenGenerator;
 	private final PasswordHashingService passwordHashingService;
-	private final UserDao userDao;
-	private final CredentialsDao credentialsDao;
+	private final UserDao<A> userDao;
+	private final CredentialsDao<A> credentialsDao;
+	private final Transactor<A> transactor;
 	private final Clock clock;
 
 	public AuthenticationServiceImpl(
 		KeyValueStore keyValueStore,
 		RandomGenerator<String> tokenGenerator,
 		PasswordHashingService passwordHashingService,
-		UserDao userDao,
-		CredentialsDao credentialsDao,
+		UserDao<A> userDao,
+		CredentialsDao<A> credentialsDao,
+		Transactor<A> transactor,
 		Clock clock
 	) {
 		this.keyValueStore = keyValueStore;
@@ -41,30 +44,33 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		this.passwordHashingService = passwordHashingService;
 		this.userDao = userDao;
 		this.credentialsDao = credentialsDao;
+		this.transactor = transactor;
 		this.clock = clock;
 	}
 
 	@Override
 	public CompletableFuture<AuthenticationToken> login(String email, String password) {
-		return userDao.findByEmail(email)
-			.thenCompose(optionalUser ->
-				Transformers.convert(optionalUser, () -> new ResourceNotFoundException("User not found"))
-			)
-			.thenCompose(user ->
-				credentialsDao.findByUserId(user.id())
-					.thenCompose(optionalValue ->
-						Transformers.convert(
-							optionalValue,
-							() -> new ResourceNotFoundException("Credentials not found. id=%s".formatted(user.id()))
-						)
+		return transactor.transaction(
+				userDao.findByEmail(email)
+					.semiFlatMap(optionalUser ->
+						Transformers.convert(optionalUser, () -> new ResourceNotFoundException("User not found"))
 					)
-					.thenCompose(credentials -> {
-						if (passwordHashingService.checkPassword(password, credentials.hashedPassword())) {
-							return CompletableFuture.completedFuture(user);
-						} else {
-							return CompletableFuture.failedFuture(new AuthenticationException("Password mismatch"));
-						}
-					})
+					.flatMap(user ->
+						credentialsDao.findByUserId(user.id())
+							.semiFlatMap(optionalValue ->
+								Transformers.convert(
+									optionalValue,
+									() -> new ResourceNotFoundException("Credentials not found. id=%s".formatted(user.id()))
+								)
+							)
+							.semiFlatMap(credentials -> {
+								if (passwordHashingService.checkPassword(password, credentials.hashedPassword())) {
+									return CompletableFuture.completedFuture(user);
+								} else {
+									return CompletableFuture.failedFuture(new AuthenticationException("Password mismatch"));
+								}
+							})
+					)
 			)
 			.thenCompose(user -> {
 				String token = tokenGenerator.generate();
@@ -101,7 +107,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 						return keyValueStore.put(authenticationToken.token(), value)
 							.thenCompose(__ ->
-								userDao.findById(authenticationToken.userId())
+								transactor.transaction(userDao.findById(authenticationToken.userId()))
 									.thenCompose(optionalValue ->
 										Transformers.convert(
 											optionalValue,

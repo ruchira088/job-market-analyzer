@@ -17,6 +17,9 @@ dependencies {
             "org.seleniumhq.selenium:selenium-java:$seleniumVersion",
             "io.reactivex.rxjava3:rxjava:$rxJavaVersion",
             "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
+            "org.jdbi:jdbi3-core:$jdbiVersion",
+            "org.postgresql:postgresql:$postgresqlVersion",
+            "com.h2database:h2:$h2Version",
             "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
             "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion",
             "ch.qos.logback:logback-classic:$logbackVersion"

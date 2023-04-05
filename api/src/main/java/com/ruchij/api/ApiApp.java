@@ -37,6 +37,8 @@ import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentials
 import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.task.CrawlerTaskDao;
 import com.ruchij.crawler.dao.task.ElasticsearchCrawlerTaskDao;
+import com.ruchij.crawler.dao.transaction.JdbiTransactor;
+import com.ruchij.crawler.dao.transaction.Transactor;
 import com.ruchij.crawler.service.crawler.CrawlManager;
 import com.ruchij.crawler.service.crawler.CrawlManagerImpl;
 import com.ruchij.crawler.service.crawler.Crawler;
@@ -54,6 +56,7 @@ import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson;
 import okhttp3.OkHttpClient;
+import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 
 import java.security.SecureRandom;
@@ -108,8 +111,9 @@ public class ApiApp {
 		DatabaseConfiguration databaseConfiguration = apiConfiguration.databaseConfiguration();
 		Jdbi jdbi = Jdbi.create(databaseConfiguration.url(), databaseConfiguration.user(), databaseConfiguration.password());
 
-		UserDao userDao = new JdbiUserDao(jdbi);
-		CredentialsDao credentialsDao = new JdbiCredentialsDao(jdbi);
+		Transactor<Handle> transactor = new JdbiTransactor(jdbi);
+		UserDao<Handle> userDao = new JdbiUserDao();
+		CredentialsDao<Handle> credentialsDao = new JdbiCredentialsDao();
 //		UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
 //		CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
 		SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
@@ -158,21 +162,23 @@ public class ApiApp {
 		PasswordHashingService passwordHashingService = new BCryptPasswordHashingService();
 
 		UserService userService =
-			new UserServiceImpl(
+			new UserServiceImpl<>(
 				userDao,
 				credentialsDao,
+				transactor,
 				passwordHashingService,
 				idGenerator,
 				clock
 			);
 
 		AuthenticationService authenticationService =
-			new AuthenticationServiceImpl(
+			new AuthenticationServiceImpl<>(
 				authenticationKeyValueStore,
 				tokenGenerator,
 				passwordHashingService,
 				userDao,
 				credentialsDao,
+				transactor,
 				clock
 			);
 

@@ -21,9 +21,9 @@ dependencies {
             "org.mindrot:jbcrypt:$jbcryptVersion",
             "io.reactivex.rxjava3:rxjava:$rxJavaVersion",
             "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
+            "org.jdbi:jdbi3-core:$jdbiVersion",
             "org.postgresql:postgresql:$postgresqlVersion",
             "com.h2database:h2:$h2Version",
-            "org.jdbi:jdbi3-core:$jdbiVersion",
             "io.lettuce:lettuce-core:$lettuceVersion",
             "ch.qos.logback:logback-classic:$logbackVersion",
             "com.squareup.okhttp3:okhttp:$okHttpVersion"

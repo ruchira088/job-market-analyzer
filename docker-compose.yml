@@ -55,6 +55,7 @@ services:
 
   postgres:
     image: postgres:15
+    command: ["postgres", "-c", "log_statement=all"]
     healthcheck:
       test: "pg_isready -U admin -d job-market-analyzer"
       start_period: 10s

@@ -7,12 +7,12 @@ import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import com.ruchij.api.dao.user.models.User;
+import com.ruchij.crawler.utils.Kleisli;
 import com.ruchij.crawler.utils.Transformers;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
-public class ElasticsearchUserDao implements UserDao {
+public class ElasticsearchUserDao implements UserDao<Void> {
 	private static final String INDEX = "users";
 
 	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
@@ -22,23 +22,23 @@ public class ElasticsearchUserDao implements UserDao {
 	}
 
 	@Override
-	public CompletableFuture<String> insert(User user) {
+	public Kleisli<Void, String> insert(User user) {
 		IndexRequest<User> indexRequest =
 			IndexRequest.of(builder -> builder.index(INDEX).id(user.id()).document(user));
 
-		return elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
+		return Kleisli.lift(() -> elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id));
 	}
 
 	@Override
-	public CompletableFuture<Optional<User>> findById(String userId) {
+	public Kleisli<Void, Optional<User>> findById(String userId) {
 		GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(userId));
 
-		return elasticsearchAsyncClient.get(getRequest, User.class)
-			.thenApply(getResponse -> Optional.ofNullable(getResponse.source()));
+		return Kleisli.lift(() -> elasticsearchAsyncClient.get(getRequest, User.class)
+			.thenApply(getResponse -> Optional.ofNullable(getResponse.source())));
 	}
 
 	@Override
-	public CompletableFuture<Optional<User>> findByEmail(String email) {
+	public Kleisli<Void, Optional<User>> findByEmail(String email) {
 		SearchRequest searchRequest = SearchRequest.of(builder ->
 			builder.index(INDEX)
 				.query(queryBuilder ->
@@ -51,7 +51,7 @@ public class ElasticsearchUserDao implements UserDao {
 				.size(1)
 		);
 
-		return elasticsearchAsyncClient.search(searchRequest, User.class)
-			.thenApply(Transformers::findFirst);
+		return Kleisli.lift(() -> elasticsearchAsyncClient.search(searchRequest, User.class)
+			.thenApply(Transformers::findFirst));
 	}
 }
