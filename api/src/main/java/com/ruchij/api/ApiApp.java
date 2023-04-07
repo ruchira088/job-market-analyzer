@@ -3,12 +3,10 @@ package com.ruchij.api;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import com.ruchij.api.config.ApiConfiguration;
-import com.ruchij.api.dao.credentials.CredentialsDao;
 import com.ruchij.api.dao.credentials.JdbiCredentialsDao;
 import com.ruchij.api.dao.job.ElasticsearchSearchableJobDao;
 import com.ruchij.api.dao.job.SearchableJobDao;
 import com.ruchij.api.dao.user.JdbiUserDao;
-import com.ruchij.api.dao.user.UserDao;
 import com.ruchij.api.kv.KeyValueStore;
 import com.ruchij.api.kv.NamespacedKeyValueStore;
 import com.ruchij.api.kv.RedisKeyValueStore;
@@ -31,13 +29,9 @@ import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
 import com.ruchij.api.web.plugins.ExceptionHandlerPlugin;
-import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentialsDao;
-import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
-import com.ruchij.crawler.dao.task.CrawlerTaskDao;
-import com.ruchij.crawler.dao.task.ElasticsearchCrawlerTaskDao;
-import com.ruchij.crawler.dao.transaction.ElasticsearchTransactor;
+import com.ruchij.crawler.dao.linkedin.JdbiEncryptedLinkedInCredentialsDao;
+import com.ruchij.crawler.dao.task.JdbiCrawlerTaskDao;
 import com.ruchij.crawler.dao.transaction.JdbiTransactor;
-import com.ruchij.crawler.dao.transaction.Transactor;
 import com.ruchij.crawler.service.crawler.CrawlManager;
 import com.ruchij.crawler.service.crawler.CrawlManagerImpl;
 import com.ruchij.crawler.service.crawler.Crawler;
@@ -55,7 +49,6 @@ import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import io.javalin.json.JavalinJackson;
 import okhttp3.OkHttpClient;
-import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 
 import java.security.SecureRandom;
@@ -107,18 +100,16 @@ public class ApiApp {
 			);
 		ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
 
+		SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
+
 		DatabaseConfiguration databaseConfiguration = apiConfiguration.databaseConfiguration();
 		Jdbi jdbi = Jdbi.create(databaseConfiguration.url(), databaseConfiguration.user(), databaseConfiguration.password());
+		JdbiTransactor jdbiTransactor = new JdbiTransactor(jdbi);
 
-		Transactor<Handle> transactor = new JdbiTransactor(jdbi);
-		UserDao<Handle> userDao = new JdbiUserDao();
-		CredentialsDao<Handle> credentialsDao = new JdbiCredentialsDao();
-//		UserDao userDao = new ElasticsearchUserDao(elasticsearchAsyncClient);
-//		CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
-		SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
-		CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
-		EncryptedLinkedInCredentialsDao<Void> encryptedLinkedInCredentialsDao =
-			new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
+		JdbiUserDao userDao = new JdbiUserDao();
+		JdbiCredentialsDao credentialsDao = new JdbiCredentialsDao();
+		JdbiCrawlerTaskDao crawlerTaskDao = new JdbiCrawlerTaskDao();
+		JdbiEncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new JdbiEncryptedLinkedInCredentialsDao();
 
 		RedisKeyValueStore redisKeyValueStore =
 			new RedisKeyValueStore(apiConfiguration.redisConfiguration().uri());
@@ -137,18 +128,18 @@ public class ApiApp {
 
 		Clock clock = Clock.systemUTC();
 
-		ElasticsearchTransactor elasticsearchTransactor = new ElasticsearchTransactor();
 		LinkedInCredentialsService linkedInCredentialsService =
-			new LinkedInCredentialsServiceImpl<>(encryptedLinkedInCredentialsDao, elasticsearchTransactor, encryptionService, clock);
+			new LinkedInCredentialsServiceImpl<>(encryptedLinkedInCredentialsDao, jdbiTransactor, encryptionService, clock);
 
-		SearchService searchService = new SearchServiceImpl(searchableJobDao, crawlerTaskDao);
+		SearchService searchService = new SearchServiceImpl<>(searchableJobDao, crawlerTaskDao, jdbiTransactor);
 
 		Crawler crawler = new SeleniumCrawler(idGenerator, clock);
 
 		CrawlManager crawlManager =
-			new CrawlManagerImpl(
+			new CrawlManagerImpl<>(
 				crawler,
 				crawlerTaskDao,
+				jdbiTransactor,
 				searchableJobDao,
 				idGenerator,
 				clock
@@ -166,7 +157,7 @@ public class ApiApp {
 			new UserServiceImpl<>(
 				userDao,
 				credentialsDao,
-				transactor,
+				jdbiTransactor,
 				passwordHashingService,
 				idGenerator,
 				clock
@@ -179,11 +170,11 @@ public class ApiApp {
 				passwordHashingService,
 				userDao,
 				credentialsDao,
-				transactor,
+				jdbiTransactor,
 				clock
 			);
 
-		AuthorizationService authorizationService = new AuthorizationServiceImpl(crawlerTaskDao, searchableJobDao);
+		AuthorizationService authorizationService = new AuthorizationServiceImpl(crawlerTaskDao, jdbiTransactor, searchableJobDao);
 
 		OkHttpClient httpClient =
 			new OkHttpClient.Builder()

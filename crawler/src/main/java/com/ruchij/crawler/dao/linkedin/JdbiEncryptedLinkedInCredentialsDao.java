@@ -29,7 +29,7 @@ public class JdbiEncryptedLinkedInCredentialsDao implements EncryptedLinkedInCre
 					.execute()
 			)
 		)
-			.map(__ -> encryptedLinkedInCredentials.userId());
+			.as(encryptedLinkedInCredentials.userId());
 	}
 
 	@Override

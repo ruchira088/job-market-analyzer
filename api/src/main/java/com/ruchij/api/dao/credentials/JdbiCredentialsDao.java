@@ -21,7 +21,7 @@ public class JdbiCredentialsDao implements CredentialsDao<Handle> {
 				handle.createUpdate(SQL_INSERT)
 					.bindBean(JdbiCredentials.from(credentials))
 					.execute()
-			)).map(__ -> credentials.userId());
+			)).as(credentials.userId());
 	}
 
 	@Override

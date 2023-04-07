@@ -22,7 +22,7 @@ public class JdbiUserDao implements UserDao<Handle> {
 	public Kleisli<Handle, String> insert(User user) {
 		return new Kleisli<Handle, Integer>(handle ->
 			CompletableFuture.completedFuture(handle.createUpdate(SQL_INSERT).bindBean(JdbiUser.from(user)).execute())
-		).map(__ -> user.id());
+		).as(user.id());
 	}
 
 	@Override

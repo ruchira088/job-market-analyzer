@@ -3,11 +3,9 @@ package com.ruchij.crawler.dao.task;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
-import co.elastic.clients.elasticsearch.core.GetRequest;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.*;
 import com.ruchij.crawler.dao.task.models.CrawlerTask;
+import com.ruchij.crawler.utils.Kleisli;
 import com.ruchij.crawler.utils.Transformers;
 
 import java.time.Instant;
@@ -15,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
+public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao<Void> {
 	private static final String INDEX = "crawler_tasks";
 
 	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
@@ -25,7 +23,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
 	}
 
 	@Override
-	public CompletableFuture<String> insert(CrawlerTask crawlerTask) {
+	public Kleisli<Void, String> insert(CrawlerTask crawlerTask) {
 		IndexRequest<CrawlerTask> indexRequest =
 			IndexRequest.of(builder ->
 				builder
@@ -35,11 +33,12 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
 					.document(crawlerTask)
 			);
 
-		return this.elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
+		return new Kleisli<Void, IndexResponse>(__ -> this.elasticsearchAsyncClient.index(indexRequest))
+			.map(WriteResponseBase::id);
 	}
 
 	@Override
-	public CompletableFuture<Boolean> setFinishedTimestamp(String crawlerTaskId, Instant finishedTimestamp) {
+	public Kleisli<Void, Boolean> setFinishedTimestamp(String crawlerTaskId, Instant finishedTimestamp) {
 		UpdateRequest<CrawlerTask, UpdateFinishedTimestamp> updateRequest =
 			UpdateRequest.of(builder ->
 				builder
@@ -49,7 +48,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
 					.doc(new UpdateFinishedTimestamp(finishedTimestamp))
 			);
 
-		return this.elasticsearchAsyncClient.update(updateRequest, CrawlerTask.class)
+		return new Kleisli<>(__ -> this.elasticsearchAsyncClient.update(updateRequest, CrawlerTask.class)
 			.thenApply(crawlerTaskUpdateResponse -> true)
 			.exceptionallyCompose(throwable ->
 				Optional.ofNullable(throwable.getCause())
@@ -64,11 +63,12 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
 					.filter(errorType -> errorType.equalsIgnoreCase("document_missing_exception"))
 					.map(value -> CompletableFuture.completedFuture(false))
 					.orElse(CompletableFuture.failedFuture(throwable))
-			);
+			)
+		);
 	}
 
 	@Override
-	public CompletableFuture<List<CrawlerTask>> findByUserId(String userId, int pageSize, int pageNumber) {
+	public Kleisli<Void, List<CrawlerTask>> findByUserId(String userId, int pageSize, int pageNumber) {
 		SearchRequest searchRequest = SearchRequest.of(searchQueryBuilder ->
 			searchQueryBuilder
 				.index(INDEX)
@@ -88,16 +88,16 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao {
 				)
 		);
 
-		return this.elasticsearchAsyncClient.search(searchRequest, CrawlerTask.class)
-			.thenApply(Transformers::results);
+		return new Kleisli<Void, SearchResponse<CrawlerTask>>(__ -> this.elasticsearchAsyncClient.search(searchRequest, CrawlerTask.class))
+			.map(Transformers::results);
 	}
 
 	@Override
-	public CompletableFuture<Optional<CrawlerTask>> findById(String crawlerTaskId) {
+	public Kleisli<Void, Optional<CrawlerTask>> findById(String crawlerTaskId) {
 		GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(crawlerTaskId));
 
-		return this.elasticsearchAsyncClient.get(getRequest, CrawlerTask.class)
-			.thenApply(crawlerTaskGetResponse -> Optional.ofNullable(crawlerTaskGetResponse.source()));
+		return new Kleisli<Void, GetResponse<CrawlerTask>>(__ -> this.elasticsearchAsyncClient.get(getRequest, CrawlerTask.class))
+			.map(crawlerTaskGetResponse -> Optional.ofNullable(crawlerTaskGetResponse.source()));
 	}
 
 	private record UpdateFinishedTimestamp(Instant finishedAt) {

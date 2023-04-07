@@ -4,18 +4,21 @@ import com.ruchij.api.dao.job.SearchableJobDao;
 import com.ruchij.crawler.dao.job.models.Job;
 import com.ruchij.crawler.dao.task.CrawlerTaskDao;
 import com.ruchij.crawler.dao.task.models.CrawlerTask;
+import com.ruchij.crawler.dao.transaction.Transactor;
 import com.ruchij.crawler.exceptions.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class SearchServiceImpl implements SearchService {
+public class SearchServiceImpl<A> implements SearchService {
 	private final SearchableJobDao searchableJobDao;
-	private final CrawlerTaskDao crawlerTaskDao;
+	private final CrawlerTaskDao<A> crawlerTaskDao;
+	private final Transactor<A> transactor;
 
-	public SearchServiceImpl(SearchableJobDao searchableJobDao, CrawlerTaskDao crawlerTaskDao) {
+	public SearchServiceImpl(SearchableJobDao searchableJobDao, CrawlerTaskDao<A> crawlerTaskDao, Transactor<A> transactor) {
 		this.searchableJobDao = searchableJobDao;
 		this.crawlerTaskDao = crawlerTaskDao;
+		this.transactor = transactor;
 	}
 
 	@Override
@@ -35,7 +38,7 @@ public class SearchServiceImpl implements SearchService {
 
 	@Override
 	public CompletableFuture<List<CrawlerTask>> findCrawlerTasksByUserId(String userId, int pageSize, int pageNumber) {
-		return this.crawlerTaskDao.findByUserId(userId, pageSize, pageNumber);
+		return this.transactor.transaction(this.crawlerTaskDao.findByUserId(userId, pageSize, pageNumber));
 	}
 
 	@Override
