@@ -8,15 +8,15 @@ public record Kleisli<A, B>(Function<A, CompletableFuture<B>> value) {
 		return value.apply(input);
 	}
 
-	public <C> Kleisli<A, C> flatMap(Function<B, Kleisli<A, C>> next) {
-		return new Kleisli<>(input -> value.apply(input).thenCompose(b -> next.apply(b).run(input)));
+	public <C> Kleisli<A, C> flatMap(Function<B, Kleisli<A, C>> f) {
+		return new Kleisli<>(input -> run(input).thenCompose(b -> f.apply(b).run(input)));
 	}
 
-	public <C> Kleisli<A, C> map(Function<B, C> next) {
-		return new Kleisli<>(input -> value.apply(input).thenApply(next));
+	public <C> Kleisli<A, C> map(Function<B, C> f) {
+		return new Kleisli<>(input -> run(input).thenApply(f));
 	}
 
-	public <C> Kleisli<A, C> semiFlatMap(Function<B, CompletableFuture<C>> next) {
-		return flatMap(b -> new Kleisli<>(__ -> next.apply(b)));
+	public <C> Kleisli<A, C> semiFlatMap(Function<B, CompletableFuture<C>> f) {
+		return flatMap(b -> new Kleisli<>(__ -> f.apply(b)));
 	}
 }

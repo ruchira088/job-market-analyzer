@@ -1,6 +1,7 @@
 package com.ruchij.crawler.dao.transaction;
 
 import com.ruchij.crawler.utils.Kleisli;
+import com.ruchij.crawler.utils.ReaderMonad;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 
@@ -41,5 +42,10 @@ public class JdbiTransactor implements Transactor<Handle> {
 
 			return CompletableFuture.failedFuture(exception);
 		}
+	}
+
+	@Override
+	public <B> B transaction(ReaderMonad<Handle, B> operations) {
+		return jdbi.inTransaction(operations::run);
 	}
 }
