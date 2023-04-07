@@ -9,6 +9,8 @@ import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentials
 import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.task.CrawlerTaskDao;
 import com.ruchij.crawler.dao.task.ElasticsearchCrawlerTaskDao;
+import com.ruchij.crawler.dao.transaction.ElasticsearchTransactor;
+import com.ruchij.crawler.dao.transaction.Transactor;
 import com.ruchij.crawler.service.crawler.CrawlManager;
 import com.ruchij.crawler.service.crawler.CrawlManagerImpl;
 import com.ruchij.crawler.service.crawler.Crawler;
@@ -43,6 +45,7 @@ public class CrawlerApp {
 			     )
 		) {
 			ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
+			Transactor<Void> transactor = new ElasticsearchTransactor();
 
 			JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
 			CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
@@ -58,7 +61,7 @@ public class CrawlerApp {
 				);
 
 			LinkedInCredentialsService linkedInCredentialsService =
-				new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
+				new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, transactor, encryptionService, clock);
 
 			Crawler crawler = new SeleniumCrawler(idGenerator, clock);
 

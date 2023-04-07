@@ -3,9 +3,11 @@ package com.ruchij.crawler.service.linkedin;
 import com.ruchij.crawler.dao.elasticsearch.models.EncryptedText;
 import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.linkedin.models.EncryptedLinkedInCredentials;
+import com.ruchij.crawler.dao.transaction.Transactor;
 import com.ruchij.crawler.exceptions.ResourceNotFoundException;
 import com.ruchij.crawler.service.encryption.EncryptionService;
 import com.ruchij.crawler.service.linkedin.models.LinkedInCredentials;
+import com.ruchij.crawler.utils.Kleisli;
 import com.ruchij.crawler.utils.Transformers;
 import io.reactivex.rxjava3.core.Flowable;
 
@@ -14,45 +16,58 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
-public class LinkedInCredentialsServiceImpl implements LinkedInCredentialsService {
-	private final EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao;
+public class LinkedInCredentialsServiceImpl<A> implements LinkedInCredentialsService {
+	private final EncryptedLinkedInCredentialsDao<A> encryptedLinkedInCredentialsDao;
+	private final Transactor<A> transactor;
 	private final EncryptionService encryptionService;
 	private final Clock clock;
 
 	public LinkedInCredentialsServiceImpl(
-		EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao,
+		EncryptedLinkedInCredentialsDao<A> encryptedLinkedInCredentialsDao,
+		Transactor<A> transactor,
 		EncryptionService encryptionService,
 		Clock clock
 	) {
 		this.encryptedLinkedInCredentialsDao = encryptedLinkedInCredentialsDao;
+		this.transactor = transactor;
 		this.encryptionService = encryptionService;
 		this.clock = clock;
 	}
 
 	@Override
 	public CompletableFuture<LinkedInCredentials> getByUserId(String userId) {
+		return transactor.transaction(getLinkedInCredentialsByUserId(userId));
+	}
+
+	private Kleisli<A, LinkedInCredentials> getLinkedInCredentialsByUserId(String userId) {
 		return encryptedLinkedInCredentialsDao.findByUserId(userId)
-			.thenCompose(maybeCredentials ->
-				Transformers.convert(
-					maybeCredentials,
-					() -> new ResourceNotFoundException("LinkedIn credentials not found for userId=%s".formatted(userId))
+			.flatMap(maybeCredentials ->
+				new Kleisli<>(__ ->
+					Transformers.convert(
+						maybeCredentials,
+						() -> new ResourceNotFoundException("LinkedIn credentials not found for userId=%s".formatted(userId))
+					)
 				)
 			)
-			.thenCompose(encryptedLinkedInCredentials -> Transformers.lift(() -> decrypt(encryptedLinkedInCredentials)));
+			.flatMap(encryptedLinkedInCredentials ->
+				new Kleisli<>(__ -> Transformers.lift(() -> decrypt(encryptedLinkedInCredentials)))
+			);
 	}
 
 	@Override
 	public Flowable<LinkedInCredentials> getAll() {
-		return encryptedLinkedInCredentialsDao.getAll()
+		return transactor.transaction(encryptedLinkedInCredentialsDao.getAll())
 			.map(this::decrypt);
 	}
 
 	@Override
 	public CompletableFuture<LinkedInCredentials> deleteByUserId(String userId) {
-		return getByUserId(userId)
-			.thenCompose(linkedInCredentials ->
-				encryptedLinkedInCredentialsDao.deleteByUserId(userId).thenApply(__ -> linkedInCredentials)
-			);
+		return transactor.transaction(
+			getLinkedInCredentialsByUserId(userId)
+				.flatMap(linkedInCredentials ->
+					encryptedLinkedInCredentialsDao.deleteByUserId(userId).map(__ -> linkedInCredentials)
+				)
+		);
 	}
 
 	@Override
@@ -71,8 +86,9 @@ public class LinkedInCredentialsServiceImpl implements LinkedInCredentialsServic
 					new EncryptedText(encryptedPassword)
 				);
 
-			return encryptedLinkedInCredentialsDao.insert(encryptedLinkedInCredentials)
-				.thenApply(__ -> new LinkedInCredentials(userId, email, password));
+			return transactor.transaction(encryptedLinkedInCredentialsDao
+				.insert(encryptedLinkedInCredentials).map(__ -> new LinkedInCredentials(userId, email, password))
+			);
 		} catch (GeneralSecurityException generalSecurityException) {
 			return CompletableFuture.failedFuture(generalSecurityException);
 		}

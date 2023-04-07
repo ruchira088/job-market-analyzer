@@ -4,11 +4,9 @@ import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import com.ruchij.api.config.ApiConfiguration;
 import com.ruchij.api.dao.credentials.CredentialsDao;
-import com.ruchij.api.dao.credentials.ElasticsearchCredentialsDao;
 import com.ruchij.api.dao.credentials.JdbiCredentialsDao;
 import com.ruchij.api.dao.job.ElasticsearchSearchableJobDao;
 import com.ruchij.api.dao.job.SearchableJobDao;
-import com.ruchij.api.dao.user.ElasticsearchUserDao;
 import com.ruchij.api.dao.user.JdbiUserDao;
 import com.ruchij.api.dao.user.UserDao;
 import com.ruchij.api.kv.KeyValueStore;
@@ -37,6 +35,7 @@ import com.ruchij.crawler.dao.linkedin.ElasticsearchEncryptedLinkedInCredentials
 import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.task.CrawlerTaskDao;
 import com.ruchij.crawler.dao.task.ElasticsearchCrawlerTaskDao;
+import com.ruchij.crawler.dao.transaction.ElasticsearchTransactor;
 import com.ruchij.crawler.dao.transaction.JdbiTransactor;
 import com.ruchij.crawler.dao.transaction.Transactor;
 import com.ruchij.crawler.service.crawler.CrawlManager;
@@ -118,7 +117,8 @@ public class ApiApp {
 //		CredentialsDao credentialsDao = new ElasticsearchCredentialsDao(elasticsearchAsyncClient);
 		SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
 		CrawlerTaskDao crawlerTaskDao = new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
-		EncryptedLinkedInCredentialsDao encryptedLinkedInCredentialsDao = new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
+		EncryptedLinkedInCredentialsDao<Void> encryptedLinkedInCredentialsDao =
+			new ElasticsearchEncryptedLinkedInCredentialsDao(elasticsearchAsyncClient);
 
 		RedisKeyValueStore redisKeyValueStore =
 			new RedisKeyValueStore(apiConfiguration.redisConfiguration().uri());
@@ -137,8 +137,9 @@ public class ApiApp {
 
 		Clock clock = Clock.systemUTC();
 
+		ElasticsearchTransactor elasticsearchTransactor = new ElasticsearchTransactor();
 		LinkedInCredentialsService linkedInCredentialsService =
-			new LinkedInCredentialsServiceImpl(encryptedLinkedInCredentialsDao, encryptionService, clock);
+			new LinkedInCredentialsServiceImpl<>(encryptedLinkedInCredentialsDao, elasticsearchTransactor, encryptionService, clock);
 
 		SearchService searchService = new SearchServiceImpl(searchableJobDao, crawlerTaskDao);
 

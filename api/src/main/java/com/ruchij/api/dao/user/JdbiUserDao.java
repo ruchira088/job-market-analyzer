@@ -20,10 +20,9 @@ public class JdbiUserDao implements UserDao<Handle> {
 
 	@Override
 	public Kleisli<Handle, String> insert(User user) {
-		return new Kleisli<>(handle ->
+		return new Kleisli<Handle, Integer>(handle ->
 			CompletableFuture.completedFuture(handle.createUpdate(SQL_INSERT).bindBean(JdbiUser.from(user)).execute())
-				.thenApply(__ -> user.id())
-		);
+		).map(__ -> user.id());
 	}
 
 	@Override
