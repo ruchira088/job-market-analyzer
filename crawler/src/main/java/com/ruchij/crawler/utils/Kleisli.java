@@ -2,7 +2,6 @@ package com.ruchij.crawler.utils;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public record Kleisli<A, B>(Function<A, CompletableFuture<B>> value) {
 	public CompletableFuture<B> run(A input) {
@@ -18,10 +17,6 @@ public record Kleisli<A, B>(Function<A, CompletableFuture<B>> value) {
 	}
 
 	public <C> Kleisli<A, C> semiFlatMap(Function<B, CompletableFuture<C>> next) {
-		return flatMap(b -> lift(() -> next.apply(b)));
-	}
-
-	public static <A, B> Kleisli<A, B> lift(Supplier<CompletableFuture<B>> supplier) {
-		return new Kleisli<>(__ -> supplier.get());
+		return flatMap(b -> new Kleisli<>(__ -> next.apply(b)));
 	}
 }

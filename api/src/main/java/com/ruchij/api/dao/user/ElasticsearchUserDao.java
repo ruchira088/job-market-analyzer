@@ -3,9 +3,7 @@ package com.ruchij.api.dao.user;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch._types.WriteResponseBase;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
-import co.elastic.clients.elasticsearch.core.GetRequest;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.*;
 import com.ruchij.api.dao.user.models.User;
 import com.ruchij.crawler.utils.Kleisli;
 import com.ruchij.crawler.utils.Transformers;
@@ -26,15 +24,16 @@ public class ElasticsearchUserDao implements UserDao<Void> {
 		IndexRequest<User> indexRequest =
 			IndexRequest.of(builder -> builder.index(INDEX).id(user.id()).document(user));
 
-		return Kleisli.lift(() -> elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id));
+		return new Kleisli<Void, IndexResponse>(__ -> elasticsearchAsyncClient.index(indexRequest))
+			.map(WriteResponseBase::id);
 	}
 
 	@Override
 	public Kleisli<Void, Optional<User>> findById(String userId) {
 		GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(userId));
 
-		return Kleisli.lift(() -> elasticsearchAsyncClient.get(getRequest, User.class)
-			.thenApply(getResponse -> Optional.ofNullable(getResponse.source())));
+		return new Kleisli<Void, GetResponse<User>>(__ -> elasticsearchAsyncClient.get(getRequest, User.class))
+			.map(getResponse -> Optional.ofNullable(getResponse.source()));
 	}
 
 	@Override
@@ -51,7 +50,7 @@ public class ElasticsearchUserDao implements UserDao<Void> {
 				.size(1)
 		);
 
-		return Kleisli.lift(() -> elasticsearchAsyncClient.search(searchRequest, User.class)
-			.thenApply(Transformers::findFirst));
+		return new Kleisli<Void, SearchResponse<User>>(__ -> elasticsearchAsyncClient.search(searchRequest, User.class))
+			.map(Transformers::findFirst);
 	}
 }
