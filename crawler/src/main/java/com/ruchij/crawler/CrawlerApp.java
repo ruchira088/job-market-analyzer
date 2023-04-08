@@ -3,6 +3,7 @@ package com.ruchij.crawler;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import com.ruchij.crawler.config.CrawlerConfiguration;
+import com.ruchij.crawler.dao.jdbi.JdbiInitializer;
 import com.ruchij.crawler.dao.job.ElasticsearchJobDao;
 import com.ruchij.crawler.dao.job.JobDao;
 import com.ruchij.crawler.dao.linkedin.JdbiEncryptedLinkedInCredentialsDao;
@@ -49,6 +50,7 @@ public class CrawlerApp {
 
 			DatabaseConfiguration databaseConfiguration = crawlerConfiguration.databaseConfiguration();
 			Jdbi jdbi = Jdbi.create(databaseConfiguration.url(), databaseConfiguration.user(), databaseConfiguration.password());
+			JdbiInitializer.initialize(jdbi);
 			JdbiTransactor jdbiTransactor = new JdbiTransactor(jdbi);
 
 			JdbiCrawlerTaskDao crawlerTaskDao = new JdbiCrawlerTaskDao();

@@ -11,8 +11,8 @@ public class HomePage {
 	}
 
 	public JobsPage jobsPage() {
-		WebElement jobsTab = this.awaitableWebDriver.findElementByCss(".app-aware-link span[title=Jobs]");
-		jobsTab.click();
+		this.awaitableWebDriver.remoteWebDriver().get("https://www.linkedin.com/jobs/collections/recommended/");
+		this.awaitableWebDriver.findElementByCss(".jobs-details");
 
 		return new JobsPage(this.awaitableWebDriver);
 	}

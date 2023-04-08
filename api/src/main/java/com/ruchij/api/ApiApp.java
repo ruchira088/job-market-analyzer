@@ -29,6 +29,9 @@ import com.ruchij.api.services.user.UserService;
 import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
 import com.ruchij.api.web.plugins.ExceptionHandlerPlugin;
+import com.ruchij.crawler.dao.jdbi.JdbiInitializer;
+import com.ruchij.crawler.dao.jdbi.arguments.EncryptedTextArgumentFactory;
+import com.ruchij.crawler.dao.jdbi.mappers.EncryptedTextColumMapper;
 import com.ruchij.crawler.dao.linkedin.JdbiEncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.task.JdbiCrawlerTaskDao;
 import com.ruchij.crawler.dao.transaction.JdbiTransactor;
@@ -103,7 +106,9 @@ public class ApiApp {
 		SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
 
 		DatabaseConfiguration databaseConfiguration = apiConfiguration.databaseConfiguration();
+
 		Jdbi jdbi = Jdbi.create(databaseConfiguration.url(), databaseConfiguration.user(), databaseConfiguration.password());
+		JdbiInitializer.initialize(jdbi);
 		JdbiTransactor jdbiTransactor = new JdbiTransactor(jdbi);
 
 		JdbiUserDao userDao = new JdbiUserDao();

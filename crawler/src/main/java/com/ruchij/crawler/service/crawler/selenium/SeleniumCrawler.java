@@ -77,7 +77,7 @@ public class SeleniumCrawler implements Crawler {
 
 	private FirefoxDriver firefoxDriver() {
 		FirefoxOptions firefoxOptions = new FirefoxOptions();
-		firefoxOptions.setHeadless(true);
+//		firefoxOptions.setHeadless(true);
 
 		FirefoxDriver firefoxDriver = new FirefoxDriver(firefoxOptions);
 

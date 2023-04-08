@@ -25,7 +25,6 @@ public class JobsPage {
 	private static final Logger logger = LoggerFactory.getLogger(JobsPage.class);
 
 	private final AwaitableWebDriver awaitableWebDriver;
-	private boolean showingAllJobs = false;
 
 	public JobsPage(AwaitableWebDriver awaitableWebDriver) {
 		this.awaitableWebDriver = awaitableWebDriver;
@@ -47,7 +46,7 @@ public class JobsPage {
 			String companyName = findText.apply(".jobs-unified-top-card__company-name");
 
 			String companyLogoUrl =
-				Optional.ofNullable(jobCard.findElement(By.cssSelector(".job-card-list__logo img")))
+				Optional.ofNullable(jobCard.findElement(By.cssSelector(".job-card-container__link img")))
 					.map(element -> element.getAttribute("src"))
 					.orElse("https://via.placeholder.com/100x100");
 
@@ -74,8 +73,6 @@ public class JobsPage {
 	}
 
 	public int pageCount() {
-		showAllJobs();
-
 		String paginationAttribute = "data-test-pagination-page-btn";
 		WebElement pagination = this.awaitableWebDriver.findElementByCss(".jobs-search-results-list__pagination");
 
@@ -106,7 +103,6 @@ public class JobsPage {
 	}
 
 	void traverseJobs(Clock clock, String crawlerTaskId, Consumer<LinkedInJob> onLinkedInJob, Supplier<Boolean> shouldContinue, Runnable onComplete) {
-		showAllJobs();
 		Set<String> jobIds = new HashSet<>();
 		int pageNumber = 1;
 
@@ -163,15 +159,4 @@ public class JobsPage {
 
 		onComplete.run();
 	}
-
-	void showAllJobs() {
-		if (!showingAllJobs) {
-			WebElement showAll = this.awaitableWebDriver.findElementByCss(".jobs-job-board-list__footer");
-			showAll.click();
-
-			this.awaitableWebDriver.findElementByCss(".jobs-details");
-			showingAllJobs = true;
-		}
-	}
-
 }
