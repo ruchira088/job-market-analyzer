@@ -179,7 +179,7 @@ public class ApiApp {
 				clock
 			);
 
-		AuthorizationService authorizationService = new AuthorizationServiceImpl(crawlerTaskDao, jdbiTransactor, searchableJobDao);
+		AuthorizationService authorizationService = new AuthorizationServiceImpl<>(crawlerTaskDao, jdbiTransactor, searchableJobDao);
 
 		OkHttpClient httpClient =
 			new OkHttpClient.Builder()
@@ -189,6 +189,7 @@ public class ApiApp {
 		HealthService healthService =
 			new HealthServiceImpl(
 				elasticsearchAsyncClient,
+				jdbi,
 				redisKeyValueStore.getRedisAsyncCommands(),
 				httpClient,
 				crawler,

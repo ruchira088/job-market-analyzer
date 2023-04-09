@@ -9,6 +9,7 @@ import com.ruchij.crawler.service.crawler.Crawler;
 import com.ruchij.crawler.utils.JsonUtils;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import okhttp3.*;
+import org.jdbi.v3.core.Jdbi;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +26,10 @@ import java.util.concurrent.TimeUnit;
 
 public class HealthServiceImpl implements HealthService {
 	private static final Logger logger = LoggerFactory.getLogger(HealthServiceImpl.class);
-	private static final Duration TIME_OUT = Duration.ofSeconds(50);
+	private static final Duration TIME_OUT = Duration.ofSeconds(20);
 
 	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
+	private final Jdbi jdbi;
 	private final RedisAsyncCommands<String, String> redisAsyncCommands;
 	private final OkHttpClient okHttpClient;
 	private final Crawler crawler;
@@ -36,6 +38,7 @@ public class HealthServiceImpl implements HealthService {
 	private final Clock clock;
 
 	public HealthServiceImpl(ElasticsearchAsyncClient elasticsearchAsyncClient,
+													 Jdbi jdbi,
 	                         RedisAsyncCommands<String, String> redisAsyncCommands,
 	                         OkHttpClient okHttpClient,
 	                         Crawler crawler,
@@ -43,6 +46,7 @@ public class HealthServiceImpl implements HealthService {
 	                         Properties properties,
 	                         Clock clock) {
 		this.elasticsearchAsyncClient = elasticsearchAsyncClient;
+		this.jdbi = jdbi;
 		this.redisAsyncCommands = redisAsyncCommands;
 		this.okHttpClient = okHttpClient;
 		this.crawler = crawler;
@@ -81,10 +85,12 @@ public class HealthServiceImpl implements HealthService {
 	@Override
 	public CompletableFuture<HealthCheck> healthCheck() {
 		CompletableFuture<HealthStatus> elasticsearchHealthStatus =
-			race(elasticsearchAsyncClient.ping().thenApply(booleanResponse -> HealthStatus.HEALTHY));
+			race(elasticsearchAsyncClient.ping().thenApply(__ -> HealthStatus.HEALTHY));
+
+		CompletableFuture<HealthStatus> databaseHealthStatus = race(CompletableFuture.supplyAsync(this::database));
 
 		CompletableFuture<HealthStatus> redisHealthStatus =
-			race(redisAsyncCommands.ping().thenApply(response -> HealthStatus.HEALTHY).toCompletableFuture());
+			race(redisAsyncCommands.ping().thenApply(__ -> HealthStatus.HEALTHY).toCompletableFuture());
 
 		CompletableFuture<HealthStatus> internetConnectivityHealthStatus = race(internetConnectivity());
 
@@ -95,12 +101,21 @@ public class HealthServiceImpl implements HealthService {
 		HealthCheck healthCheck =
 			new HealthCheck(
 				resolve(elasticsearchHealthStatus),
+				resolve(databaseHealthStatus),
 				resolve(redisHealthStatus),
 				resolve(internetConnectivityHealthStatus),
 				resolve(linkedInRenderingHealthStatus)
 			);
 
 		return CompletableFuture.completedFuture(healthCheck);
+	}
+
+	private HealthStatus database() {
+		Integer result = jdbi.withHandle(
+			handle -> handle.createQuery("SELECT 1").mapTo(Integer.class).one()
+		);
+
+		return result == 1 ? HealthStatus.HEALTHY : HealthStatus.UNHEALTHY;
 	}
 
 	private HealthStatus resolve(CompletableFuture<HealthStatus> completableFuture) {
