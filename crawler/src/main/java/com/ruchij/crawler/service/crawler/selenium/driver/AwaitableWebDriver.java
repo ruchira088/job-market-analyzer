@@ -4,10 +4,11 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.function.Function;
 
-public interface AwaitableWebDriver {
+public interface AwaitableWebDriver extends Closeable {
 	WebElement findElementByCss(String cssQuery);
 
 	List<WebElement> findElementsByCss(String cssQuery);

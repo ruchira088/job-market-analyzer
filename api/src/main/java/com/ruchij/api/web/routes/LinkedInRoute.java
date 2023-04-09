@@ -2,7 +2,7 @@ package com.ruchij.api.web.routes;
 
 import com.ruchij.api.services.crawler.ExtendedCrawlManager;
 import com.ruchij.api.web.middleware.AuthenticationMiddleware;
-import com.ruchij.api.web.requests.CreateLinkedInCredentialsRequest;
+import com.ruchij.api.web.requests.LinkedInCredentialsRequest;
 import com.ruchij.api.web.responses.ErrorResponse;
 import com.ruchij.api.web.responses.SseType;
 import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
@@ -30,9 +30,24 @@ public class LinkedInRoute implements EndpointGroup {
 	@Override
 	public void addEndpoints() {
 		path("credentials", () -> {
+				post("verify", context -> {
+					LinkedInCredentialsRequest linkedInCredentialsRequest =
+						context.bodyStreamAsClass(LinkedInCredentialsRequest.class);
+
+					context.future(() ->
+						linkedInCredentialsService.verifyCredentials(
+								linkedInCredentialsRequest.email(), linkedInCredentialsRequest.password()
+							)
+							.thenAccept(isValid ->
+								context
+									.status(isValid ? HttpStatus.OK : HttpStatus.UNAUTHORIZED)
+							)
+					);
+				});
+
 				post(context -> {
-					CreateLinkedInCredentialsRequest linkedInCredentialsRequest =
-						context.bodyStreamAsClass(CreateLinkedInCredentialsRequest.class);
+					LinkedInCredentialsRequest linkedInCredentialsRequest =
+						context.bodyStreamAsClass(LinkedInCredentialsRequest.class);
 
 					context
 						.future(() ->

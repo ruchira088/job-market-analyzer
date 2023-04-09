@@ -29,6 +29,8 @@ public class LinkedIn {
 		WebElement submitButton = this.awaitableWebDriver.findElementByCss("button[aria-label='Sign in']");
 		submitButton.click();
 
+		this.awaitableWebDriver.findElementByCss(".global-nav__me");
+
 		return new HomePage(this.awaitableWebDriver);
 	}
 

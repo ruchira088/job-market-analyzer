@@ -7,6 +7,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
 
@@ -43,5 +44,10 @@ public class SeleniumWebDriver implements AwaitableWebDriver {
 	@Override
 	public RemoteWebDriver remoteWebDriver() {
 		return this.remoteWebDriver;
+	}
+
+	@Override
+	public void close() throws IOException {
+		this.remoteWebDriver.quit();
 	}
 }

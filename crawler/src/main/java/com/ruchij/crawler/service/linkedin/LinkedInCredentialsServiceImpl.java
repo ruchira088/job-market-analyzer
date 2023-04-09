@@ -5,6 +5,7 @@ import com.ruchij.crawler.dao.linkedin.EncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.linkedin.models.EncryptedLinkedInCredentials;
 import com.ruchij.crawler.dao.transaction.Transactor;
 import com.ruchij.crawler.exceptions.ResourceNotFoundException;
+import com.ruchij.crawler.service.crawler.Crawler;
 import com.ruchij.crawler.service.encryption.EncryptionService;
 import com.ruchij.crawler.service.linkedin.models.LinkedInCredentials;
 import com.ruchij.crawler.utils.Kleisli;
@@ -19,17 +20,20 @@ import java.util.concurrent.CompletableFuture;
 public class LinkedInCredentialsServiceImpl<A> implements LinkedInCredentialsService {
 	private final EncryptedLinkedInCredentialsDao<A> encryptedLinkedInCredentialsDao;
 	private final Transactor<A> transactor;
+	private final Crawler crawler;
 	private final EncryptionService encryptionService;
 	private final Clock clock;
 
 	public LinkedInCredentialsServiceImpl(
 		EncryptedLinkedInCredentialsDao<A> encryptedLinkedInCredentialsDao,
 		Transactor<A> transactor,
+		Crawler crawler,
 		EncryptionService encryptionService,
 		Clock clock
 	) {
 		this.encryptedLinkedInCredentialsDao = encryptedLinkedInCredentialsDao;
 		this.transactor = transactor;
+		this.crawler = crawler;
 		this.encryptionService = encryptionService;
 		this.clock = clock;
 	}
@@ -92,6 +96,11 @@ public class LinkedInCredentialsServiceImpl<A> implements LinkedInCredentialsSer
 		} catch (GeneralSecurityException generalSecurityException) {
 			return CompletableFuture.failedFuture(generalSecurityException);
 		}
+	}
+
+	@Override
+	public CompletableFuture<Boolean> verifyCredentials(String email, String password) {
+		return this.crawler.verifyCredentials(email, password);
 	}
 
 	private LinkedInCredentials decrypt(EncryptedLinkedInCredentials encryptedLinkedInCredentials)

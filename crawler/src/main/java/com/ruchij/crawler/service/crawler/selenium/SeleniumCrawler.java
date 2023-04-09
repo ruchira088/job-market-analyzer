@@ -100,16 +100,27 @@ public class SeleniumCrawler implements Crawler {
 	@Override
 	public CompletableFuture<Boolean> isHealthy() {
 		return CompletableFuture.supplyAsync(() -> {
-			AwaitableWebDriver awaitableWebDriver = awaitableWebDriver();
-			try {
+			try (AwaitableWebDriver awaitableWebDriver = awaitableWebDriver()) {
 				LinkedIn linkedIn = new LinkedIn(awaitableWebDriver);
 				linkedIn.open();
 				return true;
 			} catch (Exception exception) {
 				logger.error("Unable to open LinkedIn webpage", exception);
 				return false;
-			} finally {
-				awaitableWebDriver.remoteWebDriver().quit();
+			}
+		});
+	}
+
+	@Override
+	public CompletableFuture<Boolean> verifyCredentials(String email, String password) {
+		return CompletableFuture.supplyAsync(() -> {
+			try (AwaitableWebDriver awaitableWebDriver = awaitableWebDriver()) {
+				LinkedIn linkedIn = new LinkedIn(awaitableWebDriver);
+				linkedIn.login(email, password);
+				return true;
+			} catch (Exception exception) {
+				logger.error("Invalid LinkedIn credentials", exception);
+				return false;
 			}
 		});
 	}
