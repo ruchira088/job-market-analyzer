@@ -46,9 +46,14 @@ public class CrawlManagerImpl<A> implements CrawlManager {
 			.concatMap(value -> crawler.crawl(crawlerTaskId, linkedInEmail, linkedInPassword))
 			.concatMap(crawledJob -> Flowable.fromCompletionStage(jobDao.insert(crawledJob.job())).map(__ -> crawledJob))
 			.concatWith(
-				Flowable.fromCompletionStage(transactor.transaction(crawlerTaskDao.setFinishedTimestamp(crawlerTaskId, clock.instant())))
-					.concatMap(__ -> Flowable.empty())
-			)
-			.doOnCancel(() -> {});
+				Flowable.defer(() ->
+					Flowable.fromCompletionStage(
+							transactor.transaction(
+								crawlerTaskDao.setFinishedTimestamp(crawlerTaskId, clock.instant())
+							)
+						)
+						.concatMap(__ -> Flowable.empty())
+				)
+			);
 	}
 }
