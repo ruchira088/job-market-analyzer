@@ -9,16 +9,16 @@ public class PostgresContainer extends org.testcontainers.containers.PostgreSQLC
 
 	public PostgresContainer() {
 		super("postgres:15.2");
-		addEnv("POSTGRES_DB", DB_NAME);
-		addEnv("POSTGRES_USER", USER);
-		addEnv("POSTGRES_PASSWORD", PASSWORD);
+		withDatabaseName(DB_NAME);
+		withUsername(USER);
+		withPassword(PASSWORD);
 	}
 
 	public DatabaseConfiguration databaseConfiguration() {
 		start();
 
 		return new DatabaseConfiguration(
-			"jdbc:postgresql://%s:%s/%s".formatted(getHost(), getMappedPort(5432), DB_NAME),
+			getJdbcUrl(),
 			USER,
 			PASSWORD
 		);

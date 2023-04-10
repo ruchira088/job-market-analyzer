@@ -17,7 +17,6 @@ public class JdbiUserDao implements UserDao<Handle> {
 
 	private static final String SQL_SELECT = "SELECT id, created_at, email, first_name, last_name FROM api_user";
 
-
 	@Override
 	public Kleisli<Handle, String> insert(User user) {
 		return new Kleisli<Handle, Integer>(handle ->
