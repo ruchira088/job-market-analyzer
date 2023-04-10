@@ -7,7 +7,6 @@ import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,15 +143,25 @@ public class JobsPage {
 
 				pageNumber++;
 
-				List<WebElement> elements =
-					this.awaitableWebDriver.findElementsByCss("li[data-test-pagination-page-btn='%s']".formatted(pageNumber));
+				List<WebElement> paginationButtons =
+					this.awaitableWebDriver.findElementsByCss("li[data-test-pagination-page-btn]");
 
-				if (!elements.isEmpty()) {
-					WebElement nextPage = elements.get(0);
-					nextPage.click();
+				String page = String.valueOf(pageNumber);
+
+				Optional<WebElement> maybeNextPageButton =
+					paginationButtons
+						.stream()
+						.filter(paginationButton ->
+							paginationButton.getAttribute("data-test-pagination-page-btn").equals(page)
+						)
+						.findAny();
+
+				if (maybeNextPageButton.isPresent()) {
+					WebElement nextPageButton = maybeNextPageButton.get();
+					nextPageButton.click();
 					scanPageForJobs = true;
 
-					logger.info("Started crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
+					logger.info("Started crawling page=%s for id=%s".formatted(page, crawlerTaskId));
 				}
 			}
 		}
