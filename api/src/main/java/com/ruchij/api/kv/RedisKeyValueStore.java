@@ -11,13 +11,11 @@ public class RedisKeyValueStore implements KeyValueStore, AutoCloseable {
 	private final String SUCCESS_RESPONSE = "OK";
 
 	private final RedisClient redisClient;
-	private final StatefulRedisConnection<String, String> redisConnection;
 	private final RedisAsyncCommands<String, String> redisAsyncCommands;
 
 	public RedisKeyValueStore(String redisConnectionString) {
 		this.redisClient = RedisClient.create(redisConnectionString);
-		this.redisConnection = redisClient.connect();
-		this.redisAsyncCommands = redisConnection.async();
+		this.redisAsyncCommands = redisClient.connect().async();
 	}
 
 	@Override
@@ -42,7 +40,6 @@ public class RedisKeyValueStore implements KeyValueStore, AutoCloseable {
 
 	@Override
 	public void close() {
-		redisConnection.close();
 		redisClient.close();
 	}
 }
