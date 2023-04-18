@@ -4,12 +4,10 @@ import com.ruchij.api.containers.RedisContainer;
 import com.ruchij.api.pubsub.publisher.RedisPublisher;
 import com.ruchij.api.pubsub.subscriber.RedisSubscriber;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -22,7 +20,7 @@ public class RedisPubSubTest {
 	}
 
 	@Test
-	@Timeout(value = 5, unit = TimeUnit.SECONDS)
+	@Timeout(value = 30, unit = TimeUnit.SECONDS)
 	void publishAndSubscribe() throws InterruptedException {
 		try (RedisContainer redisContainer = new RedisContainer()) {
 			String redisConnectionString = redisContainer.redisConfiguration().uri();
