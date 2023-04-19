@@ -10,6 +10,8 @@ import com.ruchij.api.dao.user.JdbiUserDao;
 import com.ruchij.api.kv.KeyValueStore;
 import com.ruchij.api.kv.NamespacedKeyValueStore;
 import com.ruchij.api.kv.RedisKeyValueStore;
+import com.ruchij.api.pubsub.publisher.RedisPublisher;
+import com.ruchij.api.pubsub.subscriber.RedisSubscriber;
 import com.ruchij.api.services.authentication.AuthenticationService;
 import com.ruchij.api.services.authentication.AuthenticationServiceImpl;
 import com.ruchij.api.services.authentication.models.AuthenticationToken;
@@ -153,8 +155,14 @@ public class ApiApp {
 		ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(4);
 		LockService lockService = new LocalLockService(scheduledExecutorService, clock);
 
+		RedisPublisher redisPublisher =
+			new RedisPublisher(apiConfiguration.redisConfiguration().uri(), objectMapper);
+
+		RedisSubscriber redisSubscriber =
+			new RedisSubscriber(apiConfiguration.redisConfiguration().uri(), objectMapper);
+
 		ExtendedCrawlManager extendedCrawlManager =
-			new ExtendedCrawlManagerImpl(crawlManager, lockService, linkedInCredentialsService);
+			new ExtendedCrawlManagerImpl(crawlManager, lockService, linkedInCredentialsService, redisPublisher, redisSubscriber);
 
 		PasswordHashingService passwordHashingService = new BCryptPasswordHashingService();
 

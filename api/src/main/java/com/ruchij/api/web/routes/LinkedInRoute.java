@@ -8,6 +8,9 @@ import com.ruchij.api.web.responses.SseType;
 import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
+import io.reactivex.rxjava3.disposables.Disposable;
+
+import java.util.Map;
 
 import static com.ruchij.crawler.utils.JsonUtils.objectMapper;
 import static io.javalin.apibuilder.ApiBuilder.*;
@@ -95,47 +98,39 @@ public class LinkedInRoute implements EndpointGroup {
 			}
 		);
 
-		path("crawl", () ->
-			sse(sseClient -> {
-				sseClient.keepAlive();
-
-				authenticationMiddleware.authenticate(sseClient.ctx())
-					.thenApply(user -> {
-							sseClient.sendEvent(SseType.CRAWL_STARTED.name(), "{}");
-
-							return extendedCrawlManager.runWithLock(user.id())
-								.doFinally(() -> {
-									if (!sseClient.terminated()) {
-										sseClient.sendEvent(SseType.CRAWL_COMPLETED.name(), "{}");
-										sseClient.close();
-									}
-								})
-								.doOnError(throwable -> {
-									sseClient.sendEvent(
-										SseType.CRAWL_ERROR.name(),
-										objectMapper.writeValueAsString(new ErrorResponse(throwable.getMessage()))
-									);
-									sseClient.close();
-								})
-								.subscribe(crawledJob -> {
-										if (!sseClient.terminated()) {
-											sseClient.sendEvent(
-												SseType.CRAWLED_JOB.name(),
-												objectMapper.writeValueAsString(crawledJob)
-											);
-										}
-									}
-								);
-						}
+		path("crawl", () -> {
+				post(context ->
+					context.future(() ->
+						authenticationMiddleware.authenticate(context)
+							.thenAccept(user -> {
+								extendedCrawlManager.runWithLock(user.id()).subscribe();
+								context.status(HttpStatus.ACCEPTED).json(Map.of());
+							})
 					)
-					.thenAccept(disposable ->
-						sseClient.onClose(() -> {
-							if (!disposable.isDisposed()) {
-								disposable.dispose();
+				);
+
+				sse(sseClient -> {
+					sseClient.keepAlive();
+
+					authenticationMiddleware.authenticate(sseClient.ctx())
+						.thenAccept(user -> {
+								Disposable disposable = extendedCrawlManager.listenToCrawledJobs(user.id())
+									.doOnError(throwable ->
+										sseClient.sendEvent(
+											SseType.CRAWL_ERROR.name(),
+											objectMapper.writeValueAsString(new ErrorResponse(throwable.getMessage()))
+										))
+									.subscribe(crawledJob -> sseClient.sendEvent(
+											SseType.CRAWLED_JOB.name(),
+											objectMapper.writeValueAsString(crawledJob)
+										)
+									);
+
+								sseClient.onClose(disposable::dispose);
 							}
-						})
-					);
-			})
+						);
+				});
+			}
 		);
 	}
 }

@@ -1,6 +1,9 @@
 package com.ruchij.api.services.crawler;
 
 import com.ruchij.api.exceptions.ResourceConflictException;
+import com.ruchij.api.pubsub.publisher.Publisher;
+import com.ruchij.api.pubsub.subscriber.Subscriber;
+import com.ruchij.api.services.crawler.models.CrawledJobMessage;
 import com.ruchij.api.services.lock.LockService;
 import com.ruchij.crawler.service.crawler.CrawlManager;
 import com.ruchij.crawler.service.crawler.models.CrawledJob;
@@ -13,21 +16,28 @@ import java.time.Duration;
 
 public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
 	private static final Duration LOCK_TIMEOUT = Duration.ofMinutes(10);
+	private static final String CRAWLED_JOB_TOPIC = "crawled-job";
 
 	private static final Logger logger = LoggerFactory.getLogger(ExtendedCrawlManagerImpl.class);
 
 	private final CrawlManager crawlManager;
 	private final LockService lockService;
 	private final LinkedInCredentialsService linkedInCredentialsService;
+	private final Publisher publisher;
+	private final Subscriber subscriber;
 
 	public ExtendedCrawlManagerImpl(
 		CrawlManager crawlManager,
 		LockService lockService,
-		LinkedInCredentialsService linkedInCredentialsService
+		LinkedInCredentialsService linkedInCredentialsService,
+		Publisher publisher,
+		Subscriber subscriber
 	) {
 		this.crawlManager = crawlManager;
 		this.lockService = lockService;
 		this.linkedInCredentialsService = linkedInCredentialsService;
+		this.publisher = publisher;
+		this.subscriber = subscriber;
 	}
 
 	@Override
@@ -51,6 +61,11 @@ public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
 			.concatMap(linkedInCredentials ->
 				run(linkedInCredentials.userId(), linkedInCredentials.email(), linkedInCredentials.password())
 			)
+			.concatMap(crawledJob ->
+				Flowable.fromCompletionStage(
+					publisher.publish(CRAWLED_JOB_TOPIC, new CrawledJobMessage(userId, crawledJob))
+					)
+					.map(__ -> crawledJob))
 			.doFinally(() -> {
 				lockService.release(userId);
 				logger.info("Released crawl lock for id=%s".formatted(userId));
@@ -60,5 +75,12 @@ public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
 	@Override
 	public Flowable<CrawledJob> run(String userId, String linkedInEmail, String linkedInPassword) {
 		return crawlManager.run(userId, linkedInEmail, linkedInPassword);
+	}
+
+	@Override
+	public Flowable<CrawledJob> listenToCrawledJobs(String userId) {
+		return this.subscriber.subscribe(CRAWLED_JOB_TOPIC, CrawledJobMessage.class, "not-used")
+			.filter(crawledJobMessage -> crawledJobMessage.userId().equals(userId))
+			.map(CrawledJobMessage::crawledJob);
 	}
 }
