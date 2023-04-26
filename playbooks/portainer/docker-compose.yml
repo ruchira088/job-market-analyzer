@@ -4,6 +4,7 @@ services:
   postgres:
     image: postgres:15
     command: ["postgres", "-c", "log_statement=all"]
+    restart: unless-stopped
     healthcheck:
       test: "pg_isready -U admin -d job-market-analyzer"
       start_period: 10s
@@ -18,6 +19,7 @@ services:
 
   redis:
     image: bitnami/redis:7.0
+    restart: unless-stopped
     healthcheck:
       test: "redis-cli ping"
       start_period: 2s
