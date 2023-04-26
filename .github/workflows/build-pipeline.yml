@@ -37,7 +37,7 @@ jobs:
         run: ./gradlew assemble
 
       - name: Execute test suite
-        run: ./gradlew test --debug
+        run: ./gradlew test
 
       - name: Send failure Slack message
         if: failure()
