@@ -16,8 +16,7 @@ import java.util.concurrent.TimeUnit;
 import static com.ruchij.crawler.utils.JsonUtils.objectMapper;
 
 public class RedisPubSubTest {
-	public record SampleRedisMessage(int id) {
-	}
+	public record SampleRedisMessage(int id) { }
 
 	@Test
 	@Timeout(value = 30, unit = TimeUnit.SECONDS)
