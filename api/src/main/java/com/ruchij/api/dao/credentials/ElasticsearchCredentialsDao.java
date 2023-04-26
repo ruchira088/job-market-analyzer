@@ -12,16 +12,19 @@ import java.util.Optional;
 
 public class ElasticsearchCredentialsDao implements CredentialsDao<Void> {
 	private static final String INDEX = "credentials";
-	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
 
-	public ElasticsearchCredentialsDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {
+	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
+	private final String indexName;
+
+	public ElasticsearchCredentialsDao(ElasticsearchAsyncClient elasticsearchAsyncClient, String indexPrefix) {
 		this.elasticsearchAsyncClient = elasticsearchAsyncClient;
+		this.indexName = "%s-%s".formatted(indexPrefix, INDEX);
 	}
 
 	@Override
 	public Kleisli<Void, String> insert(Credentials credentials) {
 		IndexRequest<Credentials> indexRequest =
-			IndexRequest.of(builder -> builder.index(INDEX).id(credentials.userId()).document(credentials));
+			IndexRequest.of(builder -> builder.index(this.indexName).id(credentials.userId()).document(credentials));
 
 		return new Kleisli<Void, IndexResponse>(__ -> elasticsearchAsyncClient.index(indexRequest))
 			.map(IndexResponse::id);
@@ -29,7 +32,7 @@ public class ElasticsearchCredentialsDao implements CredentialsDao<Void> {
 
 	@Override
 	public Kleisli<Void, Optional<Credentials>> findByUserId(String userId) {
-		GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(userId));
+		GetRequest getRequest = GetRequest.of(builder -> builder.index(this.indexName).id(userId));
 
 		return new Kleisli<Void, GetResponse<Credentials>>(__ ->
 			elasticsearchAsyncClient.get(getRequest, Credentials.class)

@@ -15,9 +15,11 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
 	private static final String INDEX = "linkedin_credentials";
 
 	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
+	private final String indexName;
 
-	public ElasticsearchEncryptedLinkedInCredentialsDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {
+	public ElasticsearchEncryptedLinkedInCredentialsDao(ElasticsearchAsyncClient elasticsearchAsyncClient, String indexPrefix) {
 		this.elasticsearchAsyncClient = elasticsearchAsyncClient;
+		this.indexName = "%s-%s".formatted(indexPrefix, INDEX);
 	}
 
 	@Override
@@ -25,7 +27,7 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
 		IndexRequest<EncryptedLinkedInCredentials> indexRequest =
 			IndexRequest.of(builder ->
 				builder
-					.index(INDEX)
+					.index(this.indexName)
 					.id(encryptedLinkedInCredentials.userId())
 					.document(encryptedLinkedInCredentials)
 			);
@@ -36,7 +38,7 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
 
 	@Override
 	public Kleisli<Void, List<EncryptedLinkedInCredentials>> getAll(int pageNumber, int pageSize) {
-		SearchRequest searchRequest = SearchRequest.of(builder -> builder.index(INDEX).size(pageSize).from(pageNumber * pageSize));
+		SearchRequest searchRequest = SearchRequest.of(builder -> builder.index(this.indexName).size(pageSize).from(pageNumber * pageSize));
 
 		return new Kleisli<Void, SearchResponse<EncryptedLinkedInCredentials>>(__ ->
 			elasticsearchAsyncClient.search(searchRequest, EncryptedLinkedInCredentials.class)
@@ -46,7 +48,7 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
 
 	@Override
 	public Kleisli<Void, Optional<EncryptedLinkedInCredentials>> findByUserId(String userId) {
-		GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(userId));
+		GetRequest getRequest = GetRequest.of(builder -> builder.index(this.indexName).id(userId));
 
 		return new Kleisli<Void, GetResponse<EncryptedLinkedInCredentials>>(__ -> elasticsearchAsyncClient.get(getRequest, EncryptedLinkedInCredentials.class))
 			.map(linkedInCredentialsGetResponse -> Optional.ofNullable(linkedInCredentialsGetResponse.source()));
@@ -54,7 +56,7 @@ public class ElasticsearchEncryptedLinkedInCredentialsDao implements EncryptedLi
 
 	@Override
 	public Kleisli<Void, Boolean> deleteByUserId(String userId) {
-		DeleteRequest deleteRequest = DeleteRequest.of(builder -> builder.index(INDEX).id(userId));
+		DeleteRequest deleteRequest = DeleteRequest.of(builder -> builder.index(this.indexName).id(userId));
 
 		return new Kleisli<Void, DeleteResponse>(__ -> elasticsearchAsyncClient.delete(deleteRequest))
 			.map(deleteResponse -> deleteResponse.result() == Result.Deleted);

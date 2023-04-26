@@ -19,6 +19,7 @@ public class ElasticsearchContainer extends org.testcontainers.elasticsearch.Ela
 		return new ElasticsearchConfiguration(
 			getHost(),
 			getMappedPort(9200),
+			"docker",
 			Optional.of(new ElasticsearchConfiguration.Credentials("elastic", PASSWORD))
 		);
 	}

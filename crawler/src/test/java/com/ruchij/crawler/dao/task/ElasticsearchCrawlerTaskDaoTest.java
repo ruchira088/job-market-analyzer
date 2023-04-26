@@ -19,7 +19,7 @@ class ElasticsearchCrawlerTaskDaoTest {
 	void performOperations() throws Exception {
 		ElasticsearchTest elasticsearchTest = elasticsearchAsyncClient -> {
 			ElasticsearchCrawlerTaskDao elasticsearchCrawlerTaskDao =
-				new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient);
+				new ElasticsearchCrawlerTaskDao(elasticsearchAsyncClient, "local");
 
 			ElasticsearchTransactor elasticsearchTransactor = new ElasticsearchTransactor();
 

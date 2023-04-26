@@ -15,17 +15,20 @@ import java.util.concurrent.CompletableFuture;
 
 public class ElasticsearchKeywordDao implements KeywordDao {
 	private static final String INDEX = "keyword";
-	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
 
-	public ElasticsearchKeywordDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {
+	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
+	private final String indexName;
+
+	public ElasticsearchKeywordDao(ElasticsearchAsyncClient elasticsearchAsyncClient, String indexPrefix) {
 		this.elasticsearchAsyncClient = elasticsearchAsyncClient;
+		this.indexName = "%s-%s".formatted(indexPrefix, INDEX);
 	}
 
 	@Override
 	public CompletableFuture<String> insert(Keyword keyword) {
 		IndexRequest<Keyword> indexRequest =
 			IndexRequest.of(builder ->
-				builder.index(INDEX).id(keyword.id()).document(keyword)
+				builder.index(this.indexName).id(keyword.id()).document(keyword)
 			);
 
 		return this.elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
@@ -35,7 +38,7 @@ public class ElasticsearchKeywordDao implements KeywordDao {
 	public CompletableFuture<List<Keyword>> getByUserId(String userId, int pageSize, int pageNumber) {
 		SearchRequest searchRequest = SearchRequest.of(builder ->
 			builder
-				.index(INDEX)
+				.index(this.indexName)
 				.size(pageSize)
 				.from(pageSize * pageNumber)
 				.sort(SortOptions.of(sortOptionsBuilder ->

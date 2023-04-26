@@ -17,9 +17,11 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao<Void> {
 	private static final String INDEX = "crawler_tasks";
 
 	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
+	private final String indexName;
 
-	public ElasticsearchCrawlerTaskDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {
+	public ElasticsearchCrawlerTaskDao(ElasticsearchAsyncClient elasticsearchAsyncClient, String indexPrefix) {
 		this.elasticsearchAsyncClient = elasticsearchAsyncClient;
+		this.indexName = "%s-%s".formatted(indexPrefix, INDEX);
 	}
 
 	@Override
@@ -27,7 +29,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao<Void> {
 		IndexRequest<CrawlerTask> indexRequest =
 			IndexRequest.of(builder ->
 				builder
-					.index(INDEX)
+					.index(this.indexName)
 					.refresh(Refresh.True)
 					.id(crawlerTask.id())
 					.document(crawlerTask)
@@ -42,7 +44,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao<Void> {
 		UpdateRequest<CrawlerTask, UpdateFinishedTimestamp> updateRequest =
 			UpdateRequest.of(builder ->
 				builder
-					.index(INDEX)
+					.index(this.indexName)
 					.id(crawlerTaskId)
 					.refresh(Refresh.True)
 					.doc(new UpdateFinishedTimestamp(finishedTimestamp))
@@ -71,7 +73,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao<Void> {
 	public Kleisli<Void, List<CrawlerTask>> findByUserId(String userId, int pageSize, int pageNumber) {
 		SearchRequest searchRequest = SearchRequest.of(searchQueryBuilder ->
 			searchQueryBuilder
-				.index(INDEX)
+				.index(this.indexName)
 				.size(pageSize)
 				.from(pageSize * pageNumber)
 				.sort(SortOptions.of(sortOptionsBuilder ->
@@ -94,7 +96,7 @@ public class ElasticsearchCrawlerTaskDao implements CrawlerTaskDao<Void> {
 
 	@Override
 	public Kleisli<Void, Optional<CrawlerTask>> findById(String crawlerTaskId) {
-		GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(crawlerTaskId));
+		GetRequest getRequest = GetRequest.of(builder -> builder.index(this.indexName).id(crawlerTaskId));
 
 		return new Kleisli<Void, GetResponse<CrawlerTask>>(__ -> this.elasticsearchAsyncClient.get(getRequest, CrawlerTask.class))
 			.map(crawlerTaskGetResponse -> Optional.ofNullable(crawlerTaskGetResponse.source()));

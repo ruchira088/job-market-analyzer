@@ -13,15 +13,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static com.ruchij.crawler.dao.job.ElasticsearchJobDao.INDEX;
-
 public class ElasticsearchSearchableJobDao implements SearchableJobDao {
 	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
 	private final ElasticsearchJobDao elasticsearchJobDao;
 
-	public ElasticsearchSearchableJobDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {
+	public ElasticsearchSearchableJobDao(ElasticsearchAsyncClient elasticsearchAsyncClient, String indexPrefix) {
 		this.elasticsearchAsyncClient = elasticsearchAsyncClient;
-		this.elasticsearchJobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
+		this.elasticsearchJobDao = new ElasticsearchJobDao(elasticsearchAsyncClient, indexPrefix);
 	}
 
 	@Override
@@ -43,7 +41,7 @@ public class ElasticsearchSearchableJobDao implements SearchableJobDao {
 	public CompletableFuture<List<Job>> search(String keyword, String crawlerTaskId, int pageSize, int pageNumber) {
 		SearchRequest searchRequest = SearchRequest.of(builder ->
 			builder
-				.index(INDEX)
+				.index(elasticsearchJobDao.getIndexName())
 				.from(pageNumber * pageSize)
 				.size(pageSize)
 				.query(queryBuilder ->
@@ -73,7 +71,7 @@ public class ElasticsearchSearchableJobDao implements SearchableJobDao {
 	public CompletableFuture<Long> countJobsByCrawlerTaskId(String crawlerTaskId) {
 		CountRequest countRequest = CountRequest.of(builder ->
 			builder
-				.index(INDEX)
+				.index(elasticsearchJobDao.getIndexName())
 				.query(queryBuilder ->
 					queryBuilder.match(
 						MatchQuery.of(matchQueryBuilder ->

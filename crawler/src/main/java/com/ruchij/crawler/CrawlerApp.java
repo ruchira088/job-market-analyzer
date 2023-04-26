@@ -46,7 +46,8 @@ public class CrawlerApp {
 			     )
 		) {
 			ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
-			JobDao jobDao = new ElasticsearchJobDao(elasticsearchAsyncClient);
+			JobDao jobDao =
+				new ElasticsearchJobDao(elasticsearchAsyncClient, crawlerConfiguration.elasticsearchConfiguration().indexPrefix());
 
 			DatabaseConfiguration databaseConfiguration = crawlerConfiguration.databaseConfiguration();
 			Jdbi jdbi = Jdbi.create(databaseConfiguration.url(), databaseConfiguration.user(), databaseConfiguration.password());

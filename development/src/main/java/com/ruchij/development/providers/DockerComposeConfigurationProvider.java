@@ -17,6 +17,7 @@ public class DockerComposeConfigurationProvider implements ConfigurationProvider
 		return new ElasticsearchConfiguration(
 			"localhost",
 			9200,
+			"docker-compose",
 			Optional.of(
 				new ElasticsearchConfiguration.Credentials("elastic", "my-password")
 			)

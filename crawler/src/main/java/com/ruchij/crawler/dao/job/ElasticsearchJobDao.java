@@ -14,25 +14,31 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class ElasticsearchJobDao implements JobDao {
-	public static final String INDEX = "jobs";
+	private static final String INDEX = "jobs";
 
 	private final ElasticsearchAsyncClient elasticsearchAsyncClient;
+	private final String indexName;
 
-	public ElasticsearchJobDao(ElasticsearchAsyncClient elasticsearchAsyncClient) {
+	public ElasticsearchJobDao(ElasticsearchAsyncClient elasticsearchAsyncClient, String indexPrefix) {
 		this.elasticsearchAsyncClient = elasticsearchAsyncClient;
+		this.indexName = "%s-%s".formatted(indexPrefix, INDEX);
+	}
+
+	public String getIndexName() {
+		return indexName;
 	}
 
 	@Override
 	public CompletableFuture<String> insert(Job job) {
 		IndexRequest<Job> indexRequest =
-			IndexRequest.of(builder -> builder.index(INDEX).id(job.id()).document(job));
+			IndexRequest.of(builder -> builder.index(this.indexName).id(job.id()).document(job));
 
 		return this.elasticsearchAsyncClient.index(indexRequest).thenApply(WriteResponseBase::id);
 	}
 
 	@Override
 	public CompletableFuture<Optional<Job>> findById(String jobId) {
-		GetRequest getRequest = GetRequest.of(builder -> builder.index(INDEX).id(jobId));
+		GetRequest getRequest = GetRequest.of(builder -> builder.index(this.indexName).id(jobId));
 
 		return this.elasticsearchAsyncClient.get(getRequest, Job.class)
 			.thenApply(jobGetResponse -> Optional.ofNullable(jobGetResponse.source()));
@@ -42,7 +48,7 @@ public class ElasticsearchJobDao implements JobDao {
 	public CompletableFuture<List<Job>> findByCrawlerTaskId(String crawlerTaskId, int pageSize, int pageNumber) {
 		SearchRequest searchRequest = SearchRequest.of(builder ->
 			builder
-				.index(INDEX)
+				.index(this.indexName)
 				.size(pageSize)
 				.from(pageSize * pageNumber)
 				.query(queryBuilder ->

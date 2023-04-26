@@ -62,13 +62,14 @@ public class MigrationApp {
 			ElasticsearchIndicesClient elasticsearchIndicesClient = elasticsearchClient.indices();
 
 			for (String index : INDICES) {
-				BooleanResponse existsResponse = elasticsearchIndicesClient.exists(ExistsRequest.of(builder -> builder.index(index)));
+				String indexName = "%s-%s".formatted(elasticsearchConfiguration.indexPrefix(), index);
+				BooleanResponse existsResponse = elasticsearchIndicesClient.exists(ExistsRequest.of(builder -> builder.index(indexName)));
 
 				if (!existsResponse.value()) {
-					CreateIndexRequest createIndexRequest = CreateIndexRequest.of(builder -> builder.index(index));
+					CreateIndexRequest createIndexRequest = CreateIndexRequest.of(builder -> builder.index(indexName));
 					elasticsearchIndicesClient.create(createIndexRequest);
 
-					logger.info("Created index=%s for Elasticsearch".formatted(index));
+					logger.info("Created index=%s for Elasticsearch".formatted(indexName));
 				}
 			}
 		}

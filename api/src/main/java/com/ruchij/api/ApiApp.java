@@ -105,7 +105,8 @@ public class ApiApp {
 			);
 		ElasticsearchAsyncClient elasticsearchAsyncClient = elasticsearchClientBuilder.buildAsyncClient();
 
-		SearchableJobDao searchableJobDao = new ElasticsearchSearchableJobDao(elasticsearchAsyncClient);
+		SearchableJobDao searchableJobDao =
+			new ElasticsearchSearchableJobDao(elasticsearchAsyncClient, apiConfiguration.elasticsearchConfiguration().indexPrefix());
 
 		DatabaseConfiguration databaseConfiguration = apiConfiguration.databaseConfiguration();
 
