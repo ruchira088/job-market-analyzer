@@ -25,76 +25,76 @@
     - name: Create Docker registry secret
       command: kubectl apply -f k8s-output/DockerRegistryCredentials.yaml --kubeconfig {{ kubeconfig }}
 
-    - name: Deploy K8s resources
-      block:
-        - name: Deploy Elasticsearch
-          block:
-            - name: Check Elasticsearch service in K8s
-              k8s_info:
-                kind: Service
-                namespace: "{{ namespace }}"
-                name: job-market-analyzer-es-http
-                kubeconfig: "{{ kubeconfig }}"
-              register: elasticsearch_output
-
-            - name: Create Elasticsearch cluster
-              when: elasticsearch_output.resources | length == 0
-              block:
-                #            - name: Install CRDs (Custom Resource Definitions)
-                #              command: kubectl create -f https://download.elastic.co/downloads/eck/2.6.1/crds.yaml --kubeconfig {{ kubeconfig }}
-                #
-                #            - name: Install K8s operator
-                #              command: kubectl apply -f https://download.elastic.co/downloads/eck/2.6.1/operator.yaml --kubeconfig {{ kubeconfig }}
-                - name: Install Elasticsearch
-                  command: kubectl apply -f k8s-output/Elasticsearch.yaml --kubeconfig {{ kubeconfig }}
-
-                - name: Wait for Elasticsearch cluster
-                  pause:
-                    seconds: 30
-
-                - name: Extract Elasticsearch password
-                  shell: kubectl -n {{ namespace }} --kubeconfig {{ kubeconfig }} get secret job-market-analyzer-es-elastic-user -o json | jq -r '.data.elastic' | base64 --decode
-                  register: elasticsearch_password_output
-
-                - name: Persist Elasticsearch password in AWS SSM
-                  community.aws.ssm_parameter:
-                    name: /job-market-analyzer/{{ git_branch }}/elasticsearch/password
-                    region: ap-southeast-2
-                    string_type: SecureString
-                    value: "{{ elasticsearch_password_output.stdout }}"
-
-        - name: Deploy Redis Helm chart
-          block:
-            - name: Add Bitnami Helm charts repository
-              command: helm repo add bitnami https://charts.bitnami.com/bitnami
-
-            - name: Update Helm repositories
-              command: helm repo update
-
-            - name: Deploy Redis
-              block:
-                - name: Check Redis service in K8s
-                  k8s_info:
-                    kind: Service
-                    namespace: "{{ namespace }}"
-                    name: redis-master
-                    kubeconfig: "{{ kubeconfig }}"
-                  register: redis_output
-
-                - name: Set config values and secrets
-                  import_tasks: tasks/configs-and-secrets.yml
-                  when: redis_output.resources | length == 0
-
-                - name: Install Redis Helm chart
-                  shell: |
-                    KUBECONFIG={{ kubeconfig }} \
-                      helm install redis \
-                        --set auth.password="{{ secrets.redis_password }}" \
-                        --set architecture=standalone \
-                        --set image.tag=7.0.8-debian-11-r0 \
-                        --namespace {{ namespace }} \
-                        bitnami/redis
-                  when: redis_output.resources | length == 0
+#    - name: Deploy K8s resources
+#      block:
+#        - name: Deploy Elasticsearch
+#          block:
+#            - name: Check Elasticsearch service in K8s
+#              k8s_info:
+#                kind: Service
+#                namespace: "{{ namespace }}"
+#                name: job-market-analyzer-es-http
+#                kubeconfig: "{{ kubeconfig }}"
+#              register: elasticsearch_output
+#
+#            - name: Create Elasticsearch cluster
+#              when: elasticsearch_output.resources | length == 0
+#              block:
+#                #            - name: Install CRDs (Custom Resource Definitions)
+#                #              command: kubectl create -f https://download.elastic.co/downloads/eck/2.6.1/crds.yaml --kubeconfig {{ kubeconfig }}
+#                #
+#                #            - name: Install K8s operator
+#                #              command: kubectl apply -f https://download.elastic.co/downloads/eck/2.6.1/operator.yaml --kubeconfig {{ kubeconfig }}
+#                - name: Install Elasticsearch
+#                  command: kubectl apply -f k8s-output/Elasticsearch.yaml --kubeconfig {{ kubeconfig }}
+#
+#                - name: Wait for Elasticsearch cluster
+#                  pause:
+#                    seconds: 30
+#
+#                - name: Extract Elasticsearch password
+#                  shell: kubectl -n {{ namespace }} --kubeconfig {{ kubeconfig }} get secret job-market-analyzer-es-elastic-user -o json | jq -r '.data.elastic' | base64 --decode
+#                  register: elasticsearch_password_output
+#
+#                - name: Persist Elasticsearch password in AWS SSM
+#                  community.aws.ssm_parameter:
+#                    name: /job-market-analyzer/{{ git_branch }}/elasticsearch/password
+#                    region: ap-southeast-2
+#                    string_type: SecureString
+#                    value: "{{ elasticsearch_password_output.stdout }}"
+#
+#        - name: Deploy Redis Helm chart
+#          block:
+#            - name: Add Bitnami Helm charts repository
+#              command: helm repo add bitnami https://charts.bitnami.com/bitnami
+#
+#            - name: Update Helm repositories
+#              command: helm repo update
+#
+#            - name: Deploy Redis
+#              block:
+#                - name: Check Redis service in K8s
+#                  k8s_info:
+#                    kind: Service
+#                    namespace: "{{ namespace }}"
+#                    name: redis-master
+#                    kubeconfig: "{{ kubeconfig }}"
+#                  register: redis_output
+#
+#                - name: Set config values and secrets
+#                  import_tasks: tasks/configs-and-secrets.yml
+#                  when: redis_output.resources | length == 0
+#
+#                - name: Install Redis Helm chart
+#                  shell: |
+#                    KUBECONFIG={{ kubeconfig }} \
+#                      helm install redis \
+#                        --set auth.password="{{ secrets.redis_password }}" \
+#                        --set architecture=standalone \
+#                        --set image.tag=7.0.8-debian-11-r0 \
+#                        --namespace {{ namespace }} \
+#                        bitnami/redis
+#                  when: redis_output.resources | length == 0
 
     - name: Render K8s resource files
       import_tasks: tasks/k8s-resource-files.yml
