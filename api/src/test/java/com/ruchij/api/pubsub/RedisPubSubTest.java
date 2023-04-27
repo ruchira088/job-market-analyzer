@@ -7,7 +7,6 @@ import io.reactivex.rxjava3.core.Flowable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -21,7 +20,6 @@ public class RedisPubSubTest {
 
 	@Test
 	@Timeout(value = 30, unit = TimeUnit.SECONDS)
-	@DisabledIfEnvironmentVariable(named = "CI", matches = "true")
 	void publishAndSubscribe() throws InterruptedException {
 		try (RedisContainer redisContainer = new RedisContainer()) {
 			String redisConnectionString = redisContainer.redisConfiguration().uri();
