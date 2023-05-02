@@ -66,7 +66,7 @@ public class CrawlerApp {
 					SecureRandom.getInstanceStrong()
 				);
 
-			Crawler crawler = new SeleniumCrawler(idGenerator, clock);
+			Crawler crawler = new SeleniumCrawler(crawlerConfiguration.seleniumConfiguration(), idGenerator, clock);
 
 			LinkedInCredentialsService linkedInCredentialsService =
 				new LinkedInCredentialsServiceImpl<>(encryptedLinkedInCredentialsDao, jdbiTransactor, crawler, encryptionService, clock);

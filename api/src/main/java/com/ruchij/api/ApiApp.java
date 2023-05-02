@@ -136,7 +136,7 @@ public class ApiApp {
 
 		Clock clock = Clock.systemUTC();
 
-		Crawler crawler = new SeleniumCrawler(idGenerator, clock);
+		Crawler crawler = new SeleniumCrawler(apiConfiguration.seleniumConfiguration(), idGenerator, clock);
 
 		LinkedInCredentialsService linkedInCredentialsService =
 			new LinkedInCredentialsServiceImpl<>(encryptedLinkedInCredentialsDao, jdbiTransactor, crawler, encryptionService, clock);
