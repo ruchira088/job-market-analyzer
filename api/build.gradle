@@ -3,7 +3,6 @@ import java.time.Instant
 plugins {
     id 'application'
     id 'jacoco'
-    id 'net.researchgate.release' version "$releasePluginVersion"
 }
 
 group = 'com.ruchij.api'
@@ -79,14 +78,4 @@ tasks.named('test') {
 
 distTar {
     archiveFileName = 'api.tar'
-}
-
-release {
-    preTagCommitMessage = 'Setting release version: '
-    newVersionCommitMessage = 'Setting development version: '
-    pushReleaseVersionBranch = 'main'
-
-    git {
-        requireBranch.set('dev')
-    }
 }
