@@ -100,7 +100,7 @@
       import_tasks: tasks/k8s-resource-files.yml
       vars:
         domain: jobs-api.home.ruchij.com
-        hostname: "{{ domain if git_branch == 'main' else git_branch + '.' + domain }}"
+        hostname: "{{ 'jobs-api.home.ruchij.com' if git_branch == 'main' else git_branch + '.jobs-api.dev.ruchij.com' }}"
 
     - name: Deploy migration Job
       block:
