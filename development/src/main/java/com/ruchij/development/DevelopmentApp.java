@@ -6,6 +6,8 @@ import com.ruchij.api.config.ApiSecurityConfiguration;
 import com.ruchij.api.config.HttpConfiguration;
 import com.ruchij.api.config.RedisConfiguration;
 import com.ruchij.api.web.Routes;
+import com.ruchij.crawler.config.SeleniumConfiguration;
+import com.ruchij.crawler.service.crawler.selenium.Browser;
 import com.ruchij.development.providers.ConfigurationProvider;
 import com.ruchij.development.providers.ContainerConfigurationProvider;
 import com.ruchij.development.providers.DockerComposeConfigurationProvider;
@@ -45,13 +47,16 @@ public class DevelopmentApp {
 
 		HttpConfiguration httpConfiguration = new HttpConfiguration("0.0.0.0", 443);
 
+		SeleniumConfiguration seleniumConfiguration = new SeleniumConfiguration(Browser.FIREFOX, true);
+
 		ApiConfiguration apiConfiguration =
 			new ApiConfiguration(
 				elasticsearchConfiguration,
 				databaseConfiguration,
 				redisConfiguration,
 				apiSecurityConfiguration,
-				httpConfiguration
+				httpConfiguration,
+				seleniumConfiguration
 			);
 
 		Routes routes = ApiApp.routes(apiConfiguration);

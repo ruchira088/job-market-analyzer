@@ -1,5 +1,6 @@
 package com.ruchij.crawler.service.crawler.selenium;
 
+import com.ruchij.crawler.config.SeleniumConfiguration;
 import com.ruchij.crawler.service.crawler.Crawler;
 import com.ruchij.crawler.service.crawler.models.CrawledJob;
 import com.ruchij.crawler.service.crawler.selenium.driver.AwaitableWebDriver;
@@ -21,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class SeleniumCrawler implements Crawler {
@@ -28,10 +31,12 @@ public class SeleniumCrawler implements Crawler {
 
 	private static final Logger logger = LoggerFactory.getLogger(SeleniumCrawler.class);
 
+	private final SeleniumConfiguration seleniumConfiguration;
 	private final RandomGenerator<String> idGenerator;
 	private final Clock clock;
 
-	public SeleniumCrawler(RandomGenerator<String> idGenerator, Clock clock) {
+	public SeleniumCrawler(SeleniumConfiguration seleniumConfiguration, RandomGenerator<String> idGenerator, Clock clock) {
+		this.seleniumConfiguration = seleniumConfiguration;
 		this.idGenerator = idGenerator;
 		this.clock = clock;
 	}
@@ -69,28 +74,43 @@ public class SeleniumCrawler implements Crawler {
 	}
 
 	private AwaitableWebDriver awaitableWebDriver() {
-		RemoteWebDriver remoteWebDriver = firefoxDriver();
+		boolean isHeadlessMode = this.seleniumConfiguration.headlessMode();
+
+		RemoteWebDriver remoteWebDriver =
+			switch (this.seleniumConfiguration.browser()) {
+				case CHROME -> chromeDriver(isHeadlessMode);
+				case FIREFOX -> firefoxDriver(isHeadlessMode);
+			};
+
 		WebDriverWait webDriverWait = new WebDriverWait(remoteWebDriver, Duration.ofSeconds(15));
 
 		return new SeleniumWebDriver(remoteWebDriver, webDriverWait);
 	}
 
-	private FirefoxDriver firefoxDriver() {
+	private FirefoxDriver firefoxDriver(boolean isHeadlessMode) {
 		FirefoxOptions firefoxOptions = new FirefoxOptions();
-//		firefoxOptions.setHeadless(true);
+
+		if (isHeadlessMode) {
+			firefoxOptions.addArguments("-headless");
+		}
 
 		FirefoxDriver firefoxDriver = new FirefoxDriver(firefoxOptions);
 
 		return firefoxDriver;
 	}
 
-	private ChromeDriver chromeDriver() {
+	private ChromeDriver chromeDriver(boolean isHeadlessMode) {
 		ChromeOptions chromeOptions = new ChromeOptions();
-		chromeOptions.setHeadless(true);
-		chromeOptions.addArguments(
-			"--disable-dev-shm-usage",
-			"--no-sandbox"
-		);
+
+		List<String> args = new LinkedList<>();
+		args.add("--disable-dev-shm-usage");
+		args.add("--no-sandbox");
+
+		if (isHeadlessMode) {
+			args.add("--headless");
+		}
+
+		chromeOptions.addArguments(args);
 
 		ChromeDriver chromeDriver = new ChromeDriver(chromeOptions);
 
