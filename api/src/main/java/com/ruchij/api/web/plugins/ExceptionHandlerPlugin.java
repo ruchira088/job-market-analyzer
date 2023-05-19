@@ -14,34 +14,34 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ExceptionHandlerPlugin implements Plugin {
-    private Map<Class<? extends Exception>, HttpStatus> errorCodes() {
-        Map<Class<? extends Exception>, HttpStatus> errorMappings = new HashMap<>();
+	private Map<Class<? extends Exception>, HttpStatus> errorCodes() {
+		Map<Class<? extends Exception>, HttpStatus> errorMappings = new HashMap<>();
 
-        errorMappings.put(ResourceConflictException.class, HttpStatus.CONFLICT);
-        errorMappings.put(AuthenticationException.class, HttpStatus.UNAUTHORIZED);
-        errorMappings.put(ResourceNotFoundException.class, HttpStatus.NOT_FOUND);
+		errorMappings.put(ResourceConflictException.class, HttpStatus.CONFLICT);
+		errorMappings.put(AuthenticationException.class, HttpStatus.UNAUTHORIZED);
+		errorMappings.put(ResourceNotFoundException.class, HttpStatus.NOT_FOUND);
 
-        return errorMappings;
-    }
+		return errorMappings;
+	}
 
-    private Throwable rootCause(Throwable throwable) {
-        return Optional.ofNullable(throwable.getCause()).map(this::rootCause).orElse(throwable);
-    }
+	private Throwable rootCause(Throwable throwable) {
+		return Optional.ofNullable(throwable.getCause()).map(this::rootCause).orElse(throwable);
+	}
 
-    @Override
-    public void apply(@NotNull Javalin javalin) {
-        for (Map.Entry<Class<? extends Exception>, HttpStatus> entry : errorCodes().entrySet()) {
-            javalin.exception(
-                entry.getKey(),
-                (exception, context) ->
-                    context
-                        .status(entry.getValue())
-                        .json(new ErrorResponse(
-                                Optional.ofNullable(rootCause(exception).getMessage())
-                                    .orElse(entry.getKey().getCanonicalName())
-                            )
-                        )
-            );
-        }
-    }
+	@Override
+	public void apply(@NotNull Javalin javalin) {
+		for (Map.Entry<Class<? extends Exception>, HttpStatus> entry : errorCodes().entrySet()) {
+			javalin.exception(
+				entry.getKey(),
+				(exception, context) ->
+					context
+						.status(entry.getValue())
+						.json(new ErrorResponse(
+								Optional.ofNullable(rootCause(exception).getMessage())
+									.orElse(entry.getKey().getCanonicalName())
+							)
+						)
+			);
+		}
+	}
 }

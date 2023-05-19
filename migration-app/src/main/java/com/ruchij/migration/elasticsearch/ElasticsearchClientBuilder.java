@@ -8,35 +8,59 @@ import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 
+import java.util.Optional;
+
 public class ElasticsearchClientBuilder implements AutoCloseable {
-    private final RestClient restClient;
-    private final ElasticsearchTransport elasticsearchTransport;
+	private final RestClient restClient;
+	private final ElasticsearchTransport elasticsearchTransport;
 
-    public ElasticsearchClientBuilder(ElasticsearchConfiguration elasticsearchConfiguration) {
-        this(elasticsearchConfiguration, new JacksonJsonpMapper());
-    }
+	public ElasticsearchClientBuilder(ElasticsearchConfiguration elasticsearchConfiguration) {
+		this(elasticsearchConfiguration, new JacksonJsonpMapper());
+	}
 
-    public ElasticsearchClientBuilder(ElasticsearchConfiguration elasticsearchConfiguration, JsonpMapper jsonpMapper) {
-        HttpHost elasticsearchHost =
-            new HttpHost(elasticsearchConfiguration.host(), elasticsearchConfiguration.port());
+	public ElasticsearchClientBuilder(ElasticsearchConfiguration elasticsearchConfiguration, JsonpMapper jsonpMapper) {
+		HttpHost elasticsearchHost =
+			new HttpHost(elasticsearchConfiguration.host(), elasticsearchConfiguration.port());
 
-        restClient = RestClient.builder(elasticsearchHost).build();
-        elasticsearchTransport = new RestClientTransport(restClient, jsonpMapper);
-    }
+		Optional<BasicCredentialsProvider> maybeCredentialsProvider = elasticsearchConfiguration.credentials()
+			.map(credentials -> {
+				BasicCredentialsProvider basicCredentialsProvider = new BasicCredentialsProvider();
+				basicCredentialsProvider.setCredentials(
+					AuthScope.ANY,
+					new UsernamePasswordCredentials(credentials.username(), credentials.password())
+				);
 
-    public ElasticsearchAsyncClient buildAsyncClient() {
-        return new ElasticsearchAsyncClient(elasticsearchTransport);
-    }
+				return basicCredentialsProvider;
+			});
 
-    public ElasticsearchClient buildClient() {
-        return new ElasticsearchClient(elasticsearchTransport);
-    }
+		restClient =
+			RestClient.builder(elasticsearchHost)
+				.setHttpClientConfigCallback(httpClientBuilder -> {
+					maybeCredentialsProvider.ifPresent(httpClientBuilder::setDefaultCredentialsProvider);
 
-    @Override
-    public void close() throws Exception {
-        restClient.close();
-        elasticsearchTransport.close();
-    }
+					return httpClientBuilder;
+				})
+				.build();
+
+		elasticsearchTransport = new RestClientTransport(restClient, jsonpMapper);
+	}
+
+	public ElasticsearchAsyncClient buildAsyncClient() {
+		return new ElasticsearchAsyncClient(elasticsearchTransport);
+	}
+
+	public ElasticsearchClient buildClient() {
+		return new ElasticsearchClient(elasticsearchTransport);
+	}
+
+	@Override
+	public void close() throws Exception {
+		restClient.close();
+		elasticsearchTransport.close();
+	}
 }

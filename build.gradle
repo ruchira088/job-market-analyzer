@@ -1,0 +1,14 @@
+plugins {
+    id 'com.github.ben-manes.versions' version "$dependencyUpdatesPluginVersion"
+    id 'net.researchgate.release' version "$releasePluginVersion"
+}
+
+release {
+    preTagCommitMessage = 'Setting release version: '
+    newVersionCommitMessage = 'Setting development version: '
+    pushReleaseVersionBranch = 'main'
+
+    git {
+        requireBranch.set('dev')
+    }
+}

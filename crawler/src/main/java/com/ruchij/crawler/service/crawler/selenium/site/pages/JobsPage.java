@@ -1,20 +1,18 @@
 package com.ruchij.crawler.service.crawler.selenium.site.pages;
 
-import com.ruchij.crawler.dao.job.models.Job;
 import com.ruchij.crawler.dao.job.models.WorkplaceType;
-import com.ruchij.crawler.service.clock.Clock;
+import com.ruchij.crawler.service.crawler.models.LinkedInJob;
+import com.ruchij.crawler.service.crawler.selenium.driver.AwaitableWebDriver;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.time.Duration;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
@@ -23,158 +21,152 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class JobsPage {
-    private static final Logger logger = LoggerFactory.getLogger(JobsPage.class);
+	private static final Logger logger = LoggerFactory.getLogger(JobsPage.class);
 
-    private final RemoteWebDriver remoteWebDriver;
-    private final WebDriverWait webDriverWait;
-    private boolean showingAllJobs = false;
+	private final AwaitableWebDriver awaitableWebDriver;
 
-    public JobsPage(RemoteWebDriver remoteWebDriver) {
-        this.remoteWebDriver = remoteWebDriver;
-        this.webDriverWait = new WebDriverWait(remoteWebDriver, Duration.ofSeconds(5));
-    }
+	public JobsPage(AwaitableWebDriver awaitableWebDriver) {
+		this.awaitableWebDriver = awaitableWebDriver;
+	}
 
-    public int pageCount() {
-        showAllJobs();
+	static Optional<LinkedInJob> parse(String jobId, Instant timestamp, WebElement jobDetails, WebElement jobCard, String currentUrl) {
+		try {
+			URL pageUrl = new URL(currentUrl);
 
-        String paginationAttribute = "data-test-pagination-page-btn";
-        WebElement pagination = remoteWebDriver.findElement(By.cssSelector(".jobs-search-results-list__pagination"));
+			String href = jobDetails.findElement(By.cssSelector(".jobs-unified-top-card__content--two-pane a.ember-view"))
+				.getDomAttribute("href");
 
-        return pagination.findElements(By.cssSelector("li[%s]".formatted(paginationAttribute))).stream()
-            .flatMap(element -> Optional.ofNullable(element.getAttribute(paginationAttribute)).stream())
-            .flatMap(string ->  {
-                try {
-                    return Stream.of(Integer.parseInt(string));
-                } catch (NumberFormatException numberFormatException) {
-                    return Stream.empty();
-                }
-            })
-            .max(Comparator.naturalOrder())
-            .orElse(1);
-    }
+			URL jobUrl = new URL("%s://%s%s".formatted(pageUrl.getProtocol(), pageUrl.getHost(), href));
 
-    public Flowable<Job> listJobs(Clock clock, String crawlId) {
-        return Flowable.create(emitter ->
-                traverseJobs(
-                    clock,
-                    crawlId,
-                    emitter::onNext,
-                    () -> !emitter.isCancelled(),
-                    emitter::onComplete
-                ),
-            BackpressureStrategy.BUFFER
-        );
-    }
+			Function<String, String> findText =
+				cssSelector -> jobDetails.findElement(By.cssSelector(cssSelector)).getText();
 
-    void traverseJobs(Clock clock, String crawlId, Consumer<Job> onJob, Supplier<Boolean> shouldContinue, Runnable onComplete) {
-        showAllJobs();
-        Set<String> jobIds = new HashSet<>();
-        int pageNumber = 1;
+			String title = findText.apply(".jobs-unified-top-card__job-title");
+			String companyName = findText.apply(".jobs-unified-top-card__company-name");
 
-        boolean query = true;
+			String companyLogoUrl =
+				Optional.of(jobCard.findElements(By.cssSelector(".job-card-list__entity-lockup img")))
+					.flatMap(webElements -> webElements.stream().findFirst())
+					.map(element -> element.getAttribute("src"))
+					.orElse("https://via.placeholder.com/100x100");
 
-        logger.info("Started crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
+			String location = findText.apply(".jobs-unified-top-card__bullet");
 
-        while (query && shouldContinue.get()) {
-            query = false;
+			String jobDescription =
+				jobDetails.findElement(By.cssSelector(".jobs-description")).getAttribute("innerHTML");
 
-            List<WebElement> jobCards = remoteWebDriver.findElements(By.cssSelector(".job-card-list"));
+			List<WebElement> workplaceTypes =
+				jobDetails.findElements(By.cssSelector(".jobs-unified-top-card__workplace-type"));
 
-            for (WebElement jobCard : jobCards) {
-                String jobId = jobCard.getAttribute("data-job-id");
+			Optional<WorkplaceType> workplaceType =
+				workplaceTypes.isEmpty() ? Optional.empty() : WorkplaceType.parse(workplaceTypes.get(0).getText());
 
-                if (!shouldContinue.get()) {
-                    onComplete.run();
-                    return;
-                } else if (!jobIds.contains(jobId)) {
-                    query = true;
-                    jobIds.add(jobId);
+			LinkedInJob linkedInJob =
+				new LinkedInJob(jobId, timestamp, jobUrl, title, companyName, companyLogoUrl, location, workplaceType, jobDescription);
 
-                    jobCard.click();
+			return Optional.of(linkedInJob);
+		} catch (Exception exception) {
+			logger.error("Error occurred parsing WebElement to a Job", exception);
 
-                    webDriverWait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(".artdeco-loader")));
+			return Optional.empty();
+		}
+	}
 
-                    WebElement jobDetails = remoteWebDriver.findElement(By.cssSelector(".jobs-details"));
-                    parse(jobId, crawlId, clock.timestamp(), jobDetails, remoteWebDriver.getCurrentUrl()).ifPresent(onJob);
-                }
-            }
+	public int pageCount() {
+		String paginationAttribute = "data-test-pagination-page-btn";
+		WebElement pagination = this.awaitableWebDriver.findElementByCss(".jobs-search-results-list__pagination");
 
-            if (!query) {
-                logger.info("Completed crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
+		return pagination.findElements(By.cssSelector("li[%s]".formatted(paginationAttribute))).stream()
+			.flatMap(element -> Optional.ofNullable(element.getAttribute(paginationAttribute)).stream())
+			.flatMap(string -> {
+				try {
+					return Stream.of(Integer.parseInt(string));
+				} catch (NumberFormatException numberFormatException) {
+					return Stream.empty();
+				}
+			})
+			.max(Comparator.naturalOrder())
+			.orElse(1);
+	}
 
-                pageNumber++;
+	public Flowable<LinkedInJob> listJobs(Clock clock, String crawlerTaskId) {
+		return Flowable.create(emitter ->
+				traverseJobs(
+					clock,
+					crawlerTaskId,
+					emitter::onNext,
+					() -> !emitter.isCancelled(),
+					emitter::onComplete
+				),
+			BackpressureStrategy.BUFFER
+		);
+	}
 
-                List<WebElement> elements =
-                    remoteWebDriver.findElements(By.cssSelector("li[data-test-pagination-page-btn='%s']".formatted(pageNumber)));
+	void traverseJobs(Clock clock, String crawlerTaskId, Consumer<LinkedInJob> onLinkedInJob, Supplier<Boolean> shouldContinue, Runnable onComplete) {
+		Set<String> jobIds = new HashSet<>();
+		int pageNumber = 1;
 
-                if (!elements.isEmpty()) {
-                    WebElement nextPage = elements.get(0);
-                    nextPage.click();
-                    query = true;
+		boolean scanPageForJobs = true;
 
-                    logger.info("Started crawling page=%s for crawlId=%s".formatted(pageNumber, crawlId));
-                }
-            }
-        }
+		logger.info("Started crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
 
-        onComplete.run();
-    }
+		while (scanPageForJobs && shouldContinue.get()) {
+			scanPageForJobs = false;
 
-    static Optional<Job> parse(String jobId, String crawlId, Instant timestamp, WebElement jobDetails, String currentUrl) {
-        try {
-            URL pageUrl = new URL(currentUrl);
+			// Scroll to the bottom of the jobs list
+			WebElement pagination = this.awaitableWebDriver.findElementByCss(".jobs-search-results-list__pagination");
+			this.awaitableWebDriver.remoteWebDriver()
+				.executeScript("arguments[0].scrollIntoView(true)", pagination);
 
-            String href = jobDetails.findElement(By.cssSelector(".jobs-unified-top-card__content--two-pane a.ember-view"))
-                .getDomAttribute("href");
+			List<WebElement> jobCards = this.awaitableWebDriver.findElementsByCss(".job-card-list");
 
-            URL jobUrl = new URL("%s://%s%s".formatted(pageUrl.getProtocol(), pageUrl.getHost(), href));
+			for (WebElement jobCard : jobCards) {
+				String jobId = jobCard.getAttribute("data-job-id");
 
-            Function<String, String> findText =
-                cssSelector -> jobDetails.findElement(By.cssSelector(cssSelector)).getText();
+				if (!shouldContinue.get()) {
+					onComplete.run();
+					return;
+				} else if (!jobIds.contains(jobId)) {
+					scanPageForJobs = true;
 
-            String title = findText.apply(".jobs-unified-top-card__job-title");
-            String companyName = findText.apply(".jobs-unified-top-card__company-name");
-            String location = findText.apply(".jobs-unified-top-card__bullet");
+					jobIds.add(jobId);
+					jobCard.click();
 
-            String jobDescription = findText.apply(".jobs-description");
+					this.awaitableWebDriver.waitUntil((ExpectedConditions.invisibilityOfElementLocated(By.cssSelector(".artdeco-loader"))));
 
-            List<WebElement> workplaceTypes =
-                jobDetails.findElements(By.cssSelector(".jobs-unified-top-card__workplace-type"));
+					WebElement jobDetails = this.awaitableWebDriver.findElementByCss(".jobs-details");
+					parse(jobId, clock.instant(), jobDetails, jobCard, this.awaitableWebDriver.remoteWebDriver().getCurrentUrl()).ifPresent(onLinkedInJob);
+				}
+			}
 
-            Optional<WorkplaceType> workplaceType =
-                workplaceTypes.isEmpty() ? Optional.empty() : WorkplaceType.parse(workplaceTypes.get(0).getText());
+			if (!scanPageForJobs) {
+				logger.info("Completed crawling page=%s for id=%s".formatted(pageNumber, crawlerTaskId));
 
-            Job job = new Job();
-            job.setId(jobId);
-            job.setCrawlId(crawlId);
-            job.setCrawledAt(timestamp);
-            job.setLink(jobUrl);
-            job.setTitle(title);
-            job.setCompanyName(companyName);
-            job.setLocation(location);
-            job.setWorkplaceType(workplaceType);
-            job.setDetails(jobDescription);
+				pageNumber++;
 
-            return Optional.of(job);
-        } catch (Exception exception) {
-            logger.error("Error occurred parsing WebElement to a Job", exception);
+				List<WebElement> paginationButtons =
+					this.awaitableWebDriver.findElementsByCss("li[data-test-pagination-page-btn]");
 
-            return Optional.empty();
-        }
-    }
+				String page = String.valueOf(pageNumber);
 
-    void showAllJobs() {
-        if (!showingAllJobs) {
-            By showAllSelector = By.cssSelector(".jobs-job-board-list__footer");
+				Optional<WebElement> maybeNextPageButton =
+					paginationButtons
+						.stream()
+						.filter(paginationButton ->
+							paginationButton.getAttribute("data-test-pagination-page-btn").equals(page)
+						)
+						.findAny();
 
-            webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(showAllSelector));
-            WebElement showAll = remoteWebDriver.findElement(showAllSelector);
+				if (maybeNextPageButton.isPresent()) {
+					WebElement nextPageButton = maybeNextPageButton.get();
+					nextPageButton.click();
+					scanPageForJobs = true;
 
-            showAll.click();
+					logger.info("Started crawling page=%s for id=%s".formatted(page, crawlerTaskId));
+				}
+			}
+		}
 
-            webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".jobs-details")));
-            showingAllJobs = true;
-        }
-    }
-
+		onComplete.run();
+	}
 }

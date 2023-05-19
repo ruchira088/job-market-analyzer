@@ -1,6 +1,7 @@
 plugins {
     id 'application'
-    id 'com.github.ben-manes.versions' version '0.44.0'
+    id 'java-library'
+    id 'jacoco'
 }
 
 group = 'com.ruchij.crawler'
@@ -12,19 +13,20 @@ repositories {
 dependencies {
     implementation(
             project(':migration-app'),
-            'com.typesafe:config:1.4.2',
-            'org.seleniumhq.selenium:selenium-java:4.7.2',
-            'io.reactivex.rxjava3:rxjava:3.1.5',
-            'co.elastic.clients:elasticsearch-java:8.5.3',
-            'com.fasterxml.jackson.core:jackson-databind:2.14.1',
-            'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1',
-            'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.1',
-            'ch.qos.logback:logback-classic:1.4.5',
-            'org.testcontainers:elasticsearch:1.17.6',
+            "com.typesafe:config:$typesafeConfigVersion",
+            "org.seleniumhq.selenium:selenium-java:$seleniumVersion",
+            "io.reactivex.rxjava3:rxjava:$rxJavaVersion",
+            "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
+            "org.jdbi:jdbi3-core:$jdbiVersion",
+            "org.postgresql:postgresql:$postgresqlVersion",
+            "com.h2database:h2:$h2Version",
+            "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
+            "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion",
+            "ch.qos.logback:logback-classic:$logbackVersion"
     )
 
     testImplementation(
-            'org.junit.jupiter:junit-jupiter:5.9.1'
+            "org.junit.jupiter:junit-jupiter:$junitVersion"
     )
 }
 
@@ -32,6 +34,14 @@ application {
     mainClass = 'com.ruchij.crawler.CrawlerApp'
 }
 
+jacocoTestReport {
+    dependsOn test
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+distTar {
+    archiveFileName = 'crawler.tar'
 }

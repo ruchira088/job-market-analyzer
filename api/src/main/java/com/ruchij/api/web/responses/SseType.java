@@ -1,5 +1,5 @@
 package com.ruchij.api.web.responses;
 
 public enum SseType {
-    CRAWL_STARTED, CRAWLED_JOB, CRAWL_ERROR, CRAWL_COMPLETED
+	CRAWL_STARTED, CRAWLED_JOB, CRAWL_ERROR, CRAWL_COMPLETED
 }

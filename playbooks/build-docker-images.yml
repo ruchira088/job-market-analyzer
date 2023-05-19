@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Build all Docker images
+      import_tasks: tasks/build-and-publish-all-docker-images.yml
+      vars:
+        publish: false

@@ -6,5 +6,5 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface UserService {
-    CompletableFuture<User> create(String email, String password, String firstName, Optional<String> lastName);
+	CompletableFuture<User> create(String email, String password, String firstName, Optional<String> lastName);
 }

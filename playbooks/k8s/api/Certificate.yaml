@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: job-market-analyzer-api-certificate
+  namespace: {{ namespace }}
+spec:
+  secretName: job-market-analyzer-api-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: lets-encrypt
+  dnsNames:
+    - {{ hostname }}

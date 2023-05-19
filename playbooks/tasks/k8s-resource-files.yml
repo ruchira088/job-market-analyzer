@@ -1,14 +1,12 @@
-- name: Create output directories
-  block:
-    - name: Delete existing output directory
-      file:
-        path: k8s-output
-        state: absent
+- name: Create output directory
+  file:
+    path: k8s-output/api
+    state: directory
 
-    - name: Create output directory
-      file:
-        path: k8s-output
-        state: directory
+- name: Create output directory
+  file:
+    path: k8s-output/migration-app
+    state: directory
 
 - name: Gather git information
   import_tasks: tasks/git-info.yml
@@ -17,8 +15,17 @@
   import_tasks: tasks/configs-and-secrets.yml
 
 - name: Render K8s resource files
-  template:
-    src: "{{ item }}"
-    dest: k8s-output/{{ item | basename }}
-  with_fileglob:
-    - k8s/*.yaml
+  block:
+    - name: Render K8s migration app resource files
+      template:
+        src: "{{ item }}"
+        dest: k8s-output/migration-app/{{ item | basename }}
+      with_fileglob:
+        - k8s/migration-app/*.yaml
+
+    - name: Render K8s API resource files
+      template:
+        src: "{{ item }}"
+        dest: k8s-output/api/{{ item | basename }}
+      with_fileglob:
+        - k8s/api/*.yaml

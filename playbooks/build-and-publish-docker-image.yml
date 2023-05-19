@@ -1,0 +1,31 @@
+---
+- hosts: localhost
+  connection: local
+
+  vars:
+    publish: true
+
+  tasks:
+    - name: Install dependencies
+      import_tasks: tasks/install-dependencies.yml
+
+    - name: Build migration Docker image
+      when: application == "migration"
+      import_tasks: tasks/build-and-publish-docker-image.yml
+      vars:
+        app: migration-app
+        dockerfile: DockerfileJava.j2
+
+    - name: Build crawler Docker image
+      when: application == "crawler"
+      import_tasks: tasks/build-and-publish-docker-image.yml
+      vars:
+        app: crawler
+        dockerfile: DockerfileSelenium.j2
+
+    - name: Build API Docker image
+      when: application == "api"
+      import_tasks: tasks/build-and-publish-docker-image.yml
+      vars:
+        app: api
+        dockerfile: DockerfileSelenium.j2

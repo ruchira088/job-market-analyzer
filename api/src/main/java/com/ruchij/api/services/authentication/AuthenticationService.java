@@ -6,9 +6,9 @@ import com.ruchij.api.services.authentication.models.AuthenticationToken;
 import java.util.concurrent.CompletableFuture;
 
 public interface AuthenticationService {
-    CompletableFuture<AuthenticationToken> login(String email, String password);
+	CompletableFuture<AuthenticationToken> login(String email, String password);
 
-    CompletableFuture<User> authenticate(String token);
+	CompletableFuture<User> authenticate(String token);
 
-    CompletableFuture<AuthenticationToken> logout(String token);
+	CompletableFuture<AuthenticationToken> logout(String token);
 }

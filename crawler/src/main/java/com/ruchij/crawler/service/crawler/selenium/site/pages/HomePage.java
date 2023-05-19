@@ -1,20 +1,19 @@
 package com.ruchij.crawler.service.crawler.selenium.site.pages;
 
-import org.openqa.selenium.By;
+import com.ruchij.crawler.service.crawler.selenium.driver.AwaitableWebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class HomePage {
-    private final RemoteWebDriver remoteWebDriver;
+	private final AwaitableWebDriver awaitableWebDriver;
 
-    public HomePage(RemoteWebDriver remoteWebDriver) {
-        this.remoteWebDriver = remoteWebDriver;
-    }
+	public HomePage(AwaitableWebDriver awaitableWebDriver) {
+		this.awaitableWebDriver = awaitableWebDriver;
+	}
 
-    public JobsPage jobsPage() {
-        WebElement jobsTab = remoteWebDriver.findElement(By.cssSelector(".app-aware-link span[title=Jobs]"));
-        jobsTab.click();
+	public JobsPage jobsPage() {
+		this.awaitableWebDriver.remoteWebDriver().get("https://www.linkedin.com/jobs/collections/recommended/");
+		this.awaitableWebDriver.findElementByCss(".jobs-details");
 
-        return new JobsPage(remoteWebDriver);
-    }
+		return new JobsPage(this.awaitableWebDriver);
+	}
 }

@@ -11,9 +11,7 @@ dependencies {
             project(':migration-app'),
             project(':crawler'),
             project(':api'),
-            'io.javalin:javalin-bundle:5.2.0',
-            'org.testcontainers:elasticsearch:1.17.6'
-
+            "io.javalin:javalin-bundle:$javalinVersion"
     )
 }
 

@@ -1,6 +1,8 @@
+import java.time.Instant
+
 plugins {
     id 'application'
-    id 'com.github.ben-manes.versions' version '0.44.0'
+    id 'jacoco'
 }
 
 group = 'com.ruchij.api'
@@ -13,18 +15,22 @@ dependencies {
     implementation(
             project(':crawler'),
             project(':migration-app'),
-            'com.typesafe:config:1.4.2',
-            'io.javalin:javalin-bundle:5.3.0',
-            'org.mindrot:jbcrypt:0.4',
-            'io.reactivex.rxjava3:rxjava:3.1.5',
-            'co.elastic.clients:elasticsearch-java:8.5.3',
-            'io.lettuce:lettuce-core:6.2.2.RELEASE',
-            'ch.qos.logback:logback-classic:1.4.5',
-            'org.testcontainers:testcontainers:1.17.6'
+            "com.typesafe:config:$typesafeConfigVersion",
+            "io.javalin:javalin-bundle:$javalinVersion",
+            "org.mindrot:jbcrypt:$jbcryptVersion",
+            "io.reactivex.rxjava3:rxjava:$rxJavaVersion",
+            "co.elastic.clients:elasticsearch-java:$elasticsearchJavaVersion",
+            "org.jdbi:jdbi3-core:$jdbiVersion",
+            "org.postgresql:postgresql:$postgresqlVersion",
+            "com.h2database:h2:$h2Version",
+            "io.lettuce:lettuce-core:$lettuceVersion",
+            "ch.qos.logback:logback-classic:$logbackVersion",
+            "com.squareup.okhttp3:okhttp:$okHttpVersion"
     )
 
     testImplementation(
-            'org.junit.jupiter:junit-jupiter:5.9.1'
+            "org.junit.jupiter:junit-jupiter:$junitVersion",
+            "org.mockito:mockito-core:$mockitoVersion"
     )
 }
 
@@ -32,6 +38,44 @@ application {
     mainClass = 'com.ruchij.api.ApiApp'
 }
 
+jacocoTestReport {
+    dependsOn test
+}
+
+task buildInformation {
+    doLast {
+        def file = new File("$buildDir/resources/main/build-information.json")
+        file.parentFile.mkdirs()
+
+        if (file.exists()) {
+            file.delete()
+        }
+
+        def buildInfo =
+                """{
+                "name": "job-market-analyzer-api",
+                "group": "${project.group}",
+                "version": "${project.version}",
+                "gradleVersion": "${gradle.gradleVersion}",
+                "buildTimestamp": "${Instant.now()}",
+                "gitBranch": "${'git rev-parse --abbrev-ref HEAD'.execute().text.trim()}",
+                "gitCommit": "${'git rev-parse --short HEAD'.execute().text.trim()}"
+            }"""
+
+        file.withWriter('UTF-8') { writer ->
+            writer.write(buildInfo)
+        }
+    }
+}
+
+compileJava {
+    dependsOn buildInformation
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+distTar {
+    archiveFileName = 'api.tar'
 }

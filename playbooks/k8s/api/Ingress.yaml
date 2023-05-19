@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: job-market-analyzer-api-ingress
+  namespace: {{ namespace }}
+spec:
+  tls:
+    - secretName: job-market-analyzer-api-tls
+      hosts:
+        - {{ hostname }}
+  rules:
+    - host: {{ hostname }}
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: job-market-analyzer-api-service
+                port:
+                  name: javalin-port

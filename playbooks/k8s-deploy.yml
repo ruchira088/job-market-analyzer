@@ -10,40 +10,65 @@
       import_tasks: tasks/git-info.yml
 
     - set_fact:
-        namespace: "{{ 'my-http4s-project' if git_branch == 'main' or git_branch == 'master' else 'my-http4s-project-' + git_branch }}"
-
-    - name: Render K8s resource files
-      import_tasks: tasks/k8s-resource-files.yml
-      vars:
-        domain: my-http4s-project.dev.ruchij.com
-        hostname: "{{ domain if git_branch == 'main' or git_branch == 'master' else git_branch + '.' + domain }}"
+        namespace: "{{ 'job-market-analyzer' if git_branch == 'main' else 'job-market-analyzer-' + git_branch }}"
         ghcr_credentials: "{{ lookup('aws_ssm', '/github/ghcr/docker-config', region='ap-southeast-2') }}"
+
+    - name: Render common K8s resource files
+      import_tasks: tasks/common-k8s-resource-files.yml
 
     - name: Set kube_config
       import_tasks: tasks/k8s-config.yml
 
-    - name: Deploy K8s resources
+    - name: Create Namespace
+      command: kubectl apply -f k8s-output/Namespace.yaml --kubeconfig {{ kubeconfig }}
+
+    - name: Create Docker registry secret
+      command: kubectl apply -f k8s-output/DockerRegistryCredentials.yaml --kubeconfig {{ kubeconfig }}
+
+    - name: Render K8s resource files
+      import_tasks: tasks/k8s-resource-files.yml
+      vars:
+        hostname: "{{ 'api.jobs.home.ruchij.com' if git_branch == 'main' else git_branch + '.api.jobs.dev.ruchij.com' }}"
+
+    - name: Deploy migration Job
       block:
-        - name: Create Namespace
-          command: kubectl apply -f k8s-output/Namespace.yaml --kubeconfig {{ kubeconfig }}
-
-        - name: Create Docker registry secret
-          command: kubectl apply -f k8s-output/DockerRegistryCredentials.yaml --kubeconfig {{ kubeconfig }}
-
         - name: Create data ConfigMap
-          command: kubectl apply -f k8s-output/DataConfigMap.yaml --kubeconfig {{ kubeconfig }}
+          command: kubectl apply -f k8s-output/migration-app/DataConfigMap.yaml --kubeconfig {{ kubeconfig }}
 
         - name: Create file ConfigMap
-          command: kubectl apply -f k8s-output/FileConfigMap.yaml --kubeconfig {{ kubeconfig }}
+          command: kubectl apply -f k8s-output/migration-app/FileConfigMap.yaml --kubeconfig {{ kubeconfig }}
 
         - name: Create Secrets
-          command: kubectl apply -f k8s-output/Secrets.yaml --kubeconfig {{ kubeconfig }}
+          command: kubectl apply -f k8s-output/migration-app/Secrets.yaml --kubeconfig {{ kubeconfig }}
+
+        - name: Deploy migration Job
+          command: kubectl apply -f k8s-output/migration-app --kubeconfig {{ kubeconfig }}
+
+        - name: Wait for migration Job to complete
+          command: |
+            kubectl wait \
+              --for=condition=complete \
+              job/job-market-analyzer-migration-app-job-{{ git_commit }} \
+              --kubeconfig {{ kubeconfig }} \
+              -n {{ namespace }} \
+              --timeout=120s
+
+    - name: Deploy API
+      block:
+        - name: Create data ConfigMap
+          command: kubectl apply -f k8s-output/api/DataConfigMap.yaml --kubeconfig {{ kubeconfig }}
+
+        - name: Create file ConfigMap
+          command: kubectl apply -f k8s-output/api/FileConfigMap.yaml --kubeconfig {{ kubeconfig }}
+
+        - name: Create Secrets
+          command: kubectl apply -f k8s-output/api/Secrets.yaml --kubeconfig {{ kubeconfig }}
 
         - name: Deploy application
-          command: kubectl apply -f k8s-output --kubeconfig {{ kubeconfig }}
+          command: kubectl apply -f k8s-output/api --kubeconfig {{ kubeconfig }}
 
         - name: Wait for successful deployment
-          command: kubectl rollout status deployment my-http4s-project-deployment --kubeconfig {{ kubeconfig }} -n {{ namespace }}
+          command: kubectl rollout status deployment job-market-analyzer-api-deployment --kubeconfig {{ kubeconfig }} -n {{ namespace }}
 
     - name: Clean up output directory
       file:

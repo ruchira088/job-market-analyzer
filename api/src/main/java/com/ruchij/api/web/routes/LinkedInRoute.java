@@ -2,118 +2,135 @@ package com.ruchij.api.web.routes;
 
 import com.ruchij.api.services.crawler.ExtendedCrawlManager;
 import com.ruchij.api.web.middleware.AuthenticationMiddleware;
-import com.ruchij.api.web.requests.CreateLinkedInCredentialsRequest;
+import com.ruchij.api.web.requests.LinkedInCredentialsRequest;
 import com.ruchij.api.web.responses.ErrorResponse;
 import com.ruchij.api.web.responses.SseType;
 import com.ruchij.crawler.service.linkedin.LinkedInCredentialsService;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.HttpStatus;
+import io.reactivex.rxjava3.disposables.Disposable;
+
+import java.util.Map;
 
 import static com.ruchij.crawler.utils.JsonUtils.objectMapper;
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class LinkedInRoute implements EndpointGroup {
-    private final LinkedInCredentialsService linkedInCredentialsService;
-    private final ExtendedCrawlManager extendedCrawlManager;
-    private final AuthenticationMiddleware authenticationMiddleware;
+	private final LinkedInCredentialsService linkedInCredentialsService;
+	private final ExtendedCrawlManager extendedCrawlManager;
+	private final AuthenticationMiddleware authenticationMiddleware;
 
-    public LinkedInRoute(
-        LinkedInCredentialsService linkedInCredentialsService,
-        ExtendedCrawlManager extendedCrawlManager,
-        AuthenticationMiddleware authenticationMiddleware
-    ) {
-        this.linkedInCredentialsService = linkedInCredentialsService;
-        this.extendedCrawlManager = extendedCrawlManager;
-        this.authenticationMiddleware = authenticationMiddleware;
-    }
+	public LinkedInRoute(
+		LinkedInCredentialsService linkedInCredentialsService,
+		ExtendedCrawlManager extendedCrawlManager,
+		AuthenticationMiddleware authenticationMiddleware
+	) {
+		this.linkedInCredentialsService = linkedInCredentialsService;
+		this.extendedCrawlManager = extendedCrawlManager;
+		this.authenticationMiddleware = authenticationMiddleware;
+	}
 
-    @Override
-    public void addEndpoints() {
-        path("credentials", () -> {
-                post(context -> {
-                    CreateLinkedInCredentialsRequest linkedInCredentialsRequest =
-                        context.bodyStreamAsClass(CreateLinkedInCredentialsRequest.class);
+	@Override
+	public void addEndpoints() {
+		path("credentials", () -> {
+				post("verify", context -> {
+					LinkedInCredentialsRequest linkedInCredentialsRequest =
+						context.bodyStreamAsClass(LinkedInCredentialsRequest.class);
 
-                    context
-                        .future(() ->
-                            authenticationMiddleware.authenticate(context)
-                                .thenCompose(user ->
-                                    linkedInCredentialsService.insert(
-                                        user.userId(),
-                                        linkedInCredentialsRequest.email(),
-                                        linkedInCredentialsRequest.password()
-                                    )
-                                )
-                                .thenAccept(linkedInCredentials ->
-                                    context
-                                        .status(HttpStatus.CREATED)
-                                        .json(linkedInCredentials)
-                                )
-                        );
-                });
+					context.future(() ->
+						linkedInCredentialsService.verifyCredentials(
+								linkedInCredentialsRequest.email(), linkedInCredentialsRequest.password()
+							)
+							.thenAccept(isValid ->
+								context
+									.status(isValid ? HttpStatus.OK : HttpStatus.UNAUTHORIZED)
+							)
+					);
+				});
 
-                get(context ->
-                    context
-                        .future(() ->
-                            authenticationMiddleware.authenticate(context)
-                                .thenCompose(user -> linkedInCredentialsService.getByUserId(user.userId()))
-                                .thenAccept(linkedInCredentials ->
-                                    context
-                                        .status(HttpStatus.OK)
-                                        .json(linkedInCredentials)
-                                )
-                        )
-                );
+				post(context -> {
+					LinkedInCredentialsRequest linkedInCredentialsRequest =
+						context.bodyStreamAsClass(LinkedInCredentialsRequest.class);
 
-                delete(context ->
-                    context
-                        .future(() ->
-                            authenticationMiddleware.authenticate(context)
-                                .thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.userId()))
-                                .thenAccept(linkedInCredentials ->
-                                    context
-                                        .status(HttpStatus.OK)
-                                        .json(linkedInCredentials)
-                                )
-                        )
-                );
-            }
-        );
+					context
+						.future(() ->
+							authenticationMiddleware.authenticate(context)
+								.thenCompose(user ->
+									linkedInCredentialsService.insert(
+										user.id(),
+										linkedInCredentialsRequest.email(),
+										linkedInCredentialsRequest.password()
+									)
+								)
+								.thenAccept(linkedInCredentials ->
+									context
+										.status(HttpStatus.CREATED)
+										.json(linkedInCredentials)
+								)
+						);
+				});
 
-        path("crawl", () ->
-            sse(sseClient -> {
-                sseClient.keepAlive();
+				get(context ->
+					context
+						.future(() ->
+							authenticationMiddleware.authenticate(context)
+								.thenCompose(user -> linkedInCredentialsService.getByUserId(user.id()))
+								.thenAccept(linkedInCredentials ->
+									context
+										.status(HttpStatus.OK)
+										.json(linkedInCredentials)
+								)
+						)
+				);
 
-                authenticationMiddleware.authenticate(sseClient.ctx())
-                    .thenApply(user -> {
-                            sseClient.sendEvent(SseType.CRAWL_STARTED.name(), "{}");
+				delete(context ->
+					context
+						.future(() ->
+							authenticationMiddleware.authenticate(context)
+								.thenCompose(user -> linkedInCredentialsService.deleteByUserId(user.id()))
+								.thenAccept(linkedInCredentials ->
+									context
+										.status(HttpStatus.OK)
+										.json(linkedInCredentials)
+								)
+						)
+				);
+			}
+		);
 
-                            return extendedCrawlManager.runWithLock(user.userId())
-                                .doFinally(() -> {
-                                    if (!sseClient.terminated()) {
-                                        sseClient.sendEvent(SseType.CRAWL_COMPLETED.name(), "{}");
-                                        sseClient.close();
-                                    }
-                                })
-                                .doOnError(throwable -> {
-                                    sseClient.sendEvent(
-                                        SseType.CRAWL_ERROR.name(),
-                                        objectMapper.writeValueAsString(new ErrorResponse(throwable.getMessage()))
-                                    );
-                                    sseClient.close();
-                                })
-                                .subscribe(crawledJob -> {
-                                        if (!sseClient.terminated()) {
-                                            sseClient.sendEvent(
-                                                SseType.CRAWLED_JOB.name(),
-                                                objectMapper.writeValueAsString(crawledJob)
-                                            );
-                                        }
-                                    }
-                                );
-                        }
-                    );
-            })
-        );
-    }
+		path("crawl", () -> {
+				post(context ->
+					context.future(() ->
+						authenticationMiddleware.authenticate(context)
+							.thenAccept(user -> {
+								extendedCrawlManager.runWithLock(user.id()).subscribe();
+								context.status(HttpStatus.ACCEPTED).json(Map.of());
+							})
+					)
+				);
+
+				sse(sseClient -> {
+					sseClient.keepAlive();
+
+					authenticationMiddleware.authenticate(sseClient.ctx())
+						.thenAccept(user -> {
+								Disposable disposable = extendedCrawlManager.listenToCrawledJobs(user.id())
+									.doOnError(throwable ->
+										sseClient.sendEvent(
+											SseType.CRAWL_ERROR.name(),
+											objectMapper.writeValueAsString(new ErrorResponse(throwable.getMessage()))
+										))
+									.subscribe(crawledJob -> sseClient.sendEvent(
+											SseType.CRAWLED_JOB.name(),
+											objectMapper.writeValueAsString(crawledJob)
+										)
+									);
+
+								sseClient.onClose(disposable::dispose);
+							}
+						);
+				});
+			}
+		);
+	}
 }

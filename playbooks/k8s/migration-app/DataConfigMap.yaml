@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: job-market-analyzer-migration-app-data-config-map
+  namespace: {{ namespace }}
+data:
+{% for key, value in migration_app.config_values.items() %}
+  {{ key }}: "{{ value }}"
+{% endfor %}
