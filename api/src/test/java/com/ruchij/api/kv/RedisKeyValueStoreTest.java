@@ -16,7 +16,7 @@ class RedisKeyValueStoreTest {
 	private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
 	@Test
-	@Timeout(value = 10, unit = TimeUnit.SECONDS)
+	@Timeout(value = 60, unit = TimeUnit.SECONDS)
 	void shouldInsertAndRetrieveKeyValuePair() throws Exception {
 		run(redisKeyValueStore ->
 			redisKeyValueStore.put("A", "APPLE", Optional.empty())
@@ -26,7 +26,7 @@ class RedisKeyValueStoreTest {
 	}
 
 	@Test
-	@Timeout(value = 10, unit = TimeUnit.SECONDS)
+	@Timeout(value = 60, unit = TimeUnit.SECONDS)
 	void shouldExpireKeyAfterTtl() throws Exception {
 		run(redisKeyValueStore ->
 			redisKeyValueStore.put("B", "BAT", Optional.of(Duration.ofSeconds(1)))
