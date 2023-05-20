@@ -23,7 +23,7 @@ import com.ruchij.api.services.hashing.BCryptPasswordHashingService;
 import com.ruchij.api.services.hashing.PasswordHashingService;
 import com.ruchij.api.services.health.HealthService;
 import com.ruchij.api.services.health.HealthServiceImpl;
-import com.ruchij.api.services.lock.LocalLockService;
+import com.ruchij.api.services.lock.InMemoryLockService;
 import com.ruchij.api.services.lock.LockService;
 import com.ruchij.api.services.search.SearchService;
 import com.ruchij.api.services.search.SearchServiceImpl;
@@ -32,8 +32,6 @@ import com.ruchij.api.services.user.UserServiceImpl;
 import com.ruchij.api.web.Routes;
 import com.ruchij.api.web.plugins.ExceptionHandlerPlugin;
 import com.ruchij.crawler.dao.jdbi.JdbiInitializer;
-import com.ruchij.crawler.dao.jdbi.arguments.EncryptedTextArgumentFactory;
-import com.ruchij.crawler.dao.jdbi.mappers.EncryptedTextColumMapper;
 import com.ruchij.crawler.dao.linkedin.JdbiEncryptedLinkedInCredentialsDao;
 import com.ruchij.crawler.dao.task.JdbiCrawlerTaskDao;
 import com.ruchij.crawler.dao.transaction.JdbiTransactor;
@@ -154,7 +152,7 @@ public class ApiApp {
 			);
 
 		ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(4);
-		LockService lockService = new LocalLockService(scheduledExecutorService, clock);
+		LockService lockService = new InMemoryLockService(scheduledExecutorService, clock);
 
 		RedisPublisher redisPublisher =
 			new RedisPublisher(apiConfiguration.redisConfiguration().uri(), objectMapper);
