@@ -13,7 +13,7 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class RedisKeyValueStoreTest {
-	private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
+	private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 
 	@Test
 	@Timeout(value = 60, unit = TimeUnit.SECONDS)
@@ -35,6 +35,32 @@ class RedisKeyValueStoreTest {
 				.thenCompose(__ -> sleep(Duration.ofSeconds(2)))
 				.thenCompose(__ -> redisKeyValueStore.get("B"))
 				.thenAccept(maybeValue -> assertEquals(Optional.empty(), maybeValue))
+		);
+	}
+
+	@Test
+	@Timeout(value = 60, unit = TimeUnit.SECONDS)
+	void shouldDeleteKey() throws Exception {
+		run(redisKeyValueStore ->
+			redisKeyValueStore.put("C", "CAT", Optional.empty())
+				.thenCompose(__ -> redisKeyValueStore.get("C"))
+				.thenAccept(maybeValue -> assertEquals(Optional.of("CAT"), maybeValue))
+				.thenCompose(__ -> redisKeyValueStore.delete("C"))
+				.thenCompose(__ -> redisKeyValueStore.get("C"))
+				.thenAccept(maybeValue -> assertEquals(Optional.empty(), maybeValue))
+		);
+	}
+
+	@Test
+	@Timeout(value = 60, unit = TimeUnit.SECONDS)
+	void shouldUpdateExistingValue() throws Exception {
+		run(redisKeyValueStore ->
+			redisKeyValueStore.put("D", "DOG", Optional.empty())
+				.thenCompose(__ -> redisKeyValueStore.get("D"))
+				.thenAccept(maybeValue -> assertEquals(Optional.of("DOG"), maybeValue))
+				.thenCompose(__ -> redisKeyValueStore.put("D", "DEAR", Optional.empty()))
+				.thenCompose(__ -> redisKeyValueStore.get("D"))
+				.thenAccept(maybeValue -> assertEquals(Optional.of("DEAR"), maybeValue))
 		);
 	}
 
