@@ -70,8 +70,7 @@ public class ApiApp {
 		ApiConfiguration apiConfiguration = ApiConfiguration.parse(config);
 		Routes routes = routes(apiConfiguration);
 
-		httpApplication(routes, __ -> {
-		})
+		httpApplication(routes, __ -> {})
 			.start(apiConfiguration.httpConfiguration().host(), apiConfiguration.httpConfiguration().port());
 	}
 
@@ -160,8 +159,10 @@ public class ApiApp {
 		RedisSubscriber redisSubscriber =
 			new RedisSubscriber(apiConfiguration.redisConfiguration().uri(), objectMapper);
 
-		ExtendedCrawlManager extendedCrawlManager =
+		ExtendedCrawlManagerImpl extendedCrawlManager =
 			new ExtendedCrawlManagerImpl(crawlManager, lockService, linkedInCredentialsService, redisPublisher, redisSubscriber);
+
+		extendedCrawlManager.listen();
 
 		PasswordHashingService passwordHashingService = new BCryptPasswordHashingService();
 
