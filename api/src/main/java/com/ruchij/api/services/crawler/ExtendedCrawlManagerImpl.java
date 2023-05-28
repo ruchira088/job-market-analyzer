@@ -119,6 +119,9 @@ public class ExtendedCrawlManagerImpl implements ExtendedCrawlManager {
 	public Disposable listen() {
 		return subscriber.subscribe(STOP_CRAWL, StopUserCrawlMessage.class, "not-used")
 			.map(StopUserCrawlMessage::userId)
-			.subscribe(this::stopRun);
+			.subscribe(userId ->
+				stopRun(userId)
+					.ifPresent(__ -> logger.info("Stopped job crawler for userId=%s".formatted(userId)))
+			);
 	}
 }
