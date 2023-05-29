@@ -2,6 +2,7 @@ plugins {
     id 'application'
     id 'java-library'
     id 'jacoco'
+    id 'java-test-fixtures'
 }
 
 group = 'com.ruchij.crawler'
@@ -27,6 +28,11 @@ dependencies {
 
     testImplementation(
             "org.junit.jupiter:junit-jupiter:$junitVersion"
+    )
+
+    testFixturesImplementation(
+            project(':migration-app'),
+            "org.jdbi:jdbi3-core:$jdbiVersion"
     )
 }
 
