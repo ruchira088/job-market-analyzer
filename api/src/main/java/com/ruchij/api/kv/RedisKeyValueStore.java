@@ -1,9 +1,11 @@
 package com.ruchij.api.kv;
 
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -19,8 +21,11 @@ public class RedisKeyValueStore implements KeyValueStore, AutoCloseable {
 	}
 
 	@Override
-	public CompletableFuture<Boolean> put(String key, String value) {
-		return redisAsyncCommands.set(key, value).toCompletableFuture()
+	public CompletableFuture<Boolean> put(String key, String value, Optional<Duration> maybeTtl) {
+		return maybeTtl
+			.map(ttl -> redisAsyncCommands.set(key, value, SetArgs.Builder.px(ttl)))
+			.orElseGet(() -> redisAsyncCommands.set(key, value))
+			.toCompletableFuture()
 			.thenApply(result -> result.equals(SUCCESS_RESPONSE));
 	}
 

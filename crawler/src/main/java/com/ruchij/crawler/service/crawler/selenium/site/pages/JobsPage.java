@@ -45,7 +45,8 @@ public class JobsPage {
 			String companyName = findText.apply(".jobs-unified-top-card__company-name");
 
 			String companyLogoUrl =
-				Optional.ofNullable(jobCard.findElement(By.cssSelector(".job-card-container__link img")))
+				Optional.of(jobCard.findElements(By.cssSelector(".job-card-list__entity-lockup img")))
+					.flatMap(webElements -> webElements.stream().findFirst())
 					.map(element -> element.getAttribute("src"))
 					.orElse("https://via.placeholder.com/100x100");
 

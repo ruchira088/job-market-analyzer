@@ -1,6 +1,6 @@
 package com.ruchij.api.service.lock;
 
-import com.ruchij.api.services.lock.LocalLockService;
+import com.ruchij.api.services.lock.InMemoryLockService;
 import com.ruchij.api.services.lock.LockService;
 import com.ruchij.api.services.lock.models.Lock;
 import org.junit.jupiter.api.AfterAll;
@@ -24,7 +24,7 @@ class LockServiceTest {
 	private final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(4);
 	private final Clock clock = Clock.systemUTC();
 
-	private final LockService lockService = new LocalLockService(scheduledExecutorService, clock);
+	private final LockService lockService = new InMemoryLockService(scheduledExecutorService, clock);
 
 	@Test
 	void lockContention() throws Exception {

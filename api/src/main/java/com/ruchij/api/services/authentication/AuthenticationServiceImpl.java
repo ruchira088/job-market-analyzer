@@ -17,6 +17,7 @@ import com.ruchij.crawler.utils.Transformers;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class AuthenticationServiceImpl<A> implements AuthenticationService {
@@ -82,7 +83,7 @@ public class AuthenticationServiceImpl<A> implements AuthenticationService {
 				try {
 					String value = JsonUtils.objectMapper.writeValueAsString(authenticationToken);
 
-					return keyValueStore.put(token, value).thenApply(__ -> authenticationToken);
+					return keyValueStore.put(token, value, Optional.of(SESSION_DURATION)).thenApply(__ -> authenticationToken);
 				} catch (JsonProcessingException jsonProcessingException) {
 					return CompletableFuture.failedFuture(jsonProcessingException);
 				}
@@ -105,7 +106,7 @@ public class AuthenticationServiceImpl<A> implements AuthenticationService {
 								)
 							);
 
-						return keyValueStore.put(authenticationToken.token(), value)
+						return keyValueStore.put(authenticationToken.token(), value, Optional.of(SESSION_DURATION))
 							.thenCompose(__ ->
 								transactor.transaction(userDao.findById(authenticationToken.userId()))
 									.thenCompose(optionalValue ->

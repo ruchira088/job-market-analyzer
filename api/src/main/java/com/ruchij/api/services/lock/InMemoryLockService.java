@@ -12,12 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class LocalLockService implements LockService {
+public class InMemoryLockService implements LockService {
 	private final Map<String, Lock> locks = new ConcurrentHashMap<>();
 	private final ScheduledExecutorService scheduledExecutorService;
 	private final Clock clock;
 
-	public LocalLockService(ScheduledExecutorService scheduledExecutorService, Clock clock) {
+	public InMemoryLockService(ScheduledExecutorService scheduledExecutorService, Clock clock) {
 		this.scheduledExecutorService = scheduledExecutorService;
 		this.clock = clock;
 	}

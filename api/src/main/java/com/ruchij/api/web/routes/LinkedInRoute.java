@@ -103,9 +103,17 @@ public class LinkedInRoute implements EndpointGroup {
 					context.future(() ->
 						authenticationMiddleware.authenticate(context)
 							.thenAccept(user -> {
-								extendedCrawlManager.runWithLock(user.id()).subscribe();
+								extendedCrawlManager.triggerRunWithLock(user.id());
 								context.status(HttpStatus.ACCEPTED).json(Map.of());
 							})
+					)
+				);
+
+				delete(context ->
+					context.future(() ->
+						authenticationMiddleware.authenticate(context)
+							.thenCompose(user -> extendedCrawlManager.stopUserCrawl(user.id()))
+							.thenAccept(__ -> context.status(HttpStatus.ACCEPTED).json(Map.of()))
 					)
 				);
 

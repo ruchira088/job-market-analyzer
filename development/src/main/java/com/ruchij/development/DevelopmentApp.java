@@ -47,7 +47,7 @@ public class DevelopmentApp {
 
 		HttpConfiguration httpConfiguration = new HttpConfiguration("0.0.0.0", 443);
 
-		SeleniumConfiguration seleniumConfiguration = new SeleniumConfiguration(Browser.FIREFOX, true);
+		SeleniumConfiguration seleniumConfiguration = new SeleniumConfiguration(Browser.FIREFOX, false);
 
 		ApiConfiguration apiConfiguration =
 			new ApiConfiguration(
