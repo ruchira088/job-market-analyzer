@@ -9,7 +9,6 @@ import com.ruchij.api.web.Routes;
 import com.ruchij.crawler.config.SeleniumConfiguration;
 import com.ruchij.crawler.service.crawler.selenium.Browser;
 import com.ruchij.development.providers.ConfigurationProvider;
-import com.ruchij.development.providers.ContainerConfigurationProvider;
 import com.ruchij.development.providers.DockerComposeConfigurationProvider;
 import com.ruchij.migration.config.DatabaseConfiguration;
 import com.ruchij.migration.config.ElasticsearchConfiguration;
@@ -63,16 +62,15 @@ public class DevelopmentApp {
 
 		ApiApp.httpApplication(
 				routes,
-				javalinConfig -> javalinConfig.jetty.server(() -> jettyServer(httpConfiguration))
+				javalinConfig ->
+					javalinConfig.jetty.modifyServer(server -> jettyServer(httpConfiguration, server))
 			)
 			.start();
 
 		logger.info("HTTPS API is ready on port %s".formatted(httpConfiguration.port()));
 	}
 
-	private static Server jettyServer(HttpConfiguration httpConfiguration) {
-		Server server = new Server();
-
+	private static Server jettyServer(HttpConfiguration httpConfiguration, Server server) {
 		SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
 		sslContextFactory.setKeyStorePath(DevelopmentApp.class.getResource("/localhost.jks").toExternalForm());
 		sslContextFactory.setKeyStorePassword("changeit");
