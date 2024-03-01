@@ -17,7 +17,6 @@ import com.ruchij.api.services.authentication.AuthenticationServiceImpl;
 import com.ruchij.api.services.authentication.models.AuthenticationToken;
 import com.ruchij.api.services.authorization.AuthorizationService;
 import com.ruchij.api.services.authorization.AuthorizationServiceImpl;
-import com.ruchij.api.services.crawler.ExtendedCrawlManager;
 import com.ruchij.api.services.crawler.ExtendedCrawlManagerImpl;
 import com.ruchij.api.services.hashing.BCryptPasswordHashingService;
 import com.ruchij.api.services.hashing.PasswordHashingService;
@@ -80,18 +79,18 @@ public class ApiApp {
 	) {
 		return Javalin
 			.create(javalinConfig -> {
-					javalinConfig.jsonMapper(new JavalinJackson(objectMapper));
-					javalinConfig.plugins.register(new ExceptionHandlerPlugin());
-					javalinConfig.plugins.enableCors(
-						corsContainer -> corsContainer.add(corsPluginConfig -> {
-							corsPluginConfig.reflectClientOrigin = true;
-							corsPluginConfig.allowCredentials = true;
+					javalinConfig.jsonMapper(new JavalinJackson(objectMapper, true));
+					javalinConfig.registerPlugin(new ExceptionHandlerPlugin());
+					javalinConfig.bundledPlugins.enableCors(corsPluginConfig ->
+						corsPluginConfig.addRule(corsRule -> {
+							corsRule.allowCredentials = true;
+							corsRule.reflectClientOrigin = true;
 						})
 					);
+					javalinConfig.router.apiBuilder(routes);
 					configModifier.accept(javalinConfig);
 				}
-			)
-			.routes(routes);
+			);
 	}
 
 	public static Routes routes(ApiConfiguration apiConfiguration) throws Exception {
