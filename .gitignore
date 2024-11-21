@@ -13,3 +13,5 @@ playbooks/output
 development/src/main/resources/localhost.jks
 
 playbooks/k8s-output
+
+.vscode
