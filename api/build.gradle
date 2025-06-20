@@ -29,8 +29,10 @@ dependencies {
     )
 
     testImplementation(
+            platform("org.junit:junit-bom:$junitVersion"),
+            'org.junit.jupiter:junit-jupiter',
+            'org.junit.platform:junit-platform-launcher',
             "org.testcontainers:junit-jupiter:$testContainersVersion",
-            "org.junit.jupiter:junit-jupiter:$junitVersion",
             "org.mockito:mockito-core:$mockitoVersion",
             testFixtures(project(':crawler'))
     )
