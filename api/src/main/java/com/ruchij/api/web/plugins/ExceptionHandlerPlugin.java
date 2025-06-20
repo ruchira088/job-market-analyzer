@@ -4,16 +4,17 @@ import com.ruchij.api.exceptions.AuthenticationException;
 import com.ruchij.api.exceptions.ResourceConflictException;
 import com.ruchij.api.web.responses.ErrorResponse;
 import com.ruchij.crawler.exceptions.ResourceNotFoundException;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.HttpStatus;
 import io.javalin.plugin.Plugin;
+import io.javalin.router.InternalRouter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class ExceptionHandlerPlugin implements Plugin {
+public class ExceptionHandlerPlugin extends Plugin<Void> {
 	private Map<Class<? extends Exception>, HttpStatus> errorCodes() {
 		Map<Class<? extends Exception>, HttpStatus> errorMappings = new HashMap<>();
 
@@ -29,9 +30,11 @@ public class ExceptionHandlerPlugin implements Plugin {
 	}
 
 	@Override
-	public void apply(@NotNull Javalin javalin) {
+	public void onInitialize(@NotNull JavalinConfig javalinConfig) {
+		InternalRouter internalRouter = javalinConfig.pvt.internalRouter;
+
 		for (Map.Entry<Class<? extends Exception>, HttpStatus> entry : errorCodes().entrySet()) {
-			javalin.exception(
+			internalRouter.addHttpExceptionHandler(
 				entry.getKey(),
 				(exception, context) ->
 					context
